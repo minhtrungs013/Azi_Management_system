@@ -1,6 +1,6 @@
 // lib/store/features/authSlice.ts
-import { CreateprojectService, deleteProjectIdByUserIdService, getProjectByUserIdService, getProjectIdService, updateProjectIdByUserIdService } from '@/lib/services/project/projectService';
-import { projectPayload, ProjectUpdate } from '@/types/project';
+import { CreateprojectService, deleteProjectIdByUserIdService, getAllMemberProjectService, getAllNonMemberToProjectService, getPermissionService, getProjectByUserIdService, getProjectIdService, inviteMemberToProjectService, updateProjectIdByUserIdService } from '@/lib/services/project/projectService';
+import { AddUserPermissionforProject, projectPayload } from '@/types/project';
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 
 export const getProjectById = createAsyncThunk('getProjectByUserIdService', async (_, { rejectWithValue }) => {
@@ -30,7 +30,7 @@ export const createProject = createAsyncThunk('createProject', async (payload: p
   }
 });
 
-export const updateProjectById = createAsyncThunk('getProjectByUserIdService', async (params: { url: string; payload: projectPayload }, { rejectWithValue }) => {
+export const updateProjectById = createAsyncThunk('updateProjectByUserId', async (params: { url: string; payload: projectPayload }, { rejectWithValue }) => {
   try {
     const response = await updateProjectIdByUserIdService(params);
     return response;
@@ -39,9 +39,43 @@ export const updateProjectById = createAsyncThunk('getProjectByUserIdService', a
   }
 });
 
-export const deleteProjectById = createAsyncThunk('getProjectByUserIdService', async (payload: string, { rejectWithValue }) => {
+export const deleteProjectById = createAsyncThunk('deleteProjectByUserId', async (payload: string, { rejectWithValue }) => {
   try {
     const response = await deleteProjectIdByUserIdService(payload);
+    return response;
+  } catch (error) {
+    return rejectWithValue(' failed');
+  }
+});
+export const inviteMemberToProject = createAsyncThunk('deleteProjectByUserId', async (body: { url: string; payload: AddUserPermissionforProject }, { rejectWithValue }) => {
+  try {
+    const response = await inviteMemberToProjectService(body);
+    return response;
+  } catch (error) {
+    return rejectWithValue(' failed');
+  }
+});
+
+export const getPermissions  = createAsyncThunk('getPermissions', async (_, { rejectWithValue }) => {
+  try {
+    const response = await getPermissionService();
+    return response;
+  } catch (error) {
+    return rejectWithValue(' failed');
+  }
+});
+
+export const getAllNonMemberToProject = createAsyncThunk('getAllNonMemberToProject', async (payload: string, { rejectWithValue }) => {
+  try {
+    const response = await getAllNonMemberToProjectService(payload);
+    return response;
+  } catch (error) {
+    return rejectWithValue(' failed');
+  }
+});
+export const getAllMemberProject = createAsyncThunk('getAllMemberProject', async (payload: string, { rejectWithValue }) => {
+  try {
+    const response = await getAllMemberProjectService(payload);
     return response;
   } catch (error) {
     return rejectWithValue(' failed');

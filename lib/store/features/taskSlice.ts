@@ -1,5 +1,5 @@
 // lib/store/features/authSlice.ts
-import { CreatetaskService } from '@/lib/services/task/taskService';
+import { CreatetaskService, moveTaskService } from '@/lib/services/task/taskService';
 import { taskPayload } from '@/types/task';
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 
@@ -8,6 +8,14 @@ import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 export const createtask = createAsyncThunk('createProject', async (payload: taskPayload, { rejectWithValue }) => {
   try {
     const response = await CreatetaskService(payload);
+    return response;
+  } catch (error) {
+    return rejectWithValue(error);
+  }
+});
+export const moveTask = createAsyncThunk('moveTask', async (param: { listId: string, taskId: string }, { rejectWithValue }) => {
+  try {
+    const response = await moveTaskService(param);
     return response;
   } catch (error) {
     return rejectWithValue(error);

@@ -12,3 +12,14 @@ export async function CreatetaskService(payload: taskPayload): Promise<any> {
     });
   }
 }
+export async function moveTaskService(param: { listId: string, taskId: string }): Promise<any> {
+  try {
+    const response = await api.put(`/cards/${param.taskId}/lists/${param.listId}`);
+    return response.data;
+  } catch (error: any) {
+    return Promise.reject({
+      message: error.response?.data?.message || 'Something went wrong',
+      status: error.response?.status || 500,
+    });
+  }
+}

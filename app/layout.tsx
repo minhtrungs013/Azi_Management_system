@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import ClientProvider from "./ClientProvider";
 import { Header } from "@/components/header/Header";
 import { Navbar } from "@/components/navbar/navbar";
+import { ThemeProvider } from "@/components/theme-provider";
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -25,16 +26,23 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={cn("min-h-screen bg-background font-sans antialiased", fontSans.variable)} suppressHydrationWarning={true}>
-        <ClientProvider>
-          <div className="flex min-h-screen flex-col">
-            <div className="grid grid-cols-12 gap-4">
-              <div className=" col-start-1 col-span-2"> <Navbar /></div>
-              <div className=" col-start-3 col-span-12 "><Header />
-                {children}
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <ClientProvider>
+            <div className="flex min-h-screen flex-col">
+              <div className="grid grid-cols-12 gap-4">
+                <div className=" col-start-1 col-span-2"> <Navbar /></div>
+                <div className=" col-start-3 col-span-12 "><Header />
+                  {children}
+                </div>
               </div>
             </div>
-          </div>
-        </ClientProvider>
+          </ClientProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -63,6 +63,7 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
   }
@@ -75,12 +76,14 @@
 
 /* Hide scrollbar for Firefox */
 .hide-scrollbar {
-  scrollbar-width: none; /* Firefox */
+  scrollbar-width: none;
+  /* Firefox */
 }
 
 /* Hide scrollbar for Edge, Internet Explorer */
 .hide-scrollbar {
-  -ms-overflow-style: none;  /* IE and Edge */
+  -ms-overflow-style: none;
+  /* IE and Edge */
 }
 
 .section::-webkit-scrollbar {
@@ -96,8 +99,9 @@
   background-image: linear-gradient(180deg, #d0368a 0%, #708ad4 99%);
   border-radius: 100px;
 }
+
 .section1::-webkit-scrollbar {
-  height:  5px;
+  height: 5px;
 }
 
 .section1::-webkit-scrollbar-track {
@@ -114,10 +118,6 @@
   transition: box-shadow 0.2s ease;
 }
 
-.card.dragging {
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  border: 1px solid #ccc; /* Optional border for visibility */
-}
 
 .list {
   padding: 10px;
@@ -127,9 +127,20 @@
 }
 
 .list:hover {
-  background-color: #f9f9f9; /* Highlight on hover */
+  background-color: #f9f9f9;
+  /* Highlight on hover */
 }
 
 .list.drag-over {
-  border: 2px dashed #3b82f6; /* Blue border when dragging over */
+  border: 2px dashed #3b82f6;
+  /* Blue border when dragging over */
 }
+
+.testuser:hover .testuserda {
+  display: block !important;
+}
+
+.testuserda {
+  display: none;
+}
+

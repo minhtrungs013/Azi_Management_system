@@ -1,3 +1,5 @@
+import { User } from "./auth";
+
 export interface projectPayload {
   name: string;
   description: string;
@@ -25,7 +27,8 @@ export interface Cards {
   _id: string;
   title: string;
   description: string;
-  assignedUserIds: string[];
+  assignee: User;
+  issueType: string,
   image_urls: string[];
   listId: string;
   position: string;
@@ -54,3 +57,30 @@ export interface ProjectDetails {
   created_by: string;
   lists: List[];
 }
+
+export interface permission {
+  _id: string;
+  name: string;
+  label: string;
+  description: string;
+}
+
+export interface AddUserPermissionforProject  {
+  userId: string;
+  permissionIds: string[];
+}
+
+export const issueTypes = [
+  {
+    value: 'Task',
+  },
+  {
+    value: 'Bug',
+  },
+  {
+    value: 'Story',
+  },
+  {
+    value: 'Epic',
+  },
+];

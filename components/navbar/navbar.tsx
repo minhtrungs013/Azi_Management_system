@@ -45,9 +45,10 @@ export function Navbar() {
         { id: 5, name: 'Settings', icon: <Settings className="w-5 h-5" />, href: '/settings' }
     ];
     return (
-        <div className="bg-white shadow-lg h-screen">
-            <div className="flex items-center h-16 p-4 bg-white shadow-sm">
-                <img src="https://res.cloudinary.com/dax8xvyhi/image/upload/v1727239733/d05dvccydpebwdf3y3zn.webp" alt="" className='h-14 ' />
+        <div className="bg-white dark:bg-[#020817] shadow-lg dark:shadow-sm dark:shadow-slate-600 h-screen">
+            <div className="flex items-center h-16 p-4 bg-white dark:bg-[#020817] shadow-sm dark:shadow-slate-600">
+                <img src="https://res.cloudinary.com/dax8xvyhi/image/upload/v1727755525/emtzje8x6vlsqzsxdg7a.png" alt="" className='h-14 mr-2 pb-[5px]' />
+                {/* <img src="https://res.cloudinary.com/dax8xvyhi/image/upload/v1727755525/kujrbiv97xfkbdme13lz.png" alt="" className='h-14 mr-2 pb-[5px]' /> */}
                 <div className="flex-shrink-0">
                     <h1 className="font-bold text-sm text-purple-600">Azi Management System</h1>
                 </div>

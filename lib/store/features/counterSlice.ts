@@ -1,6 +1,6 @@
 // lib/store/features/authSlice.ts
-import { loginService } from '@/lib/services/auth/loginService';
-import { LoginPayload } from '@/types/auth';
+import { getAllUserService, loginService, updateUserService } from '@/lib/services/auth/loginService';
+import { LoginPayload, UserUpdate } from '@/types/auth';
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 export const login = createAsyncThunk('auth/login', async (payload: LoginPayload, { rejectWithValue }) => {
@@ -26,11 +26,36 @@ export const logout = createAsyncThunk('auth/logout', async (_, { rejectWithValu
   }
 });
 
+
+export const getAllUser = createAsyncThunk('getAllUser', async (_, { rejectWithValue }) => {
+  try {
+    const response = await getAllUserService();
+    return response;
+  } catch (error) {
+    return rejectWithValue(' failed');
+  }
+});
+
+
+export const updateUser = createAsyncThunk('updateUser', async (body: { url: string; payload: UserUpdate }, { rejectWithValue }) => {
+  try {
+    const response = await updateUserService(body);
+    return response;
+  } catch (error) {
+    return rejectWithValue(' failed');
+  }
+});
+
+
 interface AuthState {
   isLogged: boolean;
   userId: string | null;
   username: string | null;
   accessToken: string | null;
+  name?: string | null;
+  email?: string | null;
+  location?: string | null;
+  avatar_url?: string | null;
   error: string | null;
 }
 
@@ -40,6 +65,10 @@ const initialState: AuthState = {
   username: null,
   accessToken: null,
   error: null,
+  name: null,
+  email: null,
+  location: null,
+  avatar_url: null,
 };
 
 
@@ -47,6 +76,12 @@ const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
+    refreshUser(state, action: PayloadAction<UserUpdate>) {
+      state.name = action.payload.name;
+      state.email = action.payload.email;
+      state.location = action.payload.location;
+      state.avatar_url = action.payload.avatar_url;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -54,7 +89,10 @@ const authSlice = createSlice({
         state.isLogged = true;
         state.username = action.payload.user.username;
         state.userId = action.payload.user._id;
-        state.accessToken = action.payload.accessToken;
+        state.name = action.payload.user.name;
+        state.email = action.payload.user.email;
+        state.location = action.payload.user.location;
+        state.avatar_url = action.payload.user.avatar_url;
         state.error = null;
       })
       .addCase(login.rejected, (state, action: PayloadAction<any>) => {
@@ -73,5 +111,5 @@ const authSlice = createSlice({
     });
   },
 });
-
+export const { refreshUser } = authSlice.actions;
 export default authSlice.reducer;

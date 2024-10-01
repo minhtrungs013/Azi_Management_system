@@ -1,5 +1,5 @@
 import api from '@/lib/config/api';
-import { ProjectList, projectPayload } from '@/types/project';
+import { AddUserPermissionforProject, permission, ProjectList, projectPayload } from '@/types/project';
 
 export async function CreateprojectService(payload: projectPayload): Promise<any> {
   try {
@@ -49,6 +49,54 @@ export async function deleteProjectIdByUserIdService(payload: string): Promise<a
 export async function getProjectIdService(payload: string): Promise<any> {
   try {
     const response = await api.get(`/projects/${payload}`);
+    return response.data.data;
+  } catch (error: any) {
+    return Promise.reject({
+      message: error.response?.data?.message || 'Something went wrong',
+      status: error.response?.status || 500,
+    });
+  }
+}
+
+export async function getPermissionService(): Promise<permission[]> {
+  try {
+    const response = await api.get(`/permissions`);
+    return response.data.data;
+  } catch (error: any) {
+    return Promise.reject({
+      message: error.response?.data?.message || 'Something went wrong',
+      status: error.response?.status || 500,
+    });
+  }
+}
+
+export async function inviteMemberToProjectService(body: { url: string; payload: AddUserPermissionforProject }): Promise<any> {
+  try {
+    const response = await api.post(`/projects/${body.url}/members`, body.payload);
+    return response.data;
+  } catch (error: any) {
+    return Promise.reject({
+      message: error.response?.data?.message || 'Something went wrong',
+      status: error.response?.status || 500,
+    });
+  }
+}
+
+export async function getAllNonMemberToProjectService( url: String): Promise<any> {
+  try {
+    const response = await api.get(`/projects/${url}/non-members`);
+    return response.data.data;
+  } catch (error: any) {
+    return Promise.reject({
+      message: error.response?.data?.message || 'Something went wrong',
+      status: error.response?.status || 500,
+    });
+  }
+}
+
+export async function getAllMemberProjectService( url: String): Promise<any> {
+  try {
+    const response = await api.get(`/projects/${url}/members`);
     return response.data.data;
   } catch (error: any) {
     return Promise.reject({
