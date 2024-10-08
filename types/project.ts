@@ -27,12 +27,13 @@ export interface Cards {
   _id: string;
   title: string;
   description: string;
-  assignee: User;
+  assignee?: User;
   issueType: string,
   image_urls: string[];
   listId: string;
   position: string;
   priority: string;
+  reporter?: User;
   createdAt: string;
   updatedAt: string;
 }
@@ -46,6 +47,17 @@ export interface List {
   createdAt: string;
   updatedAt: string;
   cards: Cards[];
+}
+export interface PostList {
+  projectId: string;
+  name: string;
+  position: number;
+}
+export interface updateList {
+  id: string;
+  projectId: string;
+  name: string;
+  position: number;
 }
 
 export interface ProjectDetails {

@@ -1,5 +1,5 @@
 // lib/store/features/authSlice.ts
-import { CreatetaskService, moveTaskService } from '@/lib/services/task/taskService';
+import { CreatetaskService, moveTaskService, updateTaskService } from '@/lib/services/task/taskService';
 import { taskPayload } from '@/types/task';
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 
@@ -21,6 +21,14 @@ export const moveTask = createAsyncThunk('moveTask', async (param: { listId: str
     return rejectWithValue(error);
   }
 });
+export const updateTask = createAsyncThunk('updateTask', async (body: { taskId: string, data: object }, { rejectWithValue }) => {
+  try {
+    const response = await updateTaskService(body);
+    return response;
+  } catch (error) {
+    return rejectWithValue(error);
+  }
+});
 
 interface TaskState {
   error: string | null;
@@ -34,7 +42,7 @@ const initialState: TaskState = {
 
 
 const taskSlice = createSlice({
-  name: 'project',
+  name: 'tasks',
   initialState,
   reducers: {
     setRefresh(state, action) {

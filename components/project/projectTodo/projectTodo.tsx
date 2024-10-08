@@ -1,8 +1,10 @@
 'use client';
 import Modal from '@/components/Modal/Modal';
 import TaskDetail from '@/components/task/taskDetail';
+import { getAllMemberProject } from '@/lib/store/features/projectSlice';
 import { moveTask } from '@/lib/store/features/taskSlice';
 import { AppDispatch } from '@/lib/store/store';
+import { members } from '@/types/auth';
 import { Cards, List, ProjectDetails } from '@/types/project';
 import { taskPayload } from '@/types/task';
 import { Dot, Ellipsis, Plus } from 'lucide-react'
@@ -15,6 +17,19 @@ export default function ProjectTodo({ data }: { data: ProjectDetails | undefined
   const dispatch = useDispatch<AppDispatch>();
   const [draggingCard, setDraggingCard] = useState<{ cardId: string; sourceListId: string } | null>(null);
   const [isModalOpen, setModalOpen] = useState<boolean>(false);
+  const [allMemberProject, setAllMemberProject] = useState<members[]>();
+
+  useEffect(() => {
+    (async () => {
+      if (data?._id) {
+        const resAllMemberProject = await dispatch(getAllMemberProject(data?._id));
+        if (getAllMemberProject.fulfilled.match(resAllMemberProject)) {
+          setAllMemberProject(resAllMemberProject.payload);
+        }
+      }
+    })();
+  }, [data])
+  
   const openModal = (task: Cards) => {
     setTask(task);
     setModalOpen(true)
@@ -81,7 +96,7 @@ export default function ProjectTodo({ data }: { data: ProjectDetails | undefined
 
   return (
     <section className="overflow-x-auto section1 ">
-      <div className="grid grid-flow-col gap-4 my-5 auto-cols-[minmax(20%,1fr)]">
+      <div className="grid grid-flow-col gap-4 my-5 auto-cols-[minmax(25%,1fr)]">
         {/* <!-- To Do Column --> */}
         {lists.map(list => (
           <div className='rounded-xl bg-gray-100 dark:bg-[#131822] p-2' key={list._id}
@@ -126,11 +141,11 @@ export default function ProjectTodo({ data }: { data: ProjectDetails | undefined
                         'text-gray-500 bg-gray-200'}`}>{card.priority}</span>
                     <Ellipsis className="w-6 h-6 text-gray-700" />
                   </div>
-                  <h3 className="text-lg font-semibold pt-1">{card.title}</h3>
-                  <p className="text-gray-500 text-sm">{card.description}</p>
+                  <h3 className="text-base font-semibold pt-1">{card.title}</h3>
+                  <p className="text-gray-500 text-xs">{card.description}</p>
                   <div className="flex items-center  justify-between space-x-2 mt-4 text-sm text-gray-500">
                     <div className="flex -space-x-2">
-                      <img src={card.assignee.avatar_url} alt="Avatar 1" className="h-7 w-7 rounded-full border-2 border-gray-100" />
+                      <img src={card.assignee?.avatar_url} alt="Avatar 1" className="h-7 w-7 rounded-full border-2 border-gray-100" />
                     </div>
                     <div>
                       <span className='mr-2'>12 comments</span>
@@ -146,10 +161,10 @@ export default function ProjectTodo({ data }: { data: ProjectDetails | undefined
             </div>
           </div>
         ))}
-    
-      <Modal isOpen={isModalOpen} closeModal={closeModal} >
-        <TaskDetail closeModal={closeModal} task={task} />
-      </Modal>
+
+        <Modal isOpen={isModalOpen} closeModal={closeModal} >
+          <TaskDetail closeModal={closeModal} task={task} allMemberProject={allMemberProject} />
+        </Modal>
       </div>
     </section>
   )

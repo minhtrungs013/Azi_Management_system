@@ -5,15 +5,22 @@ import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation'
 import Modal from '../Modal/Modal';
 import CreateProjectForm from '../project/createOrUpdateProjectForm';
+import { ProjectList } from '@/types/project';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '@/lib/store/store';
+import { getProjectById } from '@/lib/store/features/projectSlice';
 // import { useSelector, useDispatch } from 'react-redux';
 // import { RootState, AppDispatch } from '../lib/store/store';
 
 export function Navbar() {
-    const [openItemId, setOpenItemId] = useState<number | null>(null);
+    const [openItemId, setOpenItemId] = useState<string | null>(null);
     const optionsRef = useRef<HTMLDivElement | null>(null);
     const pathname = usePathname()
+    const [projects, setProjects] = useState<ProjectList>([]);
+    const dispatch = useDispatch<AppDispatch>();
+    const refresh = useSelector((state: RootState) => state.project.refresh);
     const [isModalOpen, setModalOpen] = useState<boolean>(false);
-    const toggleOptions = (id: number) => {
+    const toggleOptions = (id: string) => {
         setOpenItemId(openItemId === id ? null : id);
     };
 
@@ -32,11 +39,11 @@ export function Navbar() {
     const openModal = () => setModalOpen(true);
     const closeModal = () => setModalOpen(false);
 
-    const projects = [
-        { id: 1, name: 'Mobile App', color: 'bg-green-500', href: '/projects/1' },
-        { id: 2, name: 'Website Redesign', color: 'bg-yellow-500', href: '/projects/2' },
-        { id: 3, name: 'Design System', color: 'bg-purple-500', href: '/projects/3' }
-    ];
+    // const projects = [
+    //     { id: 1, name: 'Mobile App', color: 'bg-green-500', href: '/projects/1' },
+    //     { id: 2, name: 'Website Redesign', color: 'bg-yellow-500', href: '/projects/2' },
+    //     { id: 3, name: 'Design System', color: 'bg-purple-500', href: '/projects/3' }
+    // ];
     const navbars = [
         { id: 1, name: 'Home', icon: <LayoutDashboard className="w-5 h-5" />, href: '/home' },
         { id: 2, name: 'Messages', icon: <MessageSquare className="w-5 h-5" />, href: '/messages' },
@@ -44,6 +51,15 @@ export function Navbar() {
         { id: 4, name: 'Members', icon: <Users className="w-5 h-5" />, href: '/members' },
         { id: 5, name: 'Settings', icon: <Settings className="w-5 h-5" />, href: '/settings' }
     ];
+
+    useEffect(() => {
+        (async () => {
+            const res = await dispatch(getProjectById());
+            if (getProjectById.fulfilled.match(res)) {
+                setProjects(res.payload);
+            }
+        })();
+    }, [refresh])
     return (
         <div className="bg-white dark:bg-[#020817] shadow-lg dark:shadow-sm dark:shadow-slate-600 h-screen">
             <div className="flex items-center h-16 p-4 bg-white dark:bg-[#020817] shadow-sm dark:shadow-slate-600">
@@ -82,22 +98,22 @@ export function Navbar() {
                     </div>
                     <ul className="space-y-2  p-4">
                         {projects.map(project => (
-                            <li key={project.id} className={`flex w-full group/item justify-between items-center rounded-md ${pathname === project.href
+                            <li key={project._id} className={`flex w-full group/item justify-between items-center rounded-md ${pathname.replace("/projects/", "") === project._id
                                 ? 'bg-purple-100 text-purple-600'
                                 : 'bg-gray-100 hover:bg-gray-200'
                                 }`}>
-                                <Link href={project.href} className="flex items-center space-x-2 p-2 w-full">
-                                    <span className={`w-2 h-2 ${project.color} rounded-full`}></span>
-                                    <span className={`${pathname === project.href
+                                <Link href={`/projects/${project._id}`} className="flex items-center space-x-2 p-2 w-full">
+                                    <span className={`w-2 h-2 bg-green-500 rounded-full`}></span>
+                                    <span className={`${pathname.replace("/projects/", "") === project._id
                                         ? 'font-medium'
                                         : ''}
                                     `}>{project.name}</span>
                                 </Link>
                                 <div className='p-2 relative'>
-                                    <div onClick={() => toggleOptions(project.id)} className='cursor-pointer'>
+                                    <div onClick={() => toggleOptions(project._id)} className='cursor-pointer'>
                                         <Ellipsis className='group/edit invisible group-hover/item:visible cursor-pointer' />
                                     </div>
-                                    {openItemId === project.id && (
+                                    {openItemId === project._id && (
                                         <div ref={optionsRef} className="absolute top-full right-[-100px] bg-white shadow-md p-2 rounded-sm">
                                             <button className="block w-full text-left p-2 hover:bg-gray-100" onClick={() => alert('Edit clicked')}>
                                                 Edit

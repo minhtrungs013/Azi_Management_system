@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import CreateTask from '../../task/createTask';
 import InviteProject from './inviteProject';
+import CreateColumn from '../projectTodo/createColumn';
 
 export default function ProjectHeader({ data }: { data: ProjectDetails | undefined }) {
     const dispatch = useDispatch<AppDispatch>();
@@ -64,7 +65,7 @@ export default function ProjectHeader({ data }: { data: ProjectDetails | undefin
                             {/* <!-- Additional avatar circle for +2 --> */}
                             {allMemberProject && allMemberProject.length > 3 &&
                                 <div className="h-10 w-10 rounded-full bg-pink-200 text-pink-600 flex items-center justify-center text-sm border-2 border-white">
-                                  +{allMemberProject.length - 3}
+                                    +{allMemberProject.length - 3}
                                 </div>}
                         </div>
                     </div>
@@ -84,9 +85,11 @@ export default function ProjectHeader({ data }: { data: ProjectDetails | undefin
                 {showModalByStatus === 'invite' ?
                     <InviteProject closeModal={closeModal} projectId={data?._id} permissions={permissions} allUser={allUser} /> :
                     showModalByStatus === 'createTask' ?
-                        <CreateTask closeModal={closeModal} listId={list?._id} allMemberProject={allMemberProject}/> :
-                        // showModalByStatus === 'createColumn' ?
-                        <CreateTask closeModal={closeModal} listId={list?._id} allMemberProject={allMemberProject}/>
+                        <CreateTask closeModal={closeModal} listId={list?._id} allMemberProject={allMemberProject} /> :
+                        showModalByStatus === 'createColumn' ?
+                            <CreateColumn closeModal={closeModal} data={data}  /> :
+
+                            <CreateTask closeModal={closeModal} listId={list?._id} allMemberProject={allMemberProject} />
                 }
             </Modal>
         </div>

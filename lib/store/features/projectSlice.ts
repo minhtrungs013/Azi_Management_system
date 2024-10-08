@@ -1,6 +1,6 @@
 // lib/store/features/authSlice.ts
-import { CreateprojectService, deleteProjectIdByUserIdService, getAllMemberProjectService, getAllNonMemberToProjectService, getPermissionService, getProjectByUserIdService, getProjectIdService, inviteMemberToProjectService, updateProjectIdByUserIdService } from '@/lib/services/project/projectService';
-import { AddUserPermissionforProject, projectPayload } from '@/types/project';
+import { CreateprojectService, deleteProjectIdByUserIdService, getAllMemberProjectService, getAllNonMemberToProjectService, getPermissionService, getProjectByUserIdService, getProjectIdService, inviteMemberToProjectService, postListToProjectService, updateListToProjectService, updateProjectIdByUserIdService } from '@/lib/services/project/projectService';
+import { AddUserPermissionforProject, PostList, projectPayload, updateList } from '@/types/project';
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 
 export const getProjectById = createAsyncThunk('getProjectByUserIdService', async (_, { rejectWithValue }) => {
@@ -79,6 +79,23 @@ export const getAllMemberProject = createAsyncThunk('getAllMemberProject', async
     return response;
   } catch (error) {
     return rejectWithValue(' failed');
+  }
+});
+
+export const postListToProject = createAsyncThunk('postListToProject', async (payload: PostList, { rejectWithValue }) => {
+  try {
+    const response = await postListToProjectService(payload);
+    return response;
+  } catch (error) {
+    return rejectWithValue(error);
+  }
+});
+export const updateListToProject = createAsyncThunk('updateListToProject', async (payload: updateList, { rejectWithValue }) => {
+  try {
+    const response = await updateListToProjectService(payload);
+    return response;
+  } catch (error) {
+    return rejectWithValue(error);
   }
 });
 
