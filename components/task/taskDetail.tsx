@@ -1,13 +1,13 @@
 "use client"
 import { setRefresh, updateTask } from "@/lib/store/features/taskSlice";
-import { AppDispatch } from "@/lib/store/store";
-import { handleUploadCloudinary } from "@/lib/utils";
+import { AppDispatch, RootState } from "@/lib/store/store";
+import { checkRuleAccess, handleUploadCloudinary } from "@/lib/utils";
 import { members } from "@/types/auth";
 import { Cards, issueTypes } from "@/types/project";
 import { CaseSensitive, Edit, FileCheck2, Power, Save, Send } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
-import { useDispatch } from "react-redux";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 
 const TaskDetail = ({ closeModal, task, allMemberProject }: { closeModal: () => void, task: Cards | undefined, allMemberProject: members[] | undefined }) => {
@@ -17,6 +17,7 @@ const TaskDetail = ({ closeModal, task, allMemberProject }: { closeModal: () => 
     const [filteredUsers, setFilteredUsers] = useState<members[]>();
     const [isShowSearchUser, sethowSearchUser] = useState<boolean>(false);
     const [value, setValue] = useState<string>(task?.assignee?.name || '');
+    const authState = useSelector((state: RootState) => state.auth);
     const [editTask, setEditTask] = useState({
         listId: task?.listId,
         title: task?.title,
@@ -49,18 +50,35 @@ const TaskDetail = ({ closeModal, task, allMemberProject }: { closeModal: () => 
                 setEditTask((prevEditTask) => {
                     return {
                         ...prevEditTask,
-                        image_urls: prevEditTask?.image_urls 
-                        ? [...prevEditTask.image_urls, ...(images || [])] // Add to the existing image_urls
-                        : images || [],
+                        image_urls: prevEditTask?.image_urls
+                            ? [...prevEditTask.image_urls, ...(images || [])] // Add to the existing image_urls
+                            : images || [],
                     };
                 });
                 if (task) {
                     task.image_urls = editTask.image_urls || [];
-                  }
+                }
             }
         }
 
     };
+
+    const handleOpenEditTask = async () => {
+        if (allMemberProject) {
+            const user = allMemberProject.find((user: members) => user.user._id === authState.userId)
+            if (user && task) {
+                const hasPermission = await checkRuleAccess(['task_admin', 'project_admin', 'content_editor'], user)
+                if (!hasPermission && authState.userId !== task.reporter?._id && authState.userId !== task.assignee?._id) {
+                    toast.warning('You have no permission to edit this task!', {
+                        position: "bottom-left",
+                        autoClose: 5000,
+                    });
+                    return;
+                }
+            }
+        }
+        setIsEditTask(!isEditTask);
+    }
 
     const handleSeachUser = (e: React.ChangeEvent<HTMLInputElement>) => {
         const lowerCaseValue = e.target.value.toLowerCase();
@@ -125,7 +143,7 @@ const TaskDetail = ({ closeModal, task, allMemberProject }: { closeModal: () => 
                         <h1 className="text-2xl font-semibold text-gray-700  flex items-center ">{task?.title}</h1>
                         <div className="flex items-center mb-8 mt-3">
                             {isEditTask ?
-                                <button onClick={() => setIsEditTask(!isEditTask)} className="px-4 py-3 bg-gray-50  shadow-md border-gray-50  rounded-md flex items-center text-sm font-medium hover:text-red-500"><Edit className='h-5 w-5 mr-2 ' /> Edit</button>
+                                <button onClick={() => handleOpenEditTask()} className="px-4 py-3 bg-gray-50  shadow-md border-gray-50  rounded-md flex items-center text-sm font-medium hover:text-red-500"><Edit className='h-5 w-5 mr-2 ' /> Edit</button>
                                 :
                                 <button onClick={() => handleEditTask()} className="px-4 py-3 bg-gray-50  shadow-md border-gray-50  rounded-md flex items-center text-sm font-medium hover:text-blue-500"><Save className='h-5 w-5 mr-2 ' /> Save</button>
                             }

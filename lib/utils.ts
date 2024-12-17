@@ -1,3 +1,4 @@
+import { members } from "@/types/auth";
 import axios from "axios";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -22,4 +23,14 @@ export const handleUploadCloudinary = async (files: FileList) => {
     }
     return newImages
   }
+};
+
+export const checkRuleAccess = async (rule: string[], RuleAccess: members) => {
+   // Kiểm tra rule truyền vào có tồn tại trong permissions của RuleAccess
+   const hasAccess = rule.every((ruleName) =>
+    RuleAccess.permissions.some((perm) => perm.name === ruleName)
+  );
+console.log(RuleAccess);
+
+  return hasAccess;
 };

@@ -13,6 +13,7 @@ const CreateTask = ({ closeModal, listId, allMemberProject }: { closeModal: () =
     const [filteredUsers, setFilteredUsers] = useState<members[]>();
     const [isShowSearchUser, sethowSearchUser] = useState<boolean>(false);
     const [value, setValue] = useState<string>('');
+console.log(allMemberProject);
 
     const [createTask, setCreateTask] = useState({
         title: "",

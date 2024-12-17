@@ -1,15 +1,17 @@
 'use client';
 import Modal from '@/components/Modal/Modal';
 import { getAllMemberProject, getAllNonMemberToProject, getPermissions } from '@/lib/store/features/projectSlice';
-import { AppDispatch } from '@/lib/store/store';
+import { AppDispatch, RootState } from '@/lib/store/store';
 import { members, User } from '@/types/auth';
 import { permission, ProjectDetails } from '@/types/project';
 import { ArrowDownWideNarrow, CalendarDays, UserPlus } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import CreateTask from '../../task/createTask';
 import InviteProject from './inviteProject';
 import CreateColumn from '../projectTodo/createColumn';
+import { toast } from 'react-toastify';
+import { checkRuleAccess } from '@/lib/utils';
 
 export default function ProjectHeader({ data }: { data: ProjectDetails | undefined }) {
     const dispatch = useDispatch<AppDispatch>();
@@ -19,10 +21,35 @@ export default function ProjectHeader({ data }: { data: ProjectDetails | undefin
     const [permissions, setPermissions] = useState<permission[]>();
     const [allUser, setAllUser] = useState<User[]>();
     const [allMemberProject, setAllMemberProject] = useState<members[]>();
-    const openModal = (status: string) => {
+    const authState = useSelector((state: RootState) => state.auth);
+
+    const openModal = async (status: string) => {
+        if (allMemberProject) {
+            const user = allMemberProject.find((user: members) => user.user._id === authState.userId)
+            if (user) {
+                const hasPermissionCreateTask = await checkRuleAccess(['task_admin', 'project_admin'], user)
+                if (!hasPermissionCreateTask && (status === "createTask" || status === "createColumn")) {
+                    toast.warning('You do not have permission to create tasks or create columns for the project.!', {
+                        position: "bottom-left",
+                        autoClose: 5000,
+                    });
+                    return;
+                }
+                const hasPermissionCreateColum = await checkRuleAccess(['member_manager', 'project_admin'], user)
+                if (!hasPermissionCreateColum && status === "invite") {
+                    toast.warning('You do not have permission to invite people to the project.!', {
+                        position: "bottom-left",
+                        autoClose: 5000,
+                    });
+                    return;
+                }
+
+            }
+        }
         setShowModalByStatus(status)
         setModalOpen(true)
     };
+    
     const closeModal = () => setModalOpen(false);
 
     useEffect(() => {
@@ -87,7 +114,7 @@ export default function ProjectHeader({ data }: { data: ProjectDetails | undefin
                     showModalByStatus === 'createTask' ?
                         <CreateTask closeModal={closeModal} listId={list?._id} allMemberProject={allMemberProject} /> :
                         showModalByStatus === 'createColumn' ?
-                            <CreateColumn closeModal={closeModal} data={data}  /> :
+                            <CreateColumn closeModal={closeModal} data={data} /> :
 
                             <CreateTask closeModal={closeModal} listId={list?._id} allMemberProject={allMemberProject} />
                 }

@@ -1,6 +1,7 @@
 "use client"
 import { login } from '@/lib/store/features/counterSlice';
 import { setRefresh } from '@/lib/store/features/projectSlice';
+import { setRefresh as setRefreshTask } from '@/lib/store/features/taskSlice';
 import store, { AppDispatch } from '@/lib/store/store';
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
@@ -33,7 +34,8 @@ const SignInForm = ({ toggleForm, closeModal }: SignInFormProps) => {
         });
         setError('');
         // setTimeout(() => {
-          dispatch(setRefresh(true));
+        dispatch(setRefresh(true));
+        dispatch(setRefreshTask(true));
         // }, 500);
         closeModal();
       } else {

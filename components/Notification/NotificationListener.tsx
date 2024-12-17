@@ -43,7 +43,7 @@ const NotificationListener: React.FC<NotificationListenerProps> = ({ closeNotifi
                     ))
                 ) : (
                     <li className="p-4 text-gray-500 text-center text-sm">
-                        Không có thông báo mới
+                        No notifications!
                     </li>
                 )}
                 <li className="p-4 text-gray-500 text-center text-sm">

@@ -6,7 +6,7 @@ import { getAllMemberProject } from '@/lib/store/features/projectSlice';
 import { moveTask, setRefresh } from '@/lib/store/features/taskSlice';
 import { AppDispatch, RootState } from '@/lib/store/store';
 import { members } from '@/types/auth';
-import { Cards, List, ProjectDetails } from '@/types/project';
+import { Cards, List, permission, ProjectDetails } from '@/types/project';
 import { Dot, Ellipsis, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -14,6 +14,7 @@ import { useSocket } from "../../../contexts/SocketContext";
 import { io } from 'socket.io-client';
 import { toast } from 'react-toastify';
 import { updateNotification } from '@/lib/store/features/notificationSlice';
+import { checkRuleAccess } from '@/lib/utils';
 // import { socket } from '@/lib/socket';
 
 interface Notification {
@@ -29,10 +30,12 @@ export default function ProjectTodo({ data }: { data: ProjectDetails | undefined
   const [draggingCard, setDraggingCard] = useState<{ cardId: string; sourceListId: string } | null>(null);
   const [isModalOpen, setModalOpen] = useState<boolean>(false);
   const [allMemberProject, setAllMemberProject] = useState<members[]>();
+  const [ruleAccess, setRuleAccess] = useState<members>();
   const { socket, sendMessage } = useSocket();
   const [notification, setNotification] = useState<Notification[]>([]);
   const authState = useSelector((state: RootState) => state.auth);
-  
+console.log(allMemberProject);
+
   useEffect(() => {
 
     if (socket) {
@@ -53,6 +56,8 @@ export default function ProjectTodo({ data }: { data: ProjectDetails | undefined
         const resAllMemberProject = await dispatch(getAllMemberProject(data?._id));
         if (getAllMemberProject.fulfilled.match(resAllMemberProject)) {
           setAllMemberProject(resAllMemberProject.payload);
+          const user: members = resAllMemberProject.payload?.find((user: members) => user.user._id === authState.userId)
+          setRuleAccess(user)
         }
       }
     })();
@@ -68,7 +73,20 @@ export default function ProjectTodo({ data }: { data: ProjectDetails | undefined
   }, [data])
 
 
-  const handleDragStart = (e: React.DragEvent, cardId: string, sourceListId: string) => {
+  const handleDragStart = async (e: React.DragEvent, cardId: string, sourceListId: string, card: Cards) => {
+    if (ruleAccess) {
+      const hasPermission = await checkRuleAccess(['task_admin', 'project_admin'], ruleAccess)
+      console.log(hasPermission);
+      
+      if (!hasPermission && authState.userId !== card.reporter?._id && authState.userId !== card.assignee?._id) {
+        toast.warning('You have no permission to drag and drop this task.', {
+          position: "bottom-left",
+          autoClose: 5000,
+        });
+        return;
+      }
+    }
+
     e.dataTransfer.effectAllowed = 'move';
 
     setDraggingCard({ cardId, sourceListId });
@@ -165,7 +183,7 @@ export default function ProjectTodo({ data }: { data: ProjectDetails | undefined
                   className={`relative overflow-hidden bg-white dark:bg-[#020817] p-4 rounded-md shadow cursor-pointer mr-1 card ${draggingCard && draggingCard.cardId === card._id ? 'dragging' : ''}`} key={card._id}
                   draggable
                   onDragEnd={handleDragEnd}
-                  onDragStart={(e) => handleDragStart(e, card._id, list._id)}>
+                  onDragStart={(e) => handleDragStart(e, card._id, list._id, card)}>
                   <div className="flex justify-between items-center">
                     <span className={`text-sm  font-medium rounded-sm py-1 px-2 ${card.priority === 'high' ? 'text-red-500 bg-red-200' :
                       card.priority === 'medium' ? 'text-orange-500 bg-orange-200' :
