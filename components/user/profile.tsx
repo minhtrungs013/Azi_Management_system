@@ -32,7 +32,6 @@ const Profile = ({ closeModal }: { closeModal: () => void }) => {
     };
     const handleImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target?.files
-        console.log(files);
         if (files) {
             const images = await handleUploadCloudinary(files)
             if (images && images?.length > 0) {
@@ -77,7 +76,7 @@ const Profile = ({ closeModal }: { closeModal: () => void }) => {
                         <div className='flex'>
                             <h1 className="text-2xl font-semibold text-gray-700 text-center mb-8">Frofile Setting</h1>
                         </div>
-                        <form onSubmit={handleSubmit}>
+                        <div >
                             <div className='flex items-center'>
                                 <div className='relative w-52'>
                                     <div className='flex items-center justify-center'>
@@ -158,11 +157,11 @@ const Profile = ({ closeModal }: { closeModal: () => void }) => {
                                 <button onClick={closeModal} type="button" className="mr-2 px-4 py-2 border border-red-500 text-red-500 font-semibold rounded-md shadow-md hover:bg-red-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-75">
                                     Cancel
                                 </button>
-                                <button type='submit' className=" px-4 py-2 bg-purple-500 text-white font-semibold rounded-md shadow-md hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-75">
+                                <button type='submit' onClick={() => handleSubmit()}  className=" px-4 py-2 bg-purple-500 text-white font-semibold rounded-md shadow-md hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-75">
                                     Update
                                 </button>
                             </div>
-                        </form>
+                        </div>
 
                     </div>
                 </div>

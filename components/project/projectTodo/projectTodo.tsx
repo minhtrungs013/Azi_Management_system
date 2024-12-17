@@ -1,16 +1,27 @@
 'use client';
 import Modal from '@/components/Modal/Modal';
+import NotificationListener from '@/components/Notification/NotificationListener';
 import TaskDetail from '@/components/task/taskDetail';
 import { getAllMemberProject } from '@/lib/store/features/projectSlice';
-import { moveTask } from '@/lib/store/features/taskSlice';
-import { AppDispatch } from '@/lib/store/store';
+import { moveTask, setRefresh } from '@/lib/store/features/taskSlice';
+import { AppDispatch, RootState } from '@/lib/store/store';
 import { members } from '@/types/auth';
 import { Cards, List, ProjectDetails } from '@/types/project';
-import { taskPayload } from '@/types/task';
-import { Dot, Ellipsis, Plus } from 'lucide-react'
+import { Dot, Ellipsis, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { useSocket } from "../../../contexts/SocketContext";
+import { io } from 'socket.io-client';
+import { toast } from 'react-toastify';
+import { updateNotification } from '@/lib/store/features/notificationSlice';
+// import { socket } from '@/lib/socket';
 
+interface Notification {
+  // Define the shape of the notification object here
+  // Example:
+  id: string;
+  message: string;
+}
 export default function ProjectTodo({ data }: { data: ProjectDetails | undefined }) {
   const [lists, setLists] = useState<List[]>(data?.lists || []);
   const [task, setTask] = useState<Cards>();
@@ -18,6 +29,23 @@ export default function ProjectTodo({ data }: { data: ProjectDetails | undefined
   const [draggingCard, setDraggingCard] = useState<{ cardId: string; sourceListId: string } | null>(null);
   const [isModalOpen, setModalOpen] = useState<boolean>(false);
   const [allMemberProject, setAllMemberProject] = useState<members[]>();
+  const { socket, sendMessage } = useSocket();
+  const [notification, setNotification] = useState<Notification[]>([]);
+  const authState = useSelector((state: RootState) => state.auth);
+  
+  useEffect(() => {
+
+    if (socket) {
+      socket.on("message", (message: any) => {
+        toast.info(message, {
+          position: "bottom-left",
+          autoClose: 5000,
+        });
+        dispatch(setRefresh(true));
+        dispatch(updateNotification(message));
+      });
+    }
+  }, [socket]);
 
   useEffect(() => {
     (async () => {
@@ -29,7 +57,7 @@ export default function ProjectTodo({ data }: { data: ProjectDetails | undefined
       }
     })();
   }, [data])
-  
+
   const openModal = (task: Cards) => {
     setTask(task);
     setModalOpen(true)
@@ -76,6 +104,9 @@ export default function ProjectTodo({ data }: { data: ProjectDetails | undefined
           return updatedLists.map((list) => {
             if (list._id === targetListId) {
               dispatch(moveTask({ taskId: cardId, listId: targetListId }))
+              setTimeout(() => {
+                sendMessage('message', authState.name + ' has been moved ' + cardToMove?.title + ' to ' + list.name);
+              }, 1000);
               return {
                 ...list,
                 cards: [...list.cards, cardToMove!],

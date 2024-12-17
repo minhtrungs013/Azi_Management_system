@@ -1,12 +1,13 @@
 
-import type { Metadata } from "next";
-import "./globals.css";
-import { Inter as FontSans } from "next/font/google";
-import { cn } from "@/lib/utils";
-import ClientProvider from "./ClientProvider";
 import { Header } from "@/components/header/Header";
 import { Navbar } from "@/components/navbar/navbar";
 import { ThemeProvider } from "@/components/theme-provider";
+import { SocketProvider } from "@/contexts/SocketContext";
+import { cn } from "@/lib/utils";
+import type { Metadata } from "next";
+import { Inter as FontSans } from "next/font/google";
+import ClientProvider from "./ClientProvider";
+import "./globals.css";
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -33,14 +34,16 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <ClientProvider>
-            <div className="flex min-h-screen flex-col">
-              <div className="grid grid-cols-12 gap-4">
-                <div className=" col-start-1 col-span-2"> <Navbar /></div>
-                <div className=" col-start-3 col-span-12 "><Header />
-                  {children}
+            <SocketProvider>
+              <div className="flex min-h-screen flex-col">
+                <div className="grid grid-cols-12 gap-4">
+                  <div className=" col-start-1 col-span-2"> <Navbar /></div>
+                  <div className=" col-start-3 col-span-12 "><Header />
+                    {children}
+                  </div>
                 </div>
               </div>
-            </div>
+            </SocketProvider>
           </ClientProvider>
         </ThemeProvider>
       </body>

@@ -23,7 +23,6 @@ const SignUpForm = ({ toggleForm }: { toggleForm: () => void }) => {
       [name]: value,
     }));
   };
-  console.log(account);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

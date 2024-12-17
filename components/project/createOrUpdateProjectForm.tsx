@@ -57,8 +57,6 @@ const CreateOrUpdateProjectForm = ({ closeModal, projectId }: { closeModal: () =
                 }
 
             } else {
-                console.log(project);
-
                 const Project: ProjectUpdate = {
                     id: projectId._id,
                     name: project.name,

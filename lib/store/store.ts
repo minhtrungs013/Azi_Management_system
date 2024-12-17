@@ -5,6 +5,7 @@ import storage from 'redux-persist/lib/storage';
 import counterReducer from './features/counterSlice';
 import projectSlice from './features/projectSlice';
 import taskSlice from './features/taskSlice';
+import notificationSlice from './features/notificationSlice';
 // export const store = configureStore({
 //   reducer: {
 //     auth: counterReducer,
@@ -25,6 +26,7 @@ const store = configureStore({
     auth: persistedReducer, // Replace your authReducer with the persisted reducer
     project: projectSlice, // Replace your authReducer with the persisted reducer
     task: taskSlice, // Replace your authReducer with the persisted reducer
+    notification: notificationSlice, // Replace your authReducer with the persisted reducer
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

@@ -25,8 +25,8 @@ export default function ProjectId({ params }: { params: { projjectId: string } }
         <div >
             <div className="flex ">
                 <main className="flex-1 p-6 ">
-                    <ProjectHeader data={data}/>
-                    <ProjectTodo data={data}/>
+                    <ProjectHeader data={data} />
+                    <ProjectTodo data={data} />
                 </main>
             </div>
         </div>

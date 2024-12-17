@@ -1,20 +1,23 @@
 'use client';
+import { getProjectById } from '@/lib/store/features/projectSlice';
+import { AppDispatch, RootState } from '@/lib/store/store';
+import { ProjectList } from '@/types/project';
 import { Ellipsis, FolderOpenDot, LayoutDashboard, ListChecks, MessageSquare, Plus, Settings, Users } from 'lucide-react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import { usePathname } from 'next/navigation'
-import Modal from '../Modal/Modal';
-import CreateProjectForm from '../project/createOrUpdateProjectForm';
-import { ProjectList } from '@/types/project';
 import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '@/lib/store/store';
-import { getProjectById } from '@/lib/store/features/projectSlice';
+import Modal from '../Modal/Modal';
+import NotificationListener from '../Notification/NotificationListener';
+import CreateProjectForm from '../project/createOrUpdateProjectForm';
+
 // import { useSelector, useDispatch } from 'react-redux';
 // import { RootState, AppDispatch } from '../lib/store/store';
 
 export function Navbar() {
     const [openItemId, setOpenItemId] = useState<string | null>(null);
     const optionsRef = useRef<HTMLDivElement | null>(null);
+    const authState = useSelector((state: RootState) => state.auth);
     const pathname = usePathname()
     const [projects, setProjects] = useState<ProjectList>([]);
     const dispatch = useDispatch<AppDispatch>();
@@ -90,7 +93,7 @@ export function Navbar() {
                 <div>
                     <div className='flex justify-between items-center'>
                         <Link href='/projects' className={`text-sm w-full text-gray-500 font-semibold flex items-center ${pathname === '/projects' && ' text-purple-600'}`}>
-                        <FolderOpenDot className="w-5 h-5 mr-2"/>  MY PROJECTS
+                            <FolderOpenDot className="w-5 h-5 mr-2" />  MY PROJECTS
                         </Link>
                         <button onClick={openModal} className='rounded-md p-2 border cursor-pointer shadow-md'>
                             <Plus className="w-4 h-4 " />
@@ -146,7 +149,7 @@ export function Navbar() {
                 </div>
             </div>
             <Modal isOpen={isModalOpen} closeModal={closeModal}>
-                <CreateProjectForm closeModal={closeModal} projectId={undefined}/>
+                <CreateProjectForm closeModal={closeModal} projectId={undefined} />
             </Modal>
         </div>
     );

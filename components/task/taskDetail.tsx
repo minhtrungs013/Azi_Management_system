@@ -43,7 +43,6 @@ const TaskDetail = ({ closeModal, task, allMemberProject }: { closeModal: () => 
 
     const handleImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target?.files
-        console.log(files);
         if (files) {
             const images = await handleUploadCloudinary(files)
             if (images && images?.length > 0) {
@@ -92,8 +91,6 @@ const TaskDetail = ({ closeModal, task, allMemberProject }: { closeModal: () => 
         if (task?._id) {
             const result = await dispatch(updateTask({ taskId: task?._id, data: editTask }))
             if (updateTask.fulfilled.match(result)) {
-                console.log(result);
-                
                 toast.success("Update task successfully!", {
                     position: "bottom-right",
                     autoClose: 5000,
