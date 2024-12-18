@@ -36,7 +36,10 @@
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
     "tailwind-merge": "^2.5.2",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "uuid": "^11.0.3",
+    "webrtc": "^1.14.1",
+    "webrtc-adapter": "^9.0.1"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.4.8",

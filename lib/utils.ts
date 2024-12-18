@@ -26,11 +26,8 @@ export const handleUploadCloudinary = async (files: FileList) => {
 };
 
 export const checkRuleAccess = async (rule: string[], RuleAccess: members) => {
-   // Kiểm tra rule truyền vào có tồn tại trong permissions của RuleAccess
-   const hasAccess = rule.every((ruleName) =>
+   const hasAccess = rule.some((ruleName) =>
     RuleAccess.permissions.some((perm) => perm.name === ruleName)
   );
-console.log(RuleAccess);
-
   return hasAccess;
 };

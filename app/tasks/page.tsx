@@ -1,4 +1,5 @@
 'use client';
+import VideoCall from "@/components/media/VideoCall";
 import { getProjectById, getProjectId } from "@/lib/store/features/projectSlice";
 import { AppDispatch, RootState } from "@/lib/store/store";
 import { ProjectDetails, ProjectList } from "@/types/project";
@@ -38,6 +39,7 @@ export default function Tasks() {
             <div className="">
                 <div className=" mb-5">
                     <h1 className="text-2xl font-semibold">Tasks</h1>
+                    <VideoCall/>
                 </div>
                 <main className=" ">
                     <div className="flex p-6 justify-between">

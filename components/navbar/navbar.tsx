@@ -10,6 +10,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import Modal from '../Modal/Modal';
 import NotificationListener from '../Notification/NotificationListener';
 import CreateProjectForm from '../project/createOrUpdateProjectForm';
+import ChatForm from '../chatGPT/ChatForm';
 
 // import { useSelector, useDispatch } from 'react-redux';
 // import { RootState, AppDispatch } from '../lib/store/store';
@@ -23,6 +24,7 @@ export function Navbar() {
     const dispatch = useDispatch<AppDispatch>();
     const refresh = useSelector((state: RootState) => state.project.refresh);
     const [isModalOpen, setModalOpen] = useState<boolean>(false);
+    const [isChatOpen, setIsChatOpen] = useState(false);
     const toggleOptions = (id: string) => {
         setOpenItemId(openItemId === id ? null : id);
     };
@@ -151,6 +153,15 @@ export function Navbar() {
             <Modal isOpen={isModalOpen} closeModal={closeModal}>
                 <CreateProjectForm closeModal={closeModal} projectId={undefined} />
             </Modal>
+            <div className=''>
+                <div
+                    className="fixed bottom-8 right-4 shadow-lg bg-white text-white rounded-full cursor-pointer z-50"
+                    onClick={() => setIsChatOpen(!isChatOpen)}
+                >
+                    <img src="https://res.cloudinary.com/dax8xvyhi/image/upload/v1734416526/qtosenattdunfhtpihbh.png" alt="" className='h-16 w-16'/>
+                </div>
+                {isChatOpen && <ChatForm />}
+            </div>
         </div>
     );
 }

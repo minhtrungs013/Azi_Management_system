@@ -4,7 +4,7 @@ import { getAllMemberProject, getAllNonMemberToProject, getPermissions } from '@
 import { AppDispatch, RootState } from '@/lib/store/store';
 import { members, User } from '@/types/auth';
 import { permission, ProjectDetails } from '@/types/project';
-import { ArrowDownWideNarrow, CalendarDays, UserPlus } from 'lucide-react';
+import { ArrowDownWideNarrow, CalendarDays, PhoneCall, UserPlus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import CreateTask from '../../task/createTask';
@@ -100,8 +100,8 @@ export default function ProjectHeader({ data }: { data: ProjectDetails | undefin
             </header>
             <div className="flex space-x-2 justify-between">
                 <div className='flex'>
-                    <button className="px-4 py-2 bg-white border rounded-md flex items-center mr-2">Filter <ArrowDownWideNarrow className="w-4 h-4 ml-2" /></button>
-                    <button className="px-4 py-2 bg-white border rounded-md flex items-center">Today <CalendarDays className="w-4 h-4 ml-2" /></button>
+                    <button className="px-4 py-2 bg-white border rounded-md flex items-center mr-2">Member Management <ArrowDownWideNarrow className="w-4 h-4 ml-2" /></button>
+                    <button className="px-4 py-2 bg-white hover:bg-green-500 text-green-600 hover:text-white  border rounded-md flex items-center">Start Group Call <PhoneCall className="w-4 h-4 ml-2" /></button>
                 </div>
                 <div className='flex'>
                     <button onClick={() => openModal('createTask')} className="px-4 py-2 bg-white border rounded-md flex items-center mr-2">Create Task <ArrowDownWideNarrow className="w-4 h-4 ml-2" /></button>

@@ -33,9 +33,12 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         });
         socketInstance.emit("openConnect", { text: "Hello from the client!" });
         socketInstance.on("message", (message) => {
+            console.log('aaa');
             setNotification([...notification, message])
         });
         setSocket(socketInstance);
+
+        
         // Dọn dẹp khi component unmount
         return () => {
             socketInstance?.disconnect();

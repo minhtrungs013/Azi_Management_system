@@ -54,7 +54,7 @@ const InviteProject = ({ closeModal, projectId, permissions, allUser }: { closeM
         }
         const filteredUsers = allUser?.filter((user) =>
             user?.name && user?.name.toLowerCase().includes(lowerCaseValue) ||
-         user?.email && user?.email.toLowerCase().includes(lowerCaseValue)
+            user?.email && user?.email.toLowerCase().includes(lowerCaseValue)
         );
         setFilteredUsers(filteredUsers)
     };
@@ -115,18 +115,22 @@ const InviteProject = ({ closeModal, projectId, permissions, allUser }: { closeM
                             <div className="relative mb-5">
                                 <label className=" text-gray-700 mb-2 flex items-center"> <ShieldCheck className="h-5 w-5 mr-2" />Permission</label>
                                 {permissions?.map((permission) => (
-                                    <div className="flex items-center mb-1 ml-[2px]" key={permission._id}>
-                                        <input
-                                            id={permission._id}
-                                            name={permission.name}
-                                            onChange={handleSelect}
-                                            type="checkbox"
-                                            className="h-4 w-4 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500"
-                                        />
-                                        <label htmlFor={permission._id} className="ml-2 text-sm  text-gray-900 cursor-pointer">
-                                            {permission.label}
-                                        </label>
-                                    </div>
+                                    <>
+                                        {permission.name !== "project_admin" &&
+                                            <div className="flex items-center mb-1 ml-[2px]" key={permission._id}>
+                                                <input
+                                                    id={permission._id}
+                                                    name={permission.name}
+                                                    onChange={handleSelect}
+                                                    type="checkbox"
+                                                    className="h-4 w-4 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500"
+                                                />
+                                                <label htmlFor={permission._id} className="ml-2 text-sm  text-gray-900 cursor-pointer">
+                                                    {permission.label}
+                                                </label>
+                                            </div>
+                                        }
+                                    </>
                                 ))}
                             </div>
                             <p className="text-xs mb-5 text-gray-600 ">This site is protected by reCAPTCHA and the Google Privacy Policy﻿, (opens new window) and Terms of Service﻿, (opens new window) apply.Add</p>

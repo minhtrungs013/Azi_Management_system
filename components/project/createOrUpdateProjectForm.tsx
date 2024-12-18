@@ -62,6 +62,8 @@ const CreateOrUpdateProjectForm = ({ closeModal, projectId }: { closeModal: () =
                     name: project.name,
                     description: project.description,
                 }
+                console.log(project);
+                
                 const result = await dispatch(updateProjectById({ url: `${projectId._id}`, payload: project }));
                 if (updateProjectById.fulfilled.match(result)) {
                     dispatch(setRefresh(true));
