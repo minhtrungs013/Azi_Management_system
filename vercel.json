@@ -5,8 +5,8 @@
             "destination": "/index.html"
         },
         {
-            "source": "/projects/:projectId",
-            "destination": "/projects/[projectId]"
+            "source": "/projects/:ProjjectId",
+            "destination": "/projects/[ProjjectId]"
         }
     ]
 }
