@@ -89,7 +89,7 @@ const SignInForm = ({ toggleForm, closeModal }: SignInFormProps) => {
             </form>
             <div className="text-center mt-6">
               <p className="text-sm text-gray-600">
-                Don't have an account?{' '}
+                Dont have an account?{' '}
                 <span onClick={toggleForm} className="text-purple-500 hover:underline cursor-pointer">
                   Sign up here
                 </span>

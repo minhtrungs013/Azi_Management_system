@@ -202,8 +202,8 @@ const TaskDetail = ({ closeModal, task, allMemberProject }: { closeModal: () => 
                                     {!isEditTask && <input type="file" onChange={handleImage} multiple />}
                                     {editTask?.image_urls.length == 0 ? <p className="ml-2 text-sm text-black  p-2"> No file Attachments...</p> :
                                         <div className="flex items-center pt-4">
-                                            {editTask?.image_urls.map(imageUrl => (
-                                                <img src={imageUrl} alt="Avatar 1" className="bg-white h-24 w-24 rounded-md border-2 shadow-md mr-2 cursor-pointer" />
+                                            {editTask?.image_urls.map((imageUrl, index) => (
+                                                <img key={index} src={imageUrl} alt="Avatar 1" className="bg-white h-24 w-24 rounded-md border-2 shadow-md mr-2 cursor-pointer" />
                                             ))
                                             }
                                         </div>
