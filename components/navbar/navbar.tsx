@@ -145,7 +145,7 @@ export function Navbar() {
                     </div>
                     <h4 className="text-gray-700 font-semibold mt-2">Thoughts Time</h4>
                     <p className="text-sm text-gray-500">
-                        We don't have any notice for you, till then you can share your thoughts with your peers.
+                        We dont have any notice for you, till then you can share your thoughts with your peers.
                     </p>
                     <button className="mt-4 bg-purple-600 text-white px-4 py-2 rounded-md">Write a message</button>
                 </div>
