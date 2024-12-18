@@ -17,7 +17,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const [notification, setNotification] = useState<any>([])
     // Kết nối socket chỉ một lần khi provider được mount
     useEffect(() => {
-        const socketInstance = io("http://192.168.188.71:2727/notifications", {
+        const socketInstance = io("https://azi-api-nestjs.onrender.com/notifications", {
             extraHeaders: {
                 Authorization: `Bearer ${localStorage.getItem("access_token")}`,
             },
