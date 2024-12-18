@@ -48,6 +48,8 @@ export async function deleteProjectIdByUserIdService(payload: string): Promise<a
 }
 export async function getProjectIdService(payload: string): Promise<any> {
   try {
+    console.log('getProjectId');
+    
     const response = await api.get(`/projects/${payload}`);
     return response.data.data;
   } catch (error: any) {
