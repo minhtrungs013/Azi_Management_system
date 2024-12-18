@@ -7,10 +7,11 @@ import { ProjectDetails } from '@/types/project';
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-export default function ProjectId({ params }: { params: { projjectId: string } }) {
+export default function ProjjectId({ params }: { params: { projjectId: string } }) {
     const dispatch = useDispatch<AppDispatch>();
     const [data, setData] = useState<ProjectDetails>()
     const refresh = useSelector((state: RootState) => state.task.refresh);
+console.log('https://azi-api-nestjs.onrender.com/projects/66f8e3d466362373a15921d3');
 
     useEffect(() => {
         (async () => {
