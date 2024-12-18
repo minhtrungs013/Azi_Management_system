@@ -1,4 +1,4 @@
-import api from '@/lib/config/api';
+import api from '../../../lib/config/api';
 import { AddUserPermissionforProject, permission, PostList, ProjectList, projectPayload, updateList } from '@/types/project';
 
 export async function CreateprojectService(payload: projectPayload): Promise<any> {
