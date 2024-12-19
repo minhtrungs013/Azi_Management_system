@@ -183,7 +183,7 @@ const VideoCall = () => {
             {!isJoinCall ?
                 <button onClick={startCall}>Start Call</button>
                 :
-                <button onClick={() => joinCall(test)}>Start Call</button>
+                <button onClick={() => joinCall(test)}>join Call</button>
             }
 
         </div>
