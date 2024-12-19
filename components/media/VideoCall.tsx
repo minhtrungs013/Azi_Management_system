@@ -95,6 +95,7 @@ export default function VideoCall() {
         remoteVideoRefs.current[userId] = peerConnection;
         return peerConnection;
     };
+console.log(remoteStreams);
 
     return (
         <div>
