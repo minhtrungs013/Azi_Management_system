@@ -18,7 +18,6 @@ const VideoCall = () => {
     useEffect(() => {
         if (!socket) return;
 
-
         socket.on("incommingCall", async (offer: any) => {
             if (window.confirm("Incoming call. Accept?")) {
                 joinCall(offer);
@@ -44,16 +43,7 @@ const VideoCall = () => {
             }
 
             // Set remote description and process pending ICE candidates
-            await pc.setRemoteDescription(new RTCSessionDescription(offer.offer));
-
-            pendingCandidates.forEach(async (candidate) => {
-                try {
-                    await pc.addIceCandidate(candidate);
-                } catch (err) {
-                    console.error("Error adding ICE candidate:", err);
-                }
-            });
-            pendingCandidates = [];
+            await setRemoteDescriptionAndProcessCandidates(offer);
 
             // Create and send answer
             const answer = await pc.createAnswer();
@@ -92,7 +82,7 @@ const VideoCall = () => {
                 }
             } else {
                 console.error("PeerConnection not initialized, storing ICE candidate.");
-                pendingCandidates.push(iceCandidate); // Store ICE candidate until PeerConnection is initialized
+                pendingCandidates.push(iceCandidate); // Store until PeerConnection is initialized
             }
         });
 
@@ -176,17 +166,8 @@ const VideoCall = () => {
             localVideoRef.current.srcObject = stream;
         }
 
-        await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
-
-        // Process pending candidates after PeerConnection is initialized
-        pendingCandidates.forEach(async (candidate: any) => {
-            try {
-                await pc.addIceCandidate(candidate);
-            } catch (err) {
-                console.error("Error adding pending ICE candidate:", err);
-            }
-        });
-        pendingCandidates = [];
+        // Set remote description and process pending candidates
+        await setRemoteDescriptionAndProcessCandidates(data);
 
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
@@ -195,6 +176,24 @@ const VideoCall = () => {
         setPeerConnection(pc);
 
         socket.emit("answer", { answer, callId: callId.current });
+    };
+
+    // Function to set remote description and process pending ICE candidates
+    const setRemoteDescriptionAndProcessCandidates = async (data: any) => {
+        const pc = peerConnectionRef.current;
+        if (pc) {
+            await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
+
+            // Process any pending candidates
+            pendingCandidates.forEach(async (candidate) => {
+                try {
+                    await pc.addIceCandidate(candidate);
+                } catch (err) {
+                    console.error("Error adding pending ICE candidate:", err);
+                }
+            });
+            pendingCandidates = [];
+        }
     };
 
     return (
