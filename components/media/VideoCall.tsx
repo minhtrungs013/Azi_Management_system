@@ -35,21 +35,21 @@ export default function VideoCall() {
                     const peerConnection = createPeerConnection(userId);
                     myStream?.getTracks().forEach((track) => peerConnection.addTrack(track, myStream));
                 });
-                
+
                 socket.on('signal', async ({ from, signal }: { from: string; signal: RTCSessionDescriptionInit | RTCIceCandidate }) => {
                     console.log(`Received signal from ${from}:`, signal);
-                    
+
                     if (!remoteVideoRefs.current[from]) {
                         const peerConnection = createPeerConnection(from);
                         remoteVideoRefs.current[from] = peerConnection;
                     }
-                    
+
                     const peerConnection = remoteVideoRefs.current[from];
-                    
+
                     if (signal && (signal as RTCSessionDescriptionInit).type) {
                         const type = (signal as RTCSessionDescriptionInit).type;
                         console.log(`Signal type: ${type}`);
-                
+
                         if (type === 'offer') {
                             await peerConnection.setRemoteDescription(signal as RTCSessionDescriptionInit);
                             const answer = await peerConnection.createAnswer();
@@ -85,10 +85,13 @@ export default function VideoCall() {
     const createPeerConnection = (userId: string): RTCPeerConnection => {
         const peerConnection = new RTCPeerConnection();
         peerConnection.onicecandidate = (event: RTCPeerConnectionIceEvent) => {
-            if (event.candidate && socket) {
+            if (event.candidate) {
+                console.log("signal", roomId);
+                
                 socket.emit('signal', { roomId, signal: event.candidate });
             }
         };
+        console.log('userId', userId);
 
         peerConnection.ontrack = (event: RTCTrackEvent) => {
             console.log('Received track event:', event.streams[0]);
@@ -98,10 +101,12 @@ export default function VideoCall() {
             }));
         };
 
+        console.log(" remoteVideoRefs ", remoteVideoRefs.current[userId]);
         remoteVideoRefs.current[userId] = peerConnection;
+
         return peerConnection;
     };
-console.log(remoteStreams);
+    console.log(remoteStreams);
 
     return (
         <div>
