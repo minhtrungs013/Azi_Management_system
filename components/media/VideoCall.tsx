@@ -31,7 +31,7 @@ const VideoCall = () => {
             console.log("New participant joins:", offer);
 
             const pc = new RTCPeerConnection();
-            
+
 
             pc.ontrack = (event: RTCTrackEvent) => {
                 if (remoteVideoRef.current) {
@@ -65,26 +65,31 @@ const VideoCall = () => {
                 await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
             }
         });
+        const handleIceCandidate = async (candidate: RTCIceCandidateInit) => {
+            socket.on("iceCandidate", async (candidate: any) => {
+                console.log("peerConnection:", peerConnection);
 
-        socket.on("iceCandidate", async (candidate: any) => {
-            console.log("peerConnection:", peerConnection);
-
-            if (peerConnection) {
-                if (peerConnection.remoteDescription && peerConnection.remoteDescription.type) {
-                    await peerConnection.addIceCandidate(new RTCIceCandidate(candidate[0])).catch((err) =>
-                        console.error("Error adding ICE candidate:", err)
-                    );
+                if (peerConnection) {
+                    if (peerConnection.remoteDescription && peerConnection.remoteDescription.type) {
+                        await peerConnection.addIceCandidate(new RTCIceCandidate(candidate[0])).catch((err) =>
+                            console.error("Error adding ICE candidate:", err)
+                        );
+                    } else {
+                        console.log("Remote description not set, storing candidate.");
+                        pendingCandidates.push(new RTCIceCandidate(candidate[0]));
+                    }
                 } else {
-                    console.log("Remote description not set, storing candidate.");
-                    pendingCandidates.push(new RTCIceCandidate(candidate[0]));
+                    console.error("PeerConnection not initialized, cannot add ICE candidate.");
                 }
-            } else {
-                console.error("PeerConnection not initialized, cannot add ICE candidate.");
-            }
-        });
+            });
+
+        };
+        return () => {
+            socket.off("iceCandidate", handleIceCandidate);
+        };
     }, [peerConnection]);
-    
-console.log(peerConnection);
+
+    console.log(peerConnection);
 
     const startCall = async () => {
         if (!socket) return;
@@ -134,7 +139,7 @@ console.log(peerConnection);
             iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
         };
         const pc = new RTCPeerConnection(configuration);
-       
+
 
         // Xử lý ICE candidate
         pc.onicecandidate = (event: RTCPeerConnectionIceEvent) => {
