@@ -1,7 +1,12 @@
 'use client';
 import { useSocket } from '@/contexts/SocketContext';
 import { useEffect, useRef, useState } from 'react';
-
+import { io } from 'socket.io-client';
+const socket = io("https://azi-api-nestjs.onrender.com/notifications", {
+    extraHeaders: {
+        Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+    },
+});
 interface RemoteStreams {
     [userId: string]: MediaStream;
 }
@@ -12,9 +17,9 @@ export default function VideoCall() {
     const roomId = 'test-room'; // Phòng cố định
     const localVideoRef = useRef<HTMLVideoElement | null>(null); // Video của mình
     const remoteVideoRefs = useRef<{ [key: string]: RTCPeerConnection }>({}); // Video của các user khác
-    const { socket } = useSocket();
+    // const { socket } = useSocket();
     useEffect(() => {
-        if (!socket) return
+        // if (!socket) return
         // Lấy quyền truy cập camera và microphone
         navigator.mediaDevices
             .getUserMedia({ video: true, audio: true })
