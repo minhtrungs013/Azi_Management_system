@@ -92,18 +92,18 @@ export default function VideoCall() {
                 // You can add TURN server here if needed
             ],
         });
-        // createOffer(peerConnection);
+        createOffer(peerConnection);
         
-        peerConnection.addEventListener('icecandidate', event =>  {
-            console.log("ICE Candidate Event:", event.candidate);
-            if (event.candidate) {
-                socket.emit('signal', { roomId, signal: event.candidate });
-            }
-        });
-        
-        peerConnection.onicegatheringstatechange = () => {
-            console.log("ICE gathering state:", peerConnection.iceGatheringState);
-        };
+        // peerConnection.addEventListener('icecandidate', event =>  {
+        //     console.log("ICE Candidate Event:", event.candidate);
+        //     if (event.candidate) {
+        //         socket.emit('signal', { roomId, signal: event.candidate });
+        //     }
+        // });
+
+        // peerConnection.onicegatheringstatechange = () => {
+        //     console.log("ICE gathering state:", peerConnection.iceGatheringState);
+        // };
     
         peerConnection.ontrack = (event: RTCTrackEvent) => {
             console.log('Received track event:', event.streams[0]);
