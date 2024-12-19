@@ -40,6 +40,7 @@ export default function VideoCall() {
 
                 // Xử lý khi nhận tín hiệu signaling
                 socket.on('signal', async ({ from, signal }: { from: string; signal: RTCSessionDescriptionInit | RTCIceCandidate }) => {
+                    console.log(from, signal);
                     if (!remoteVideoRefs.current[from]) {
                         const peerConnection = createPeerConnection(from);
                         remoteVideoRefs.current[from] = peerConnection;
