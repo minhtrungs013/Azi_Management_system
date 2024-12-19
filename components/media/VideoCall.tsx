@@ -82,7 +82,7 @@ export default function VideoCall() {
         };
     }, []);
 
-    const createPeerConnection = (userId: string): RTCPeerConnection => {
+    const createPeerConnection =  (userId: string): RTCPeerConnection => {
         console.log('Creating peer connection for user:', userId);
         const peerConnection = new RTCPeerConnection({
             iceServers: [
@@ -92,7 +92,7 @@ export default function VideoCall() {
                 // You can add TURN server here if needed
             ],
         });
-    
+        createOffer(peerConnection);
         peerConnection.onicecandidate = (event: RTCPeerConnectionIceEvent) => {
             console.log("ICE Candidate Event:", event.candidate);
             if (event.candidate) {
@@ -116,6 +116,11 @@ export default function VideoCall() {
         remoteVideoRefs.current[userId] = peerConnection;
     
         return peerConnection;
+    };
+    const createOffer = async (peerConnection: RTCPeerConnection) => {
+        const offer = await peerConnection.createOffer();
+        await peerConnection.setLocalDescription(offer);
+        socket.emit('signal', { roomId, signal: offer });
     };
     console.log(remoteStreams);
 
