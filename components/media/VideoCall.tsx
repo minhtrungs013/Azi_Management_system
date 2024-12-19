@@ -18,134 +18,136 @@ const VideoCall = () => {
     const { socket } = useSocket();
 
     useEffect(() => {
-        if (!socket) return;
+        (async () => {
+            if (!socket) return;
 
-        const configuration = {
-            iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
-        };
-        let testpeerConnection = new RTCPeerConnection(configuration);
-        socket.on("incommingCall", async (data: any) => {
-            setTest(data)
-            setIsJoinCall(true)
-            console.log(data);
-
-            // Kiểm tra trạng thái signalingState
-            if (testpeerConnection.signalingState !== "stable") {
-                console.warn("PeerConnection is not in a stable state, skipping setRemoteDescription.");
-                return;
-            }
-
-            try {
-                await testpeerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
-
-                // Thực hiện việc xử lý ICE candidates đã lưu lại
-                pendingCandidates.forEach(async (candidate) => {
-                    try {
-                        await testpeerConnection.addIceCandidate(candidate);
-                    } catch (err) {
-                        console.error("Error adding pending ICE candidate:", err);
-                    }
-                });
-                pendingCandidates = [];
-
-                setPeerConnection(testpeerConnection);
-            } catch (error) {
-                console.error("Error setting remote description:", error);
-            }
-
-        });
-
-        socket.on("newParticipantJoinCall", async (offer: any) => {
-            console.log("New participant joins:", offer);
-
-            testpeerConnection.ontrack = (event: RTCTrackEvent) => {
-                if (remoteVideoRef.current) {
-                    remoteVideoRef.current.srcObject = event.streams[0];
-                }
+            const configuration = {
+                iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
             };
+            let testpeerConnection = new RTCPeerConnection(configuration);
+            await socket.on("incommingCall", async (data: any) => {
+                setTest(data)
+                setIsJoinCall(true)
+                console.log(data);
 
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-            stream.getTracks().forEach((track) => testpeerConnection.addTrack(track, stream));
+                // Kiểm tra trạng thái signalingState
+                if (testpeerConnection.signalingState !== "stable") {
+                    console.warn("PeerConnection is not in a stable state, skipping setRemoteDescription.");
+                    return;
+                }
 
-            if (localVideoRef.current) {
-                localVideoRef.current.srcObject = stream;
-            }
-
-            console.log(offer, 'bbbb');
-
-            // Kiểm tra offer có hợp lệ không
-            if (offer.offer && offer.offer.type && offer.offer.sdp) {
-                // Set remote description và xử lý các ICE candidates đã lưu lại
                 try {
-                    const a = new RTCSessionDescription(offer.offer)
-                    console.log(a);
-                    
-                    await testpeerConnection.setRemoteDescription(new RTCSessionDescription(a));
-                    console.log("Remote description set successfully", testpeerConnection);
+                    await testpeerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
 
+                    // Thực hiện việc xử lý ICE candidates đã lưu lại
                     pendingCandidates.forEach(async (candidate) => {
-                        await testpeerConnection.addIceCandidate(candidate).catch((err) => console.error("Error adding ICE candidate:", err));
+                        try {
+                            await testpeerConnection.addIceCandidate(candidate);
+                        } catch (err) {
+                            console.error("Error adding pending ICE candidate:", err);
+                        }
                     });
                     pendingCandidates = [];
 
-                    // Tạo và gửi answer
-                    const answer = await testpeerConnection.createAnswer();
-                    await testpeerConnection.setLocalDescription(answer);
-                    console.log(answer, 'aaaaaa');
                     setPeerConnection(testpeerConnection);
-
-                    socket.emit("answer", answer);
                 } catch (error) {
                     console.error("Error setting remote description:", error);
                 }
-            } else {
-                console.error("Invalid offer received:", offer.offer);
-            }
-        });
 
-        socket.on("answer", async (answer: any) => {
-            console.log(answer);
+            });
 
-            if (!answer || !answer.type || !answer.sdp) {
-                console.error("Invalid answer received:", answer);
-                return;
-            }
+            await socket.on("newParticipantJoinCall", async (offer: any) => {
+                console.log("New participant joins:", offer);
 
-            if (testpeerConnection) {
-                try {
-                    await testpeerConnection.setRemoteDescription(new RTCSessionDescription(answer.answer));
-                } catch (error) {
-                    console.error("Error setting remote description:", error);
+                testpeerConnection.ontrack = (event: RTCTrackEvent) => {
+                    if (remoteVideoRef.current) {
+                        remoteVideoRef.current.srcObject = event.streams[0];
+                    }
+                };
+
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                stream.getTracks().forEach((track) => testpeerConnection.addTrack(track, stream));
+
+                if (localVideoRef.current) {
+                    localVideoRef.current.srcObject = stream;
                 }
-            } else {
-                console.error("PeerConnection is not initialized.");
-            }
-        });
 
-        socket.on("iceCandidate", async (candidate: any) => {
-            const iceCandidate = new RTCIceCandidate(candidate[0]);
-console.log(testpeerConnection);
-console.log(testpeerConnection.remoteDescription);
-console.log(testpeerConnection.remoteDescription?.type);
+                console.log(offer, 'bbbb');
 
-            if (testpeerConnection) {
-                if (
-                    testpeerConnection.remoteDescription &&
-                    testpeerConnection.remoteDescription.type
-                ) {
+                // Kiểm tra offer có hợp lệ không
+                if (offer.offer && offer.offer.type && offer.offer.sdp) {
+                    // Set remote description và xử lý các ICE candidates đã lưu lại
                     try {
-                        await testpeerConnection.addIceCandidate(iceCandidate);
-                    } catch (err) {
-                        console.error("Error adding ICE candidate:", err);
+                        const a = new RTCSessionDescription(offer.offer)
+                        console.log(a);
+
+                        await testpeerConnection.setRemoteDescription(new RTCSessionDescription(a));
+                        console.log("Remote description set successfully", testpeerConnection);
+
+                        pendingCandidates.forEach(async (candidate) => {
+                            await testpeerConnection.addIceCandidate(candidate).catch((err) => console.error("Error adding ICE candidate:", err));
+                        });
+                        pendingCandidates = [];
+
+                        // Tạo và gửi answer
+                        const answer = await testpeerConnection.createAnswer();
+                        await testpeerConnection.setLocalDescription(answer);
+                        console.log(answer, 'aaaaaa');
+                        setPeerConnection(testpeerConnection);
+
+                        socket.emit("answer", answer);
+                    } catch (error) {
+                        console.error("Error setting remote description:", error);
                     }
                 } else {
-                    console.log("Remote description not set, storing candidate.");
+                    console.error("Invalid offer received:", offer.offer);
+                }
+            });
+
+            await socket.on("answer", async (answer: any) => {
+                console.log(answer);
+
+                if (!answer || !answer.type || !answer.sdp) {
+                    console.error("Invalid answer received:", answer);
+                    return;
+                }
+
+                if (testpeerConnection) {
+                    try {
+                        await testpeerConnection.setRemoteDescription(new RTCSessionDescription(answer.answer));
+                    } catch (error) {
+                        console.error("Error setting remote description:", error);
+                    }
+                } else {
+                    console.error("PeerConnection is not initialized.");
+                }
+            });
+
+            await socket.on("iceCandidate", async (candidate: any) => {
+                const iceCandidate = new RTCIceCandidate(candidate[0]);
+                console.log(testpeerConnection);
+                console.log(testpeerConnection.remoteDescription);
+                console.log(testpeerConnection.remoteDescription?.type);
+
+                if (testpeerConnection) {
+                    if (
+                        testpeerConnection.remoteDescription &&
+                        testpeerConnection.remoteDescription.type
+                    ) {
+                        try {
+                            await testpeerConnection.addIceCandidate(iceCandidate);
+                        } catch (err) {
+                            console.error("Error adding ICE candidate:", err);
+                        }
+                    } else {
+                        console.log("Remote description not set, storing candidate.");
+                        pendingCandidates.push(iceCandidate);
+                    }
+                } else {
+                    console.error("PeerConnection not initialized, storing candidate.");
                     pendingCandidates.push(iceCandidate);
                 }
-            } else {
-                console.error("PeerConnection not initialized, storing candidate.");
-                pendingCandidates.push(iceCandidate);
-            }
+            });
         });
     }, [peerConnection, socket]);
     console.log(peerConnection);
