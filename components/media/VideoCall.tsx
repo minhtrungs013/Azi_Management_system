@@ -85,6 +85,7 @@ const VideoCall = () => {
             }
         });
     }, [peerConnection, socket]);
+console.log(peerConnection);
 
     const startCall = async () => {
         if (!socket) return;
@@ -170,6 +171,7 @@ const VideoCall = () => {
         await pc.setLocalDescription(answer);
 
         setPeerConnection(pc);
+console.log(data.offer);
 
         // Gửi answer cho người gọi
         socket.emit("answer", { answer, callId: callId.current });
@@ -183,7 +185,7 @@ const VideoCall = () => {
             {!isJoinCall ?
                 <button onClick={startCall}>Start Call</button>
                 :
-                <button onClick={() => joinCall(test)}>join Call</button>
+                <button onClick={() => joinCall(test)}> join Call</button>
             }
 
         </div>
