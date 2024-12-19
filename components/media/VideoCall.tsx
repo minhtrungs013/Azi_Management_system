@@ -15,8 +15,9 @@ const VideoCall = () => {
     const { socket } = useSocket();
 
     useEffect(() => {
-        // WebSocket event listeners
         if (!socket) return;
+
+        let pendingCandidates: RTCIceCandidate[] = [];
 
         socket.on("incommingCall", (a: any) => {
             if (window.confirm("Incoming call. Accept?")) {
@@ -27,7 +28,7 @@ const VideoCall = () => {
         });
 
         socket.on("newParticipantJoinCall", async (offer: any) => {
-            console.log('New participant joins:', offer);
+            console.log("New participant joins:", offer);
 
             const pc = new RTCPeerConnection();
             setPeerConnection(pc);
@@ -45,8 +46,14 @@ const VideoCall = () => {
                 localVideoRef.current.srcObject = stream;
             }
 
-            // Set remote description after receiving the offer
+            // Set remote description and process pending ICE candidates
             await pc.setRemoteDescription(new RTCSessionDescription(offer.offer));
+            pendingCandidates.forEach(async (candidate) => {
+                await pc.addIceCandidate(candidate).catch((err) => console.error("Error adding ICE candidate:", err));
+            });
+            pendingCandidates = [];
+
+            // Create and send answer
             const answer = await pc.createAnswer();
             await pc.setLocalDescription(answer);
 
@@ -59,11 +66,20 @@ const VideoCall = () => {
             }
         });
 
-        socket.on("iceCandidate", async (candidate: any) => {
-            console.log(candidate);
+        socket.on("iceCandidate", async (candidate: RTCIceCandidateInit) => {
+            console.log("ICE candidate received:", candidate);
 
-            if (peerConnection && candidate && candidate[0]) {
-                await peerConnection.addIceCandidate(new RTCIceCandidate(candidate[0]));
+            if (peerConnection) {
+                if (peerConnection.remoteDescription && peerConnection.remoteDescription.type) {
+                    await peerConnection.addIceCandidate(new RTCIceCandidate(candidate)).catch((err) =>
+                        console.error("Error adding ICE candidate:", err)
+                    );
+                } else {
+                    console.log("Remote description not set, storing candidate.");
+                    pendingCandidates.push(new RTCIceCandidate(candidate));
+                }
+            } else {
+                console.error("PeerConnection not initialized, cannot add ICE candidate.");
             }
         });
     }, [peerConnection, socket]);
