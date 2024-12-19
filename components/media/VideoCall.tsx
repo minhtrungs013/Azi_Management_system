@@ -16,7 +16,9 @@ const VideoCall = () => {
 
     useEffect(() => {
         if (!socket) return;
+
         let pendingCandidates: RTCIceCandidate[] = [];
+
         socket.on("incommingCall", async (offer: any) => {
             if (window.confirm("Incoming call. Accept?")) {
                 joinCall(offer);
@@ -43,10 +45,13 @@ const VideoCall = () => {
 
             // Set remote description and process pending ICE candidates
             await pc.setRemoteDescription(new RTCSessionDescription(offer.offer));
+
             pendingCandidates.forEach(async (candidate) => {
-                await pc.addIceCandidate(candidate).catch((err) =>
-                    console.error("Error adding ICE candidate:", err)
-                );
+                try {
+                    await pc.addIceCandidate(candidate);
+                } catch (err) {
+                    console.error("Error adding ICE candidate:", err);
+                }
             });
             pendingCandidates = [];
 
@@ -71,20 +76,23 @@ const VideoCall = () => {
         });
 
         socket.on("iceCandidate", async (candidate: any) => {
-            console.log("peerConnectionRef:", peerConnectionRef.current);
-
             const pc = peerConnectionRef.current;
+            const iceCandidate = new RTCIceCandidate(candidate);
+
             if (pc) {
                 if (pc.remoteDescription && pc.remoteDescription.type) {
-                    await pc.addIceCandidate(new RTCIceCandidate(candidate)).catch((err) =>
-                        console.error("Error adding ICE candidate:", err)
-                    );
+                    try {
+                        await pc.addIceCandidate(iceCandidate);
+                    } catch (err) {
+                        console.error("Error adding ICE candidate:", err);
+                    }
                 } else {
                     console.log("Remote description not set yet, storing candidate.");
-                    pendingCandidates.push(new RTCIceCandidate(candidate));
+                    pendingCandidates.push(iceCandidate);
                 }
             } else {
-                console.error("PeerConnection not initialized, cannot add ICE candidate.");
+                console.error("PeerConnection not initialized, storing ICE candidate.");
+                pendingCandidates.push(iceCandidate); // Store ICE candidate until PeerConnection is initialized
             }
         });
 
@@ -97,21 +105,16 @@ const VideoCall = () => {
         };
     }, [socket]);
 
-
-    console.log(peerConnection);
-
     const startCall = async () => {
         if (!socket) return;
+
         const configuration = {
-            iceServers: [
-                { urls: 'stun:stun.l.google.com:19302' }
-            ]
+            iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
         };
         const pc = new RTCPeerConnection(configuration);
 
         pc.onicecandidate = (event: RTCPeerConnectionIceEvent) => {
             if (event.candidate) {
-                // Kiểm tra nếu candidate có đầy đủ các trường cần thiết
                 if (event.candidate.sdpMid && event.candidate.sdpMLineIndex !== null) {
                     socket.emit("iceCandidate", event.candidate, callId.current);
                 } else {
@@ -135,7 +138,8 @@ const VideoCall = () => {
 
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
-        peerConnectionRef.current = pc
+
+        peerConnectionRef.current = pc;
         setPeerConnection(pc);
 
         socket.emit("startCall", { offer: offer, projectId: '66fbaf738d9864e3b8420736', callId: callId.current });
@@ -144,14 +148,11 @@ const VideoCall = () => {
     const joinCall = async (data: any) => {
         if (!socket) return;
 
-        // Tạo PeerConnection với cấu hình STUN
         const configuration = {
             iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
         };
         const pc = new RTCPeerConnection(configuration);
 
-
-        // Xử lý ICE candidate
         pc.onicecandidate = (event: RTCPeerConnectionIceEvent) => {
             if (event.candidate) {
                 if (event.candidate.sdpMid && event.candidate.sdpMLineIndex !== null) {
@@ -162,14 +163,12 @@ const VideoCall = () => {
             }
         };
 
-        // Xử lý track nhận được từ remote
         pc.ontrack = (event: RTCTrackEvent) => {
             if (remoteVideoRef.current) {
                 remoteVideoRef.current.srcObject = event.streams[0];
             }
         };
 
-        // Lấy stream từ camera/microphone
         const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         stream.getTracks().forEach((track) => pc.addTrack(track, stream));
 
@@ -177,18 +176,16 @@ const VideoCall = () => {
             localVideoRef.current.srcObject = stream;
         }
 
-        // Thiết lập remote description bằng offer nhận được
         await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
 
-        // Tạo và thiết lập answer
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
-        peerConnectionRef.current = pc
+
+        peerConnectionRef.current = pc;
         setPeerConnection(pc);
-        // Gửi answer cho người gọi
+
         socket.emit("answer", { answer, callId: callId.current });
     };
-
 
     return (
         <div>
