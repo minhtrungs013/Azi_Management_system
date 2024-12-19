@@ -13,7 +13,8 @@ const VideoCall = () => {
     const [peerConnection, setPeerConnection] = useState<RTCPeerConnection | null>(null);
     let pendingCandidates: RTCIceCandidate[] = [];
     const { socket } = useSocket();
-    if(socket) {
+    useEffect(() => {
+        if (!socket) return;
         socket.on("incommingCall", async (offer: any) => {
             if (window.confirm("Incoming call. Accept?")) {
                 joinCall(offer)
@@ -21,16 +22,6 @@ const VideoCall = () => {
                 socket.emit("declineCall");
             }
         });
-    }
-    useEffect(() => {
-        if (!socket) return;
-        // socket.on("incommingCall", async (offer: any) => {
-        //     if (window.confirm("Incoming call. Accept?")) {
-        //         joinCall(offer)
-        //     } else {
-        //         socket.emit("declineCall");
-        //     }
-        // });
 
         const handlerNewParticipantJoinCall = async (offer: any) => {
             console.log("New participant joins:", offer);
@@ -116,6 +107,8 @@ const VideoCall = () => {
 
         socket.on("iceCandidate", handleIceCandidate);
         }
+        console.log("a", peerConnection);
+        
     }, [peerConnection])
 
 
