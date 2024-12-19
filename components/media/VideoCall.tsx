@@ -13,13 +13,13 @@ const VideoCall = () => {
     const [peerConnection, setPeerConnection] = useState<RTCPeerConnection | null>(null);
     const [isJoinCall, setIsJoinCall] = useState<boolean>(false);
     const [test, setTest] = useState<any>(null);
+    let pendingCandidates: RTCIceCandidate[] = [];
 
     const { socket } = useSocket();
 
     useEffect(() => {
         if (!socket) return;
 
-        let pendingCandidates: RTCIceCandidate[] = [];
         const configuration = {
             iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
         };
@@ -85,18 +85,25 @@ const VideoCall = () => {
         });
 
         socket.on("iceCandidate", async (candidate: any) => {
+            const iceCandidate = new RTCIceCandidate(candidate[0]);
+
             if (testpeerConnection) {
-                if (testpeerConnection.remoteDescription && testpeerConnection.remoteDescription.type) {
-                    await testpeerConnection.addIceCandidate(new RTCIceCandidate(candidate[0])).catch((err) =>
-                        console.error("Error adding ICE candidate:", err)
-                    );
+                if (
+                    testpeerConnection.remoteDescription &&
+                    testpeerConnection.remoteDescription.type
+                ) {
+                    try {
+                        await testpeerConnection.addIceCandidate(iceCandidate);
+                    } catch (err) {
+                        console.error("Error adding ICE candidate:", err);
+                    }
                 } else {
                     console.log("Remote description not set, storing candidate.");
-                    pendingCandidates.push(new RTCIceCandidate(candidate[0]));
+                    pendingCandidates.push(iceCandidate);
                 }
             } else {
-                console.error("PeerConnection not initialized, cannot add ICE candidate.");
-                pendingCandidates.push(new RTCIceCandidate(candidate[0])); // Store the candidate
+                console.error("PeerConnection not initialized, storing candidate.");
+                pendingCandidates.push(iceCandidate);
             }
         });
     }, [peerConnection, socket]);
@@ -153,7 +160,7 @@ const VideoCall = () => {
         let pc = new RTCPeerConnection(configuration);;
         if (peerConnection) {
             console.log(true);
-            
+
             pc = peerConnection;
         } else {
             console.log(false);
@@ -188,7 +195,14 @@ const VideoCall = () => {
 
         // Thiết lập remote description bằng offer nhận được
         await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
-
+        pendingCandidates.forEach(async (candidate) => {
+            try {
+                await pc.addIceCandidate(candidate);
+            } catch (err) {
+                console.error("Error adding pending ICE candidate:", err);
+            }
+        });
+        pendingCandidates = [];
         // Tạo và thiết lập answer
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
