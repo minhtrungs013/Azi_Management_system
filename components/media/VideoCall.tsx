@@ -32,9 +32,20 @@ const VideoCall = () => {
                 console.warn("PeerConnection is not in a stable state, skipping setRemoteDescription.");
                 return;
             }
-
+        
             try {
                 await testpeerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
+        
+                // Thực hiện việc xử lý ICE candidates đã lưu lại
+                pendingCandidates.forEach(async (candidate) => {
+                    try {
+                        await testpeerConnection.addIceCandidate(candidate);
+                    } catch (err) {
+                        console.error("Error adding pending ICE candidate:", err);
+                    }
+                });
+                pendingCandidates = [];
+        
                 setPeerConnection(testpeerConnection);
             } catch (error) {
                 console.error("Error setting remote description:", error);
