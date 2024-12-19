@@ -24,8 +24,7 @@ const VideoCall = () => {
         const configuration = {
             iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
         };
-        console.log(peerConnection);
-        var testpeerConnection = peerConnection ?? new RTCPeerConnection(configuration);
+        var testpeerConnection = new RTCPeerConnection(configuration);
         socket.on("incommingCall", async (data: any) => {
             setTest(data)
             setIsJoinCall(true)
@@ -118,29 +117,28 @@ const VideoCall = () => {
                 console.error("PeerConnection is not initialized.");
             }
         });
-        if (testpeerConnection) {
-            if (
-                testpeerConnection.remoteDescription &&
-                testpeerConnection.remoteDescription.type
-            ) {
-                socket.on("iceCandidate", async (candidate: any) => {
-                    const iceCandidate = new RTCIceCandidate(candidate[0]);
 
+        socket.on("iceCandidate", async (candidate: any) => {
+            const iceCandidate = new RTCIceCandidate(candidate[0]);
+            if (testpeerConnection) {
+                if (
+                    testpeerConnection.remoteDescription &&
+                    testpeerConnection.remoteDescription.type
+                ) {
                     try {
                         await testpeerConnection.addIceCandidate(iceCandidate);
                     } catch (err) {
                         console.error("Error adding ICE candidate:", err);
                     }
-
-                });
+                } else {
+                    console.log("Remote description not set, storing candidate.");
+                    pendingCandidates.push(iceCandidate);
+                }
             } else {
-                console.log("Remote description not set, storing candidate.");
-                // pendingCandidates.push(iceCandidate);
+                console.error("PeerConnection not initialized, storing candidate.");
+                pendingCandidates.push(iceCandidate);
             }
-        } else {
-            console.error("PeerConnection not initialized, storing candidate.");
-            // pendingCandidates.push(iceCandidate);
-        }
+        });
     }, [peerConnection, socket]);
 
     const startCall = async () => {
