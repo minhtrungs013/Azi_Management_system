@@ -11,13 +11,13 @@ const VideoCall = () => {
     const peerConnections = useRef<Map<string, RTCPeerConnection>>(new Map());
     const callId = useRef<string>(uuidv4());
     const [peerConnection, setPeerConnection] = useState<RTCPeerConnection | null>(null);
-
+    let pendingCandidates: RTCIceCandidate[] = [];
     const { socket } = useSocket();
 
     useEffect(() => {
         if (!socket) return;
 
-        let pendingCandidates: RTCIceCandidate[] = [];
+        
 
         socket.on("incommingCall", async (offer: any) => {
             if (window.confirm("Incoming call. Accept?")) {
@@ -82,16 +82,33 @@ const VideoCall = () => {
         };
         socket.on("newParticipantJoinCall", handlerNewParticipantJoinCall);
         socket.on("answer", handlerAnswer);
-        if (peerConnection) {
-            socket.on("iceCandidate", handleIceCandidate);
-        }
+       
         // return () => {
         //     socket.off("newParticipantJoinCall", handlerNewParticipantJoinCall);
         //     socket.off("answer", handlerAnswer);
         //     socket.off("iceCandidate", handleIceCandidate);
         // };
     }, [peerConnection]);
+   
+    const handleIceCandidate = async (candidate: any) => {
+        console.log("peerConnection:", peerConnection);
+        if (peerConnection) {
+            if (peerConnection.remoteDescription && peerConnection.remoteDescription.type) {
+                await peerConnection.addIceCandidate(new RTCIceCandidate(candidate[0])).catch((err) =>
+                    console.error("Error adding ICE candidate:", err)
+                );
+            } else {
+                console.log("Remote description not set, storing candidate.");
+                pendingCandidates.push(new RTCIceCandidate(candidate[0]));
+            }
+        } else {
+            console.error("PeerConnection not initialized, cannot add ICE candidate.");
+        }
 
+    };
+    if (peerConnection && socket) {
+        socket.on("iceCandidate", handleIceCandidate);
+    }
     console.log(peerConnection);
 
     const startCall = async () => {
