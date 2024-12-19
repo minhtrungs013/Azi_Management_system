@@ -28,16 +28,16 @@ const VideoCall = () => {
             setTest(data)
             setIsJoinCall(true)
             console.log(data);
-            
+
             // Kiểm tra trạng thái signalingState
             if (testpeerConnection.signalingState !== "stable") {
                 console.warn("PeerConnection is not in a stable state, skipping setRemoteDescription.");
                 return;
             }
-        
+
             try {
                 await testpeerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
-        
+
                 // Thực hiện việc xử lý ICE candidates đã lưu lại
                 pendingCandidates.forEach(async (candidate) => {
                     try {
@@ -47,7 +47,7 @@ const VideoCall = () => {
                     }
                 });
                 pendingCandidates = [];
-        
+
                 setPeerConnection(testpeerConnection);
             } catch (error) {
                 console.error("Error setting remote description:", error);
@@ -72,23 +72,35 @@ const VideoCall = () => {
             if (localVideoRef.current) {
                 localVideoRef.current.srcObject = stream;
             }
-        console.log(offer);
 
-            // Set remote description and process pending ICE candidates
-            await pc.setRemoteDescription(new RTCSessionDescription(offer.offer));
-        console.log(offer, 'aa');
+            console.log(offer, 'bbbb');
 
-            pendingCandidates.forEach(async (candidate) => {
-                await pc.addIceCandidate(candidate).catch((err) => console.error("Error adding ICE candidate:", err));
-            });
-            pendingCandidates = [];
+            // Kiểm tra offer có hợp lệ không
+            if (offer.offer && offer.offer.type && offer.offer.sdp) {
+                // Set remote description và xử lý các ICE candidates đã lưu lại
+                try {
+                    await pc.setRemoteDescription(new RTCSessionDescription(offer.offer));
+                    console.log("Remote description set successfully");
 
-            // Create and send answer
-            const answer = await pc.createAnswer();
-            await pc.setLocalDescription(answer);
-            setPeerConnection(pc);
+                    pendingCandidates.forEach(async (candidate) => {
+                        await pc.addIceCandidate(candidate).catch((err) => console.error("Error adding ICE candidate:", err));
+                    });
+                    pendingCandidates = [];
 
-            socket.emit("answer", answer);
+                    // Tạo và gửi answer
+                    const answer = await pc.createAnswer();
+                    await pc.setLocalDescription(answer);
+                    console.log(answer, 'aaaaaa');
+
+                    setPeerConnection(pc);
+
+                    socket.emit("answer", answer);
+                } catch (error) {
+                    console.error("Error setting remote description:", error);
+                }
+            } else {
+                console.error("Invalid offer received:", offer.offer);
+            }
         });
 
         socket.on("answer", async (answer: any) => {
@@ -182,29 +194,29 @@ const VideoCall = () => {
         let pc = peerConnection ?? new RTCPeerConnection({
             iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
         });
-    
+
         pc.onicecandidate = (event: RTCPeerConnectionIceEvent) => {
             if (event.candidate) {
                 socket.emit("iceCandidate", event.candidate, callId.current);
             }
         };
-    
+
         pc.ontrack = (event: RTCTrackEvent) => {
             if (remoteVideoRef.current) {
                 remoteVideoRef.current.srcObject = event.streams[0];
             }
         };
-    
+
         const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         stream.getTracks().forEach((track) => pc.addTrack(track, stream));
-    
+
         if (localVideoRef.current) {
             localVideoRef.current.srcObject = stream;
         }
-    
+
         // Set remote description
         await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
-    
+
         // Add any pending candidates
         pendingCandidates.forEach(async (candidate) => {
             try {
@@ -214,14 +226,14 @@ const VideoCall = () => {
             }
         });
         pendingCandidates = [];
-    
+
         // Create and send the answer
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
-    console.log(data);
-    
+        console.log(data);
+
         setPeerConnection(pc);
-        socket.emit("joinCall", { from: data.from , projectId: '66fbaf738d9864e3b8420736', callId: callId.current });
+        socket.emit("joinCall", { from: data.from, projectId: '66fbaf738d9864e3b8420736', callId: callId.current });
         socket.emit("answer", {
             type: pc.localDescription?.type,
             sdp: pc.localDescription?.sdp,
