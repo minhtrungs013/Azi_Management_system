@@ -33,23 +33,31 @@ export default function VideoCall() {
                 socket.on('user-connected', (userId: string) => {
                     console.log(`User connected: ${userId}`);
                     const peerConnection = createPeerConnection(userId);
-                    stream.getTracks().forEach((track) => peerConnection.addTrack(track, stream));
+                    myStream?.getTracks().forEach((track) => peerConnection.addTrack(track, myStream));
                 });
-
+                
                 socket.on('signal', async ({ from, signal }: { from: string; signal: RTCSessionDescriptionInit | RTCIceCandidate }) => {
                     console.log(`Received signal from ${from}:`, signal);
+                    
                     if (!remoteVideoRefs.current[from]) {
                         const peerConnection = createPeerConnection(from);
                         remoteVideoRefs.current[from] = peerConnection;
                     }
+                    
                     const peerConnection = remoteVideoRefs.current[from];
-                    if ((signal as RTCSessionDescriptionInit).type === 'offer') {
-                        await peerConnection.setRemoteDescription(signal as RTCSessionDescriptionInit);
-                        const answer = await peerConnection.createAnswer();
-                        await peerConnection.setLocalDescription(answer);
-                        socket.emit('signal', { roomId, signal: answer });
-                    } else if ((signal as RTCSessionDescriptionInit).type === 'answer') {
-                        await peerConnection.setRemoteDescription(signal as RTCSessionDescriptionInit);
+                    
+                    if (signal && (signal as RTCSessionDescriptionInit).type) {
+                        const type = (signal as RTCSessionDescriptionInit).type;
+                        console.log(`Signal type: ${type}`);
+                
+                        if (type === 'offer') {
+                            await peerConnection.setRemoteDescription(signal as RTCSessionDescriptionInit);
+                            const answer = await peerConnection.createAnswer();
+                            await peerConnection.setLocalDescription(answer);
+                            socket.emit('signal', { roomId, signal: answer });
+                        } else if (type === 'answer') {
+                            await peerConnection.setRemoteDescription(signal as RTCSessionDescriptionInit);
+                        }
                     } else if ((signal as RTCIceCandidate).candidate) {
                         peerConnection.addIceCandidate(signal as RTCIceCandidate);
                     }
