@@ -83,15 +83,21 @@ export default function VideoCall() {
     }, []);
 
     const createPeerConnection = (userId: string): RTCPeerConnection => {
+        console.log('Creating peer connection for user:', userId);
         const peerConnection = new RTCPeerConnection();
+    
         peerConnection.onicecandidate = (event: RTCPeerConnectionIceEvent) => {
-            console.log("event.candidate", event.candidate);
+            console.log("ICE Candidate Event:", event.candidate);
             if (event.candidate) {
                 socket.emit('signal', { roomId, signal: event.candidate });
             }
         };
-        console.log('userId', userId);
-
+    
+        // Log if ICE candidates are being gathered
+        peerConnection.onicegatheringstatechange = () => {
+            console.log("ICE gathering state:", peerConnection.iceGatheringState);
+        };
+    
         peerConnection.ontrack = (event: RTCTrackEvent) => {
             console.log('Received track event:', event.streams[0]);
             setRemoteStreams((prev) => ({
@@ -99,10 +105,9 @@ export default function VideoCall() {
                 [userId]: event.streams[0],
             }));
         };
-
-        console.log(" remoteVideoRefs ", remoteVideoRefs.current[userId]);
+    
         remoteVideoRefs.current[userId] = peerConnection;
-
+    
         return peerConnection;
     };
     console.log(remoteStreams);
