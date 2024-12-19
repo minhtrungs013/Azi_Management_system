@@ -82,7 +82,8 @@ const VideoCall = () => {
                 console.error("PeerConnection not initialized, cannot add ICE candidate.");
             }
         });
-    }, []);
+    }, [peerConnection]);
+    
 console.log(peerConnection);
 
     const startCall = async () => {
