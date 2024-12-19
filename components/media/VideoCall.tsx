@@ -27,11 +27,9 @@ const VideoCall = () => {
             }
         });
 
-        socket.on("newParticipantJoinCall", async (offer: any) => {
+        const handlerNewParticipantJoinCall = async (offer: any) => {
             console.log("New participant joins:", offer);
-
             const pc = new RTCPeerConnection();
-
 
             pc.ontrack = (event: RTCTrackEvent) => {
                 if (remoteVideoRef.current) {
@@ -58,33 +56,36 @@ const VideoCall = () => {
             await pc.setLocalDescription(answer);
             setPeerConnection(pc);
             socket.emit("answer", answer);
-        });
+        }
 
-        socket.on("answer", async (answer: RTCSessionDescriptionInit) => {
+        const handlerAnswer = async (answer: RTCSessionDescriptionInit) => {
             if (peerConnection) {
                 await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
             }
-        });
-        const handleIceCandidate = async (candidate: RTCIceCandidateInit) => {
-            socket.on("iceCandidate", async (candidate: any) => {
-                console.log("peerConnection:", peerConnection);
+        }
 
-                if (peerConnection) {
-                    if (peerConnection.remoteDescription && peerConnection.remoteDescription.type) {
-                        await peerConnection.addIceCandidate(new RTCIceCandidate(candidate[0])).catch((err) =>
-                            console.error("Error adding ICE candidate:", err)
-                        );
-                    } else {
-                        console.log("Remote description not set, storing candidate.");
-                        pendingCandidates.push(new RTCIceCandidate(candidate[0]));
-                    }
+        const handleIceCandidate = async (candidate: any) => {
+            console.log("peerConnection:", peerConnection);
+            if (peerConnection) {
+                if (peerConnection.remoteDescription && peerConnection.remoteDescription.type) {
+                    await peerConnection.addIceCandidate(new RTCIceCandidate(candidate[0])).catch((err) =>
+                        console.error("Error adding ICE candidate:", err)
+                    );
                 } else {
-                    console.error("PeerConnection not initialized, cannot add ICE candidate.");
+                    console.log("Remote description not set, storing candidate.");
+                    pendingCandidates.push(new RTCIceCandidate(candidate[0]));
                 }
-            });
+            } else {
+                console.error("PeerConnection not initialized, cannot add ICE candidate.");
+            }
 
         };
+        socket.on("newParticipantJoinCall", handlerNewParticipantJoinCall);
+        socket.on("answer", handlerAnswer);
+        socket.on("iceCandidate", handleIceCandidate);
         return () => {
+            socket.off("newParticipantJoinCall", handlerNewParticipantJoinCall);
+            socket.off("answer", handlerAnswer);
             socket.off("iceCandidate", handleIceCandidate);
         };
     }, [peerConnection]);
