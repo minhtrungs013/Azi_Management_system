@@ -85,7 +85,7 @@ const VideoCall = () => {
             }
         });
     }, [peerConnection, socket]);
-console.log(peerConnection);
+    console.log(peerConnection);
 
     const startCall = async () => {
         if (!socket) return;
@@ -171,10 +171,13 @@ console.log(peerConnection);
         await pc.setLocalDescription(answer);
 
         setPeerConnection(pc);
-console.log(data.offer);
+        console.log(data.offer);
 
         // Gửi answer cho người gọi
-        socket.emit("answer", { answer, callId: callId.current });
+        socket.emit("answer", {
+            type: pc.localDescription?.type, // "answer"
+            sdp: pc.localDescription?.sdp, answer, callId: callId.current
+        });
     };
 
 
