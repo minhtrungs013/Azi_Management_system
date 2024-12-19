@@ -67,7 +67,7 @@ const VideoCall = () => {
         });
 
         socket.on("iceCandidate", async (candidate: any) => {
-            console.log("ICE candidate received:", candidate);
+            console.log("peerConnection:", peerConnection);
 
             if (peerConnection) {
                 if (peerConnection.remoteDescription && peerConnection.remoteDescription.type) {
@@ -82,7 +82,8 @@ const VideoCall = () => {
                 console.error("PeerConnection not initialized, cannot add ICE candidate.");
             }
         });
-    }, [peerConnection, socket]);
+    }, []);
+console.log(peerConnection);
 
     const startCall = async () => {
         if (!socket) return;
@@ -92,7 +93,6 @@ const VideoCall = () => {
             ]
         };
         const pc = new RTCPeerConnection(configuration);
-        setPeerConnection(pc);
 
         pc.onicecandidate = (event: RTCPeerConnectionIceEvent) => {
             if (event.candidate) {
@@ -120,6 +120,7 @@ const VideoCall = () => {
 
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
+        setPeerConnection(pc);
 
         socket.emit("startCall", { offer: offer, projectId: '66fbaf738d9864e3b8420736', callId: callId.current });
     };
