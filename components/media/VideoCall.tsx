@@ -73,7 +73,7 @@ const VideoCall = () => {
         
             if (peerConnection) {
                 try {
-                    await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+                    await peerConnection.setRemoteDescription(new RTCSessionDescription(answer.answer));
                 } catch (error) {
                     console.error("Error setting remote description:", error);
                 }
