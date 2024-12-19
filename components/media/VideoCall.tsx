@@ -92,13 +92,14 @@ export default function VideoCall() {
                 // You can add TURN server here if needed
             ],
         });
-        createOffer(peerConnection);
-        peerConnection.onicecandidate = (event: RTCPeerConnectionIceEvent) => {
+        // createOffer(peerConnection);
+        
+        peerConnection.addEventListener('icecandidate', event =>  {
             console.log("ICE Candidate Event:", event.candidate);
             if (event.candidate) {
                 socket.emit('signal', { roomId, signal: event.candidate });
             }
-        };
+        });
     
         // Log if ICE candidates are being gathered
         peerConnection.onicegatheringstatechange = () => {
