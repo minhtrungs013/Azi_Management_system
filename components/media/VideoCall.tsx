@@ -135,6 +135,7 @@ const VideoCall = () => {
 
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
+        peerConnectionRef.current = pc
         setPeerConnection(pc);
 
         socket.emit("startCall", { offer: offer, projectId: '66fbaf738d9864e3b8420736', callId: callId.current });
@@ -182,6 +183,7 @@ const VideoCall = () => {
         // Tạo và thiết lập answer
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
+        peerConnectionRef.current = pc
         setPeerConnection(pc);
         // Gửi answer cho người gọi
         socket.emit("answer", { answer, callId: callId.current });
