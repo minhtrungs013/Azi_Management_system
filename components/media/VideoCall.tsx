@@ -24,7 +24,8 @@ const VideoCall = () => {
         const configuration = {
             iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
         };
-        var testpeerConnection = new RTCPeerConnection(configuration);
+        let testpeerConnection = new RTCPeerConnection(configuration);
+
         socket.on("incommingCall", async (data: any) => {
             setTest(data)
             setIsJoinCall(true)
@@ -96,7 +97,7 @@ const VideoCall = () => {
                         // Optionally add retry logic or notify the user
                     }
                 } catch (error) {
-                    console.error("Error setting remote description:", error);
+                    console.log("Error setting remote description:", error);
                 }
             } else {
                 console.error("Invalid offer received:", offer.offer);
