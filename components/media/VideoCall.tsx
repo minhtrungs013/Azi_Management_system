@@ -61,21 +61,21 @@ const VideoCall = () => {
                     remoteVideoRef.current.srcObject = event.streams[0];
                 }
             };
-        
+
             const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
             stream.getTracks().forEach((track) => testpeerConnection.addTrack(track, stream));
-        
+
             if (localVideoRef.current) {
                 localVideoRef.current.srcObject = stream;
             }
-        
-        
+
+
             if (offer.offer && offer.offer.type && offer.offer.sdp) {
                 try {
                     const a = new RTCSessionDescription(offer.offer);
-        
+
                     await testpeerConnection.setRemoteDescription(new RTCSessionDescription(a));
-        
+
                     // Wait for remote description to be fully set before proceeding
                     if (testpeerConnection.remoteDescription && testpeerConnection.remoteDescription.type) {
                         // Process ICE candidates if the remote description is set
@@ -83,7 +83,7 @@ const VideoCall = () => {
                             await testpeerConnection.addIceCandidate(candidate).catch((err) => console.error("Error adding ICE candidate:", err));
                         });
                         pendingCandidates = [];
-        
+
                         // Create and send the answer
                         const answer = await testpeerConnection.createAnswer();
                         await testpeerConnection.setLocalDescription(answer);
@@ -118,28 +118,29 @@ const VideoCall = () => {
                 console.error("PeerConnection is not initialized.");
             }
         });
+        if (testpeerConnection) {
+            if (
+                testpeerConnection.remoteDescription &&
+                testpeerConnection.remoteDescription.type
+            ) {
+                socket.on("iceCandidate", async (candidate: any) => {
+                    const iceCandidate = new RTCIceCandidate(candidate[0]);
 
-        socket.on("iceCandidate", async (candidate: any) => {
-            const iceCandidate = new RTCIceCandidate(candidate[0]);
-            if (testpeerConnection) {
-                if (
-                    testpeerConnection.remoteDescription &&
-                    testpeerConnection.remoteDescription.type
-                ) {
                     try {
                         await testpeerConnection.addIceCandidate(iceCandidate);
                     } catch (err) {
                         console.error("Error adding ICE candidate:", err);
                     }
-                } else {
-                    console.log("Remote description not set, storing candidate.");
-                    pendingCandidates.push(iceCandidate);
-                }
+
+                });
             } else {
-                console.error("PeerConnection not initialized, storing candidate.");
-                pendingCandidates.push(iceCandidate);
+                console.log("Remote description not set, storing candidate.");
+                // pendingCandidates.push(iceCandidate);
             }
-        });
+        } else {
+            console.error("PeerConnection not initialized, storing candidate.");
+            // pendingCandidates.push(iceCandidate);
+        }
     }, [peerConnection, socket]);
 
     const startCall = async () => {
