@@ -83,11 +83,17 @@ export default function VideoCall() {
     }, []);
 
     const createPeerConnection = (userId: string): RTCPeerConnection => {
-        const peerConnection = new RTCPeerConnection();
+        const peerConnection = new RTCPeerConnection(
+            {
+                iceServers: [
+                    { urls: 'stun:stun.l.google.com:19302' } // STUN server
+                ]
+            }
+        );
     
         // Thêm track vào peerConnection
         myStream?.getTracks().forEach((track) => peerConnection.addTrack(track, myStream));
-    
+        createOffer(peerConnection)
         peerConnection.onicecandidate = (event: RTCPeerConnectionIceEvent) => {
             if (event.candidate) {
                 console.log('ICE Candidate Event:', event.candidate);
