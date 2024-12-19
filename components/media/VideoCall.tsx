@@ -224,6 +224,7 @@ const VideoCall = () => {
         socket.emit("answer", {
             type: pc.localDescription?.type,
             sdp: pc.localDescription?.sdp,
+            offer: data.offer,
             callId: callId.current
         });
     };
