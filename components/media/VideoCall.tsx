@@ -13,11 +13,11 @@ const VideoCall = () => {
     const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
     const [peerConnection, setPeerConnection] = useState<RTCPeerConnection | null>(null);
     const { socket } = useSocket();
+    let pendingCandidates: RTCIceCandidate[] = [];
 
     useEffect(() => {
         if (!socket) return;
 
-        let pendingCandidates: RTCIceCandidate[] = [];
 
         socket.on("incommingCall", async (offer: any) => {
             if (window.confirm("Incoming call. Accept?")) {
@@ -77,7 +77,7 @@ const VideoCall = () => {
 
         socket.on("iceCandidate", async (candidate: any) => {
             const pc = peerConnectionRef.current;
-            const iceCandidate = new RTCIceCandidate(candidate[0]);
+            const iceCandidate = new RTCIceCandidate(candidate);
 
             if (pc) {
                 if (pc.remoteDescription && pc.remoteDescription.type) {
@@ -177,6 +177,16 @@ const VideoCall = () => {
         }
 
         await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
+
+        // Process pending candidates after PeerConnection is initialized
+        pendingCandidates.forEach(async (candidate: any) => {
+            try {
+                await pc.addIceCandidate(candidate);
+            } catch (err) {
+                console.error("Error adding pending ICE candidate:", err);
+            }
+        });
+        pendingCandidates = [];
 
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
