@@ -24,7 +24,6 @@ const VideoCall = () => {
                 console.log('ye', offer);
                 
                 const pc = new RTCPeerConnection();
-                setPeerConnection(pc);
 
                 pc.ontrack = (event: RTCTrackEvent) => {
                     if (remoteVideoRef.current) {
@@ -50,6 +49,8 @@ const VideoCall = () => {
                 const answer = await pc.createAnswer();
                 await pc.setLocalDescription(answer);
 
+                setPeerConnection(pc);
+
                 socket.emit("answer", { answer, callId: callId.current });
             } else {
                 socket.emit("declineCall");
@@ -60,7 +61,7 @@ const VideoCall = () => {
             console.log("New participant joins:", offer);
 
             const pc = new RTCPeerConnection();
-            setPeerConnection(pc);
+            
 
             pc.ontrack = (event: RTCTrackEvent) => {
                 if (remoteVideoRef.current) {
@@ -85,7 +86,7 @@ const VideoCall = () => {
             // Create and send answer
             const answer = await pc.createAnswer();
             await pc.setLocalDescription(answer);
-
+            setPeerConnection(pc);
             socket.emit("answer", answer);
         });
 
@@ -161,7 +162,7 @@ const VideoCall = () => {
             iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
         };
         const pc = new RTCPeerConnection(configuration);
-        setPeerConnection(pc);
+       
 
         // Xử lý ICE candidate
         pc.onicecandidate = (event: RTCPeerConnectionIceEvent) => {
@@ -195,7 +196,7 @@ const VideoCall = () => {
         // Tạo và thiết lập answer
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
-
+        setPeerConnection(pc);
         // Gửi answer cho người gọi
         socket.emit("answer", { answer, callId: callId.current });
     };
