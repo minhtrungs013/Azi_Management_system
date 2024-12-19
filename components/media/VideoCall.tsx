@@ -77,8 +77,11 @@ const VideoCall = () => {
             if (offer.offer && offer.offer.type && offer.offer.sdp) {
                 // Set remote description và xử lý các ICE candidates đã lưu lại
                 try {
-                    await testpeerConnection.setRemoteDescription(new RTCSessionDescription(offer.offer));
-                    console.log("Remote description set successfully");
+                    const a = new RTCSessionDescription(offer.offer)
+                    console.log(a);
+                    
+                    await testpeerConnection.setRemoteDescription(new RTCSessionDescription(a));
+                    console.log("Remote description set successfully", testpeerConnection);
 
                     pendingCandidates.forEach(async (candidate) => {
                         await testpeerConnection.addIceCandidate(candidate).catch((err) => console.error("Error adding ICE candidate:", err));
