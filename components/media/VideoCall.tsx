@@ -24,6 +24,7 @@ const VideoCall = () => {
         const configuration = {
             iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
         };
+        console.log(peerConnection);
         var testpeerConnection = peerConnection ?? new RTCPeerConnection(configuration);
         socket.on("incommingCall", async (data: any) => {
             setTest(data)
