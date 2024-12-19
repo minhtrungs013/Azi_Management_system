@@ -36,6 +36,7 @@ const VideoCall = () => {
 
             try {
                 await testpeerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
+console.log(testpeerConnection);
 
                 // Thực hiện việc xử lý ICE candidates đã lưu lại
                 pendingCandidates.forEach(async (candidate) => {
