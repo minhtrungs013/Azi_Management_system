@@ -28,47 +28,47 @@ const VideoCall = () => {
 
         socket.on("newParticipantJoinCall", async (offer: any) => {
             const pc = new RTCPeerConnection();
-
+        
             pc.ontrack = (event: RTCTrackEvent) => {
                 if (remoteVideoRef.current) {
                     remoteVideoRef.current.srcObject = event.streams[0];
                 }
             };
-
+        
             const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
             stream.getTracks().forEach((track) => pc.addTrack(track, stream));
-
+        
             if (localVideoRef.current) {
                 localVideoRef.current.srcObject = stream;
             }
-
+        
             // Set remote description and process pending ICE candidates
-            await setRemoteDescriptionAndProcessCandidates(offer);
-
-            // Create and send answer
+            await pc.setRemoteDescription(new RTCSessionDescription(offer.offer));
+        
+            // Ensure we add the pending candidates after the peer connection is initialized
+            pendingCandidates.forEach(async (candidate) => {
+                try {
+                    await pc.addIceCandidate(candidate);
+                } catch (err) {
+                    console.error("Error adding ICE candidate:", err);
+                }
+            });
+            pendingCandidates = [];
+        
+            // Now you can safely create an answer
             const answer = await pc.createAnswer();
             await pc.setLocalDescription(answer);
-
-            // Update both ref and state
+        
             peerConnectionRef.current = pc;
             setPeerConnection(pc);
-
+        
             socket.emit("answer", answer);
-        });
-
-        socket.on("answer", async (answer: RTCSessionDescriptionInit) => {
-            const pc = peerConnectionRef.current;
-            if (pc) {
-                await pc.setRemoteDescription(new RTCSessionDescription(answer));
-            } else {
-                console.error("PeerConnection is null during 'answer' event.");
-            }
         });
 
         socket.on("iceCandidate", async (candidate: any) => {
             const pc = peerConnectionRef.current;
             const iceCandidate = new RTCIceCandidate(candidate[0]);
-
+        
             if (pc) {
                 if (pc.remoteDescription && pc.remoteDescription.type) {
                     try {
@@ -82,7 +82,7 @@ const VideoCall = () => {
                 }
             } else {
                 console.error("PeerConnection not initialized, storing ICE candidate.");
-                pendingCandidates.push(iceCandidate); // Store until PeerConnection is initialized
+                pendingCandidates.push(iceCandidate);
             }
         });
 
