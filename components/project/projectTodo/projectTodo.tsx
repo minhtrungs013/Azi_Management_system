@@ -34,7 +34,6 @@ export default function ProjectTodo({ data }: { data: ProjectDetails | undefined
   const { socket, sendMessage } = useSocket();
   const [notification, setNotification] = useState<Notification[]>([]);
   const authState = useSelector((state: RootState) => state.auth);
-console.log(allMemberProject);
 
   useEffect(() => {
 

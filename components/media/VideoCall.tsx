@@ -77,7 +77,7 @@ const VideoCall = () => {
         };
         const pc = new RTCPeerConnection(configuration);
         setPeerConnection(pc);
-    
+
         pc.onicecandidate = (event: RTCPeerConnectionIceEvent) => {
             if (event.candidate) {
                 // Kiểm tra nếu candidate có đầy đủ các trường cần thiết
@@ -88,39 +88,39 @@ const VideoCall = () => {
                 }
             }
         };
-    
+
         pc.ontrack = (event: RTCTrackEvent) => {
             if (remoteVideoRef.current) {
                 remoteVideoRef.current.srcObject = event.streams[0];
             }
         };
-    
+
         const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         stream.getTracks().forEach((track) => pc.addTrack(track, stream));
-    
+
         if (localVideoRef.current) {
             localVideoRef.current.srcObject = stream;
         }
-    
+
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
-    
+
         socket.emit("startCall", { offer: offer, projectId: '66fbaf738d9864e3b8420736', callId: callId.current });
     };
-    
-    const joinCall = async (a: any) => {
+
+    const joinCall = async (data: any) => {
         if (!socket) return;
+
+        // Tạo PeerConnection với cấu hình STUN
         const configuration = {
-            iceServers: [
-                { urls: 'stun:stun.l.google.com:19302' }
-            ]
+            iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
         };
         const pc = new RTCPeerConnection(configuration);
         setPeerConnection(pc);
-    
+
+        // Xử lý ICE candidate
         pc.onicecandidate = (event: RTCPeerConnectionIceEvent) => {
             if (event.candidate) {
-                // Kiểm tra nếu candidate có đầy đủ các trường cần thiết
                 if (event.candidate.sdpMid && event.candidate.sdpMLineIndex !== null) {
                     socket.emit("iceCandidate", event.candidate, callId.current);
                 } else {
@@ -128,28 +128,33 @@ const VideoCall = () => {
                 }
             }
         };
-    
+
+        // Xử lý track nhận được từ remote
         pc.ontrack = (event: RTCTrackEvent) => {
             if (remoteVideoRef.current) {
                 remoteVideoRef.current.srcObject = event.streams[0];
             }
         };
-    
+
+        // Lấy stream từ camera/microphone
         const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         stream.getTracks().forEach((track) => pc.addTrack(track, stream));
-    
+
         if (localVideoRef.current) {
             localVideoRef.current.srcObject = stream;
         }
-    
-        // Set remote description after receiving the offer
-        await pc.setRemoteDescription(new RTCSessionDescription(a.offer));
+
+        // Thiết lập remote description bằng offer nhận được
+        await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
+
+        // Tạo và thiết lập answer
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
-    
-        socket.emit("answer", answer);
+
+        // Gửi answer cho người gọi
+        socket.emit("answer", { answer, callId: callId.current });
     };
-    
+
 
     return (
         <div>
