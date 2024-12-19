@@ -16,6 +16,35 @@ const VideoCall = () => {
 
     useEffect(() => {
         if (!socket) return;
+        // Khởi tạo PeerConnection khi thành phần được render
+        const pc = new RTCPeerConnection({
+            iceServers: [
+                { urls: "stun:stun.l.google.com:19302" },
+            ],
+        });
+
+        pc.onicecandidate = (event) => {
+            if (event.candidate) {
+                socket.emit("iceCandidate", event.candidate);
+            }
+        };
+
+        pc.ontrack = (event) => {
+            if (remoteVideoRef.current) {
+                remoteVideoRef.current.srcObject = event.streams[0];
+            }
+        };
+
+        setPeerConnection(pc);
+
+        return () => {
+            pc.close();
+        };
+    }, [socket]);
+    
+
+    useEffect(() => {
+        if (!socket) return;
         
         let pendingCandidates: RTCIceCandidate[] = [];
         
@@ -67,8 +96,6 @@ const VideoCall = () => {
         });
         
         socket.on("iceCandidate", async (candidate: any) => {
-            console.log("ICE candidate received:", candidate);
-        
             if (peerConnection) {
                 if (peerConnection.remoteDescription && peerConnection.remoteDescription.type) {
                     await peerConnection.addIceCandidate(new RTCIceCandidate(candidate[0])).catch((err) =>
