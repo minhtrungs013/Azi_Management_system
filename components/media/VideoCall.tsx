@@ -18,29 +18,26 @@ export default function VideoCall() {
             Authorization: `Bearer ${localStorage.getItem("access_token")}`,
         },
     });
-    // const { socket } = useSocket();
+
     useEffect(() => {
-        // if (!socket) return
-        // Lấy quyền truy cập camera và microphone
         navigator.mediaDevices
             .getUserMedia({ video: true, audio: true })
             .then((stream) => {
-                setMyStream(stream); // Lưu stream của mình
+                setMyStream(stream);
                 if (localVideoRef.current) {
-                    localVideoRef.current.srcObject = stream; // Gán stream cho thẻ video của mình
+                    localVideoRef.current.srcObject = stream;
                 }
 
-                socket.emit('join-room', roomId); // Gửi yêu cầu tham gia phòng
+                socket.emit('join-room', roomId);
 
-                // Khi có người dùng mới tham gia
                 socket.on('user-connected', (userId: string) => {
+                    console.log(`User connected: ${userId}`);
                     const peerConnection = createPeerConnection(userId);
                     stream.getTracks().forEach((track) => peerConnection.addTrack(track, stream));
                 });
 
-                // Xử lý khi nhận tín hiệu signaling
                 socket.on('signal', async ({ from, signal }: { from: string; signal: RTCSessionDescriptionInit | RTCIceCandidate }) => {
-                    console.log(from, signal);
+                    console.log(`Received signal from ${from}:`, signal);
                     if (!remoteVideoRefs.current[from]) {
                         const peerConnection = createPeerConnection(from);
                         remoteVideoRefs.current[from] = peerConnection;
@@ -58,8 +55,8 @@ export default function VideoCall() {
                     }
                 });
 
-                // Khi có người rời phòng
                 socket.on('user-disconnected', (userId: string) => {
+                    console.log(`User disconnected: ${userId}`);
                     if (remoteVideoRefs.current[userId]) {
                         remoteVideoRefs.current[userId].close();
                         delete remoteVideoRefs.current[userId];
@@ -77,7 +74,6 @@ export default function VideoCall() {
         };
     }, []);
 
-    // Tạo kết nối WebRTC với một người dùng
     const createPeerConnection = (userId: string): RTCPeerConnection => {
         const peerConnection = new RTCPeerConnection();
         peerConnection.onicecandidate = (event: RTCPeerConnectionIceEvent) => {
@@ -87,6 +83,7 @@ export default function VideoCall() {
         };
 
         peerConnection.ontrack = (event: RTCTrackEvent) => {
+            console.log('Received track event:', event.streams[0]);
             setRemoteStreams((prev) => ({
                 ...prev,
                 [userId]: event.streams[0],
