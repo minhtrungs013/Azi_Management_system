@@ -58,16 +58,14 @@ const VideoCall = () => {
         socket.on("newParticipantJoinCall", async (offer: any) => {
             console.log("New participant joins:", offer);
 
-            const pc = testpeerConnection ?? new RTCPeerConnection();
-
-            pc.ontrack = (event: RTCTrackEvent) => {
+            testpeerConnection.ontrack = (event: RTCTrackEvent) => {
                 if (remoteVideoRef.current) {
                     remoteVideoRef.current.srcObject = event.streams[0];
                 }
             };
 
             const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-            stream.getTracks().forEach((track) => pc.addTrack(track, stream));
+            stream.getTracks().forEach((track) => testpeerConnection.addTrack(track, stream));
 
             if (localVideoRef.current) {
                 localVideoRef.current.srcObject = stream;
@@ -79,19 +77,19 @@ const VideoCall = () => {
             if (offer.offer && offer.offer.type && offer.offer.sdp) {
                 // Set remote description và xử lý các ICE candidates đã lưu lại
                 try {
-                    await pc.setRemoteDescription(new RTCSessionDescription(offer.offer));
+                    await testpeerConnection.setRemoteDescription(new RTCSessionDescription(offer.offer));
                     console.log("Remote description set successfully");
 
                     pendingCandidates.forEach(async (candidate) => {
-                        await pc.addIceCandidate(candidate).catch((err) => console.error("Error adding ICE candidate:", err));
+                        await testpeerConnection.addIceCandidate(candidate).catch((err) => console.error("Error adding ICE candidate:", err));
                     });
                     pendingCandidates = [];
 
                     // Tạo và gửi answer
-                    const answer = await pc.createAnswer();
-                    await pc.setLocalDescription(answer);
+                    const answer = await testpeerConnection.createAnswer();
+                    await testpeerConnection.setLocalDescription(answer);
                     console.log(answer, 'aaaaaa');
-                    setPeerConnection(pc);
+                    setPeerConnection(testpeerConnection);
 
                     socket.emit("answer", answer);
                 } catch (error) {
@@ -123,6 +121,9 @@ const VideoCall = () => {
 
         socket.on("iceCandidate", async (candidate: any) => {
             const iceCandidate = new RTCIceCandidate(candidate[0]);
+console.log(testpeerConnection);
+console.log(testpeerConnection.remoteDescription);
+console.log(testpeerConnection.remoteDescription?.type);
 
             if (testpeerConnection) {
                 if (
