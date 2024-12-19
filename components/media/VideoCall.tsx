@@ -21,37 +21,7 @@ const VideoCall = () => {
 
         socket.on("incommingCall", async (offer: any) => {
             if (window.confirm("Incoming call. Accept?")) {
-                console.log('ye', offer);
-                
-                const pc = new RTCPeerConnection();
-
-                pc.ontrack = (event: RTCTrackEvent) => {
-                    if (remoteVideoRef.current) {
-                        remoteVideoRef.current.srcObject = event.streams[0];
-                    }
-                };
-
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-                stream.getTracks().forEach((track) => pc.addTrack(track, stream));
-
-                if (localVideoRef.current) {
-                    localVideoRef.current.srcObject = stream;
-                }
-
-                // Set remote description and process pending ICE candidates
-                await pc.setRemoteDescription(new RTCSessionDescription(offer.offer));
-                pendingCandidates.forEach(async (candidate) => {
-                    await pc.addIceCandidate(candidate).catch((err) => console.error("Error adding ICE candidate:", err));
-                });
-                pendingCandidates = [];
-
-                // Create and send answer
-                const answer = await pc.createAnswer();
-                await pc.setLocalDescription(answer);
-
-                setPeerConnection(pc);
-
-                socket.emit("answer", { answer, callId: callId.current });
+                joinCall(offer)
             } else {
                 socket.emit("declineCall");
             }
