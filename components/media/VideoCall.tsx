@@ -10,24 +10,28 @@ const VideoCall = () => {
     const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
     const peerConnections = useRef<Map<string, RTCPeerConnection>>(new Map());
     const callId = useRef<string>(uuidv4());
-    const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
     const [peerConnection, setPeerConnection] = useState<RTCPeerConnection | null>(null);
+
     const { socket } = useSocket();
-    let pendingCandidates: RTCIceCandidate[] = [];
 
     useEffect(() => {
         if (!socket) return;
-
-        socket.on("incommingCall", async (offer: any) => {
+        
+        let pendingCandidates: RTCIceCandidate[] = [];
+        
+        socket.on("incommingCall", (a: any) => {
             if (window.confirm("Incoming call. Accept?")) {
-                joinCall(offer);
+                joinCall(a);
             } else {
                 socket.emit("declineCall");
             }
         });
-
+        
         socket.on("newParticipantJoinCall", async (offer: any) => {
+            console.log("New participant joins:", offer);
+        
             const pc = new RTCPeerConnection();
+            setPeerConnection(pc);
         
             pc.ontrack = (event: RTCTrackEvent) => {
                 if (remoteVideoRef.current) {
@@ -44,67 +48,55 @@ const VideoCall = () => {
         
             // Set remote description and process pending ICE candidates
             await pc.setRemoteDescription(new RTCSessionDescription(offer.offer));
-        
-            // Ensure we add the pending candidates after the peer connection is initialized
             pendingCandidates.forEach(async (candidate) => {
-                try {
-                    await pc.addIceCandidate(candidate);
-                } catch (err) {
-                    console.error("Error adding ICE candidate:", err);
-                }
+                await pc.addIceCandidate(candidate).catch((err) => console.error("Error adding ICE candidate:", err));
             });
             pendingCandidates = [];
         
-            // Now you can safely create an answer
+            // Create and send answer
             const answer = await pc.createAnswer();
             await pc.setLocalDescription(answer);
         
-            peerConnectionRef.current = pc;
-            setPeerConnection(pc);
-        
             socket.emit("answer", answer);
         });
-
-        socket.on("iceCandidate", async (candidate: any) => {
-            const pc = peerConnectionRef.current;
-            const iceCandidate = new RTCIceCandidate(candidate[0]);
         
-            if (pc) {
-                if (pc.remoteDescription && pc.remoteDescription.type) {
-                    try {
-                        await pc.addIceCandidate(iceCandidate);
-                    } catch (err) {
-                        console.error("Error adding ICE candidate:", err);
-                    }
-                } else {
-                    console.log("Remote description not set yet, storing candidate.");
-                    pendingCandidates.push(iceCandidate);
-                }
-            } else {
-                console.error("PeerConnection not initialized, storing ICE candidate.");
-                pendingCandidates.push(iceCandidate);
+        socket.on("answer", async (answer: RTCSessionDescriptionInit) => {
+            if (peerConnection) {
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
             }
         });
-
-        return () => {
-            // Cleanup listeners when component unmounts
-            socket.off("incommingCall");
-            socket.off("newParticipantJoinCall");
-            socket.off("answer");
-            socket.off("iceCandidate");
-        };
-    }, [socket]);
+        
+        socket.on("iceCandidate", async (candidate: any) => {
+            console.log("ICE candidate received:", candidate);
+        
+            if (peerConnection) {
+                if (peerConnection.remoteDescription && peerConnection.remoteDescription.type) {
+                    await peerConnection.addIceCandidate(new RTCIceCandidate(candidate[0])).catch((err) =>
+                        console.error("Error adding ICE candidate:", err)
+                    );
+                } else {
+                    console.log("Remote description not set, storing candidate.");
+                    pendingCandidates.push(new RTCIceCandidate(candidate[0]));
+                }
+            } else {
+                console.error("PeerConnection not initialized, cannot add ICE candidate.");
+                pendingCandidates.push(new RTCIceCandidate(candidate[0])); // Store the candidate
+            }
+        });
+    }, [peerConnection, socket]);
 
     const startCall = async () => {
         if (!socket) return;
-
         const configuration = {
-            iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' }
+            ]
         };
         const pc = new RTCPeerConnection(configuration);
 
         pc.onicecandidate = (event: RTCPeerConnectionIceEvent) => {
             if (event.candidate) {
+                // Kiểm tra nếu candidate có đầy đủ các trường cần thiết
                 if (event.candidate.sdpMid && event.candidate.sdpMLineIndex !== null) {
                     socket.emit("iceCandidate", event.candidate, callId.current);
                 } else {
@@ -129,7 +121,6 @@ const VideoCall = () => {
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
 
-        peerConnectionRef.current = pc;
         setPeerConnection(pc);
 
         socket.emit("startCall", { offer: offer, projectId: '66fbaf738d9864e3b8420736', callId: callId.current });
@@ -138,11 +129,13 @@ const VideoCall = () => {
     const joinCall = async (data: any) => {
         if (!socket) return;
 
+        // Tạo PeerConnection với cấu hình STUN
         const configuration = {
             iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
         };
         const pc = new RTCPeerConnection(configuration);
 
+        // Xử lý ICE candidate
         pc.onicecandidate = (event: RTCPeerConnectionIceEvent) => {
             if (event.candidate) {
                 if (event.candidate.sdpMid && event.candidate.sdpMLineIndex !== null) {
@@ -153,12 +146,14 @@ const VideoCall = () => {
             }
         };
 
+        // Xử lý track nhận được từ remote
         pc.ontrack = (event: RTCTrackEvent) => {
             if (remoteVideoRef.current) {
                 remoteVideoRef.current.srcObject = event.streams[0];
             }
         };
 
+        // Lấy stream từ camera/microphone
         const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         stream.getTracks().forEach((track) => pc.addTrack(track, stream));
 
@@ -166,35 +161,19 @@ const VideoCall = () => {
             localVideoRef.current.srcObject = stream;
         }
 
-        // Set remote description and process pending candidates
-        await setRemoteDescriptionAndProcessCandidates(data);
+        // Thiết lập remote description bằng offer nhận được
+        await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
 
+        // Tạo và thiết lập answer
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
 
-        peerConnectionRef.current = pc;
         setPeerConnection(pc);
 
+        // Gửi answer cho người gọi
         socket.emit("answer", { answer, callId: callId.current });
     };
 
-    // Function to set remote description and process pending ICE candidates
-    const setRemoteDescriptionAndProcessCandidates = async (data: any) => {
-        const pc = peerConnectionRef.current;
-        if (pc) {
-            await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
-
-            // Process any pending candidates
-            pendingCandidates.forEach(async (candidate) => {
-                try {
-                    await pc.addIceCandidate(candidate);
-                } catch (err) {
-                    console.error("Error adding pending ICE candidate:", err);
-                }
-            });
-            pendingCandidates = [];
-        }
-    };
 
     return (
         <div>
