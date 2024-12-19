@@ -16,9 +16,6 @@ const VideoCall = () => {
 
     useEffect(() => {
         if (!socket) return;
-
-        
-
         socket.on("incommingCall", async (offer: any) => {
             if (window.confirm("Incoming call. Accept?")) {
                 joinCall(offer)
@@ -82,33 +79,38 @@ const VideoCall = () => {
         };
         socket.on("newParticipantJoinCall", handlerNewParticipantJoinCall);
         socket.on("answer", handlerAnswer);
-       
+
         // return () => {
         //     socket.off("newParticipantJoinCall", handlerNewParticipantJoinCall);
         //     socket.off("answer", handlerAnswer);
         //     socket.off("iceCandidate", handleIceCandidate);
         // };
-    }, [peerConnection]);
-   
-    const handleIceCandidate = async (candidate: any) => {
-        console.log("peerConnection:", peerConnection);
-        if (peerConnection) {
-            if (peerConnection.remoteDescription && peerConnection.remoteDescription.type) {
-                await peerConnection.addIceCandidate(new RTCIceCandidate(candidate[0])).catch((err) =>
-                    console.error("Error adding ICE candidate:", err)
-                );
-            } else {
-                console.log("Remote description not set, storing candidate.");
-                pendingCandidates.push(new RTCIceCandidate(candidate[0]));
-            }
-        } else {
-            console.error("PeerConnection not initialized, cannot add ICE candidate.");
-        }
+    }, []);
 
-    };
-    if (peerConnection && socket) {
-        socket.on("iceCandidate", handleIceCandidate);
-    }
+    useEffect(() => {
+        if (socket) {
+            const handleIceCandidate = async (candidate: any) => {
+                console.log("peerConnection:", peerConnection);
+                if (peerConnection) {
+                    if (peerConnection.remoteDescription && peerConnection.remoteDescription.type) {
+                        await peerConnection.addIceCandidate(new RTCIceCandidate(candidate[0])).catch((err) =>
+                            console.error("Error adding ICE candidate:", err)
+                        );
+                    } else {
+                        console.log("Remote description not set, storing candidate.");
+                        pendingCandidates.push(new RTCIceCandidate(candidate[0]));
+                    }
+                } else {
+                    console.error("PeerConnection not initialized, cannot add ICE candidate.");
+                }
+
+            };
+
+            socket.on("iceCandidate", handleIceCandidate);
+        }
+    }, [peerConnection])
+
+
     console.log(peerConnection);
 
     const startCall = async () => {
