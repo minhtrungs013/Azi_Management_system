@@ -173,49 +173,34 @@ const VideoCall = () => {
 
     const joinCall = async (data: any) => {
         if (!socket || !data) return;
-
-        // Tạo PeerConnection với cấu hình STUN
-        const configuration = {
+        console.log("peerConnection state: ", peerConnection);
+        let pc = peerConnection ?? new RTCPeerConnection({
             iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
-        };
-        let pc = new RTCPeerConnection(configuration);;
-        if (peerConnection) {
-            console.log(true);
-
-            pc = peerConnection;
-        } else {
-            console.log(false);
-            pc = new RTCPeerConnection(configuration);
-        }
-
-        // Xử lý ICE candidate
+        });
+    
         pc.onicecandidate = (event: RTCPeerConnectionIceEvent) => {
             if (event.candidate) {
-                if (event.candidate.sdpMid && event.candidate.sdpMLineIndex !== null) {
-                    socket.emit("iceCandidate", event.candidate, callId.current);
-                } else {
-                    console.error("Invalid ICE candidate received: ", event.candidate);
-                }
+                socket.emit("iceCandidate", event.candidate, callId.current);
             }
         };
-
-        // Xử lý track nhận được từ remote
+    
         pc.ontrack = (event: RTCTrackEvent) => {
             if (remoteVideoRef.current) {
                 remoteVideoRef.current.srcObject = event.streams[0];
             }
         };
-
-        // Lấy stream từ camera/microphone
+    
         const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         stream.getTracks().forEach((track) => pc.addTrack(track, stream));
-
+    
         if (localVideoRef.current) {
             localVideoRef.current.srcObject = stream;
         }
-
-        // Thiết lập remote description bằng offer nhận được
+    
+        // Set remote description
         await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
+    
+        // Add any pending candidates
         pendingCandidates.forEach(async (candidate) => {
             try {
                 await pc.addIceCandidate(candidate);
@@ -224,17 +209,17 @@ const VideoCall = () => {
             }
         });
         pendingCandidates = [];
-        // Tạo và thiết lập answer
+    
+        // Create and send the answer
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
-
+    
         setPeerConnection(pc);
-        console.log(data.offer);
-
-        // Gửi answer cho người gọi
+    
         socket.emit("answer", {
-            type: pc.localDescription?.type, // "answer"
-            sdp: pc.localDescription?.sdp, answer, callId: callId.current
+            type: pc.localDescription?.type,
+            sdp: pc.localDescription?.sdp,
+            callId: callId.current
         });
     };
 
