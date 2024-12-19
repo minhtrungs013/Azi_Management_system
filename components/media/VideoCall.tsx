@@ -27,6 +27,8 @@ const VideoCall = () => {
         socket.on("incommingCall", async (data: any) => {
             setTest(data)
             setIsJoinCall(true)
+            console.log(data);
+            
             // Kiểm tra trạng thái signalingState
             if (testpeerConnection.signalingState !== "stable") {
                 console.warn("PeerConnection is not in a stable state, skipping setRemoteDescription.");
@@ -70,9 +72,12 @@ const VideoCall = () => {
             if (localVideoRef.current) {
                 localVideoRef.current.srcObject = stream;
             }
+        console.log(offer);
 
             // Set remote description and process pending ICE candidates
             await pc.setRemoteDescription(new RTCSessionDescription(offer.offer));
+        console.log(offer, 'aa');
+
             pendingCandidates.forEach(async (candidate) => {
                 await pc.addIceCandidate(candidate).catch((err) => console.error("Error adding ICE candidate:", err));
             });
