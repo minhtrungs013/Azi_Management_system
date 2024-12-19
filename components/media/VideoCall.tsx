@@ -28,8 +28,6 @@ const VideoCall = () => {
         socket.on("incommingCall", async (data: any) => {
             setTest(data)
             setIsJoinCall(true)
-            console.log(data);
-
             // Kiểm tra trạng thái signalingState
             if (testpeerConnection.signalingState !== "stable") {
                 console.warn("PeerConnection is not in a stable state, skipping setRemoteDescription.");
@@ -57,8 +55,6 @@ const VideoCall = () => {
         });
 
         socket.on("newParticipantJoinCall", async (offer: any) => {
-            console.log("New participant joins:", offer);
-        
             testpeerConnection.ontrack = (event: RTCTrackEvent) => {
                 if (remoteVideoRef.current) {
                     remoteVideoRef.current.srcObject = event.streams[0];
@@ -72,15 +68,12 @@ const VideoCall = () => {
                 localVideoRef.current.srcObject = stream;
             }
         
-            console.log(offer, 'bbbb');
         
             if (offer.offer && offer.offer.type && offer.offer.sdp) {
                 try {
                     const a = new RTCSessionDescription(offer.offer);
-                    console.log(a);
         
                     await testpeerConnection.setRemoteDescription(new RTCSessionDescription(a));
-                    console.log("Remote description set successfully", testpeerConnection);
         
                     // Wait for remote description to be fully set before proceeding
                     if (testpeerConnection.remoteDescription && testpeerConnection.remoteDescription.type) {
@@ -95,7 +88,6 @@ const VideoCall = () => {
                         await testpeerConnection.setLocalDescription(answer);
                         console.log(answer, 'aaaaaa');
                         setPeerConnection(testpeerConnection);
-        
                         socket.emit("answer", answer);
                     } else {
                         console.warn("Remote description not set, retrying...");
@@ -110,8 +102,6 @@ const VideoCall = () => {
         });
 
         socket.on("answer", async (answer: any) => {
-            console.log(answer);
-
             if (!answer || !answer.type || !answer.sdp) {
                 console.error("Invalid answer received:", answer);
                 return;
@@ -127,13 +117,10 @@ const VideoCall = () => {
                 console.error("PeerConnection is not initialized.");
             }
         });
+console.log(testpeerConnection);
 
         socket.on("iceCandidate", async (candidate: any) => {
             const iceCandidate = new RTCIceCandidate(candidate[0]);
-            console.log(testpeerConnection);
-            console.log(testpeerConnection.remoteDescription);
-            console.log(testpeerConnection.remoteDescription?.type);
-
             if (testpeerConnection) {
                 if (
                     testpeerConnection.remoteDescription &&
@@ -154,7 +141,6 @@ const VideoCall = () => {
             }
         });
     }, [peerConnection, socket]);
-    console.log(peerConnection);
 
     const startCall = async () => {
         if (!socket) return;
