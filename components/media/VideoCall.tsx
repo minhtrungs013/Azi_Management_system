@@ -77,7 +77,7 @@ const VideoCall = () => {
 
         socket.on("iceCandidate", async (candidate: any) => {
             const pc = peerConnectionRef.current;
-            const iceCandidate = new RTCIceCandidate(candidate);
+            const iceCandidate = new RTCIceCandidate(candidate[0]);
 
             if (pc) {
                 if (pc.remoteDescription && pc.remoteDescription.type) {
