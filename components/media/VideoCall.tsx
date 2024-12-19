@@ -24,7 +24,7 @@ const VideoCall = () => {
         const configuration = {
             iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
         };
-        let testpeerConnection = new RTCPeerConnection(configuration);
+        var testpeerConnection = peerConnection ?? new RTCPeerConnection(configuration);
         socket.on("incommingCall", async (data: any) => {
             setTest(data)
             setIsJoinCall(true)
@@ -117,7 +117,6 @@ const VideoCall = () => {
                 console.error("PeerConnection is not initialized.");
             }
         });
-console.log(testpeerConnection);
 
         socket.on("iceCandidate", async (candidate: any) => {
             const iceCandidate = new RTCIceCandidate(candidate[0]);
