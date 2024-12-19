@@ -31,7 +31,6 @@ const VideoCall = () => {
             console.log("New participant joins:", offer);
         
             const pc = new RTCPeerConnection();
-            setPeerConnection(pc);
         
             pc.ontrack = (event: RTCTrackEvent) => {
                 if (remoteVideoRef.current) {
@@ -56,6 +55,7 @@ const VideoCall = () => {
             // Create and send answer
             const answer = await pc.createAnswer();
             await pc.setLocalDescription(answer);
+            setPeerConnection(pc);
         
             socket.emit("answer", answer);
         });
