@@ -91,7 +91,7 @@ const VideoCall = () => {
                     const answer = await pc.createAnswer();
                     await pc.setLocalDescription(answer);
                     console.log(answer, 'aaaaaa');
-
+                    testpeerConnection = pc;
                     setPeerConnection(pc);
 
                     socket.emit("answer", answer);
