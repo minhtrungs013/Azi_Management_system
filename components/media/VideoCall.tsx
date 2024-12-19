@@ -51,14 +51,19 @@ export default function VideoCall() {
                         console.log(`Signal type: ${type}`);
 
                         if (type === 'offer') {
-                            await peerConnection.setRemoteDescription(signal as RTCSessionDescriptionInit);
-                            const answer = await peerConnection.createAnswer();
-                            await peerConnection.setLocalDescription(answer);
-                            socket.emit('signal', { roomId, signal: answer });
+                            // Nếu peerConnection chưa có remote description, nhận offer và tạo answer
+                            if (peerConnection.signalingState === 'stable') {
+                                await peerConnection.setRemoteDescription(signal as RTCSessionDescriptionInit);
+                                const answer = await peerConnection.createAnswer();
+                                await peerConnection.setLocalDescription(answer);
+                                socket.emit('signal', { roomId, signal: answer });
+                            }
                         } else if (type === 'answer') {
+                            // Nếu nhận được answer, chỉ cần set remote description
                             await peerConnection.setRemoteDescription(signal as RTCSessionDescriptionInit);
                         }
                     } else if ((signal as RTCIceCandidate).candidate) {
+                        // Thêm ICE Candidate nếu có
                         peerConnection.addIceCandidate(signal as RTCIceCandidate);
                     }
                 });
@@ -82,7 +87,7 @@ export default function VideoCall() {
         };
     }, []);
 
-    const createPeerConnection =  (userId: string): RTCPeerConnection => {
+    const createPeerConnection = (userId: string): RTCPeerConnection => {
         console.log('Creating peer connection for user:', userId);
         const peerConnection = new RTCPeerConnection({
             iceServers: [
@@ -93,7 +98,7 @@ export default function VideoCall() {
             ],
         });
         createOffer(peerConnection);
-        
+
         // peerConnection.addEventListener('icecandidate', event =>  {
         //     console.log("ICE Candidate Event:", event.candidate);
         //     if (event.candidate) {
@@ -104,7 +109,7 @@ export default function VideoCall() {
         // peerConnection.onicegatheringstatechange = () => {
         //     console.log("ICE gathering state:", peerConnection.iceGatheringState);
         // };
-    
+
         peerConnection.ontrack = (event: RTCTrackEvent) => {
             console.log('Received track event:', event.streams[0]);
             setRemoteStreams((prev) => ({
@@ -112,9 +117,9 @@ export default function VideoCall() {
                 [userId]: event.streams[0],
             }));
         };
-    
+
         remoteVideoRefs.current[userId] = peerConnection;
-    
+
         return peerConnection;
     };
     const createOffer = async (peerConnection: RTCPeerConnection) => {
