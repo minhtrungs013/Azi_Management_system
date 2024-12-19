@@ -22,12 +22,8 @@ const VideoCall = () => {
         let pendingCandidates: RTCIceCandidate[] = [];
 
         socket.on("incommingCall", (data: any) => {
-            if (window.confirm("Incoming call. Accept?")) {
-                setTest(data)
-                setIsJoinCall(true)
-            } else {
-                socket.emit("declineCall");
-            }
+            setTest(data)
+            setIsJoinCall(true)
         });
 
         socket.on("newParticipantJoinCall", async (offer: any) => {
@@ -65,12 +61,12 @@ const VideoCall = () => {
 
         socket.on("answer", async (answer: any) => {
             console.log(answer);
-            
+
             if (!answer || !answer.type || !answer.sdp) {
                 console.error("Invalid answer received:", answer);
                 return;
             }
-        
+
             if (peerConnection) {
                 try {
                     await peerConnection.setRemoteDescription(new RTCSessionDescription(answer.answer));
