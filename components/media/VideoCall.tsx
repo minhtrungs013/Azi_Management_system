@@ -15,13 +15,6 @@ const VideoCall = () => {
     const { socket } = useSocket();
     useEffect(() => {
         if (!socket) return;
-        socket.on("incommingCall", async (offer: any) => {
-            if (window.confirm("Incoming call. Accept?")) {
-                joinCall(offer)
-            } else {
-                socket.emit("declineCall");
-            }
-        });
 
         const handlerNewParticipantJoinCall = async (offer: any) => {
             console.log("New participant joins:", offer);
@@ -88,6 +81,14 @@ const VideoCall = () => {
 
     useEffect(() => {
         if (socket) {
+            socket.on("incommingCall", async (offer: any) => {
+                if (window.confirm("Incoming call. Accept?")) {
+                    joinCall(offer)
+                } else {
+                    socket.emit("declineCall");
+                }
+            });
+
             const handleIceCandidate = async (candidate: any) => {
                 console.log("peerConnection:", peerConnection);
                 if (peerConnection) {
@@ -105,10 +106,10 @@ const VideoCall = () => {
 
             };
 
-        socket.on("iceCandidate", handleIceCandidate);
+            socket.on("iceCandidate", handleIceCandidate);
         }
         console.log("a", peerConnection);
-        
+
     }, [peerConnection])
 
 
