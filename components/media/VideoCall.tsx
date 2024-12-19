@@ -85,9 +85,8 @@ export default function VideoCall() {
     const createPeerConnection = (userId: string): RTCPeerConnection => {
         const peerConnection = new RTCPeerConnection();
         peerConnection.onicecandidate = (event: RTCPeerConnectionIceEvent) => {
+            console.log("event.candidate", event.candidate);
             if (event.candidate) {
-                console.log("signal", roomId);
-                
                 socket.emit('signal', { roomId, signal: event.candidate });
             }
         };
