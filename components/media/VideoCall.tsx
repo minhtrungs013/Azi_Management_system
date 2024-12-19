@@ -80,9 +80,9 @@ const VideoCall = () => {
             }
 
         };
+        socket.on("newParticipantJoinCall", handlerNewParticipantJoinCall);
+        socket.on("answer", handlerAnswer);
         if (peerConnection) {
-            socket.on("newParticipantJoinCall", handlerNewParticipantJoinCall);
-            socket.on("answer", handlerAnswer);
             socket.on("iceCandidate", handleIceCandidate);
         }
         // return () => {
