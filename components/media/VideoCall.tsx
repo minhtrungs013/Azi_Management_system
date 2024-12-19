@@ -99,6 +99,7 @@ export default function VideoCall() {
         });
       
 
+        
         peerConnection.addEventListener('icecandidate', event =>  {
             console.log("ICE Candidate Event:", event.candidate);
             if (event.candidate) {
