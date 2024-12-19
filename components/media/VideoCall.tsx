@@ -11,90 +11,64 @@ const VideoCall = () => {
     const peerConnections = useRef<Map<string, RTCPeerConnection>>(new Map());
     const callId = useRef<string>(uuidv4());
     const [peerConnection, setPeerConnection] = useState<RTCPeerConnection | null>(null);
+    const [isJoinCall, setIsJoinCall] = useState<boolean>(false);
+    const [test, setTest] = useState<any>(null);
 
     const { socket } = useSocket();
 
     useEffect(() => {
         if (!socket) return;
-        // Khởi tạo PeerConnection khi thành phần được render
-        const pc = new RTCPeerConnection({
-            iceServers: [
-                { urls: "stun:stun.l.google.com:19302" },
-            ],
-        });
 
-        pc.onicecandidate = (event) => {
-            if (event.candidate) {
-                socket.emit("iceCandidate", event.candidate);
-            }
-        };
-
-        pc.ontrack = (event) => {
-            if (remoteVideoRef.current) {
-                remoteVideoRef.current.srcObject = event.streams[0];
-            }
-        };
-
-        setPeerConnection(pc);
-
-        return () => {
-            pc.close();
-        };
-    }, [socket]);
-    
-
-    useEffect(() => {
-        if (!socket) return;
-        
         let pendingCandidates: RTCIceCandidate[] = [];
-        
-        socket.on("incommingCall", (a: any) => {
+
+        socket.on("incommingCall", (data: any) => {
             if (window.confirm("Incoming call. Accept?")) {
-                joinCall(a);
+                setTest(data)
+                setIsJoinCall(true)
             } else {
                 socket.emit("declineCall");
             }
         });
-        
+
         socket.on("newParticipantJoinCall", async (offer: any) => {
             console.log("New participant joins:", offer);
-        
+
             const pc = new RTCPeerConnection();
-        
+
             pc.ontrack = (event: RTCTrackEvent) => {
                 if (remoteVideoRef.current) {
                     remoteVideoRef.current.srcObject = event.streams[0];
                 }
             };
-        
+
             const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
             stream.getTracks().forEach((track) => pc.addTrack(track, stream));
-        
+
             if (localVideoRef.current) {
                 localVideoRef.current.srcObject = stream;
             }
-        
+
             // Set remote description and process pending ICE candidates
             await pc.setRemoteDescription(new RTCSessionDescription(offer.offer));
             pendingCandidates.forEach(async (candidate) => {
                 await pc.addIceCandidate(candidate).catch((err) => console.error("Error adding ICE candidate:", err));
             });
             pendingCandidates = [];
-        
+
             // Create and send answer
             const answer = await pc.createAnswer();
             await pc.setLocalDescription(answer);
             setPeerConnection(pc);
-        
+
             socket.emit("answer", answer);
         });
-        
+
         socket.on("answer", async (answer: RTCSessionDescriptionInit) => {
             if (peerConnection) {
                 await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
             }
         });
-        
+
         socket.on("iceCandidate", async (candidate: any) => {
             if (peerConnection) {
                 if (peerConnection.remoteDescription && peerConnection.remoteDescription.type) {
@@ -154,7 +128,7 @@ const VideoCall = () => {
     };
 
     const joinCall = async (data: any) => {
-        if (!socket) return;
+        if (!socket || !data) return;
 
         // Tạo PeerConnection với cấu hình STUN
         const configuration = {
@@ -206,7 +180,12 @@ const VideoCall = () => {
         <div>
             <video ref={localVideoRef} autoPlay muted style={{ width: "300px", height: "auto" }}></video>
             <video ref={remoteVideoRef} autoPlay style={{ width: "300px", height: "auto" }}></video>
-            <button onClick={startCall}>Start Call</button>
+            {!isJoinCall ?
+                <button onClick={startCall}>Start Call</button>
+                :
+                <button onClick={() => joinCall(test)}>Start Call</button>
+            }
+
         </div>
     );
 };
