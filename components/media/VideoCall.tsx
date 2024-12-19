@@ -218,9 +218,10 @@ const VideoCall = () => {
         // Create and send the answer
         const answer = await pc.createAnswer();
         await pc.setLocalDescription(answer);
+    console.log(data);
     
         setPeerConnection(pc);
-        socket.emit("joinCall", { offer: data.offer, projectId: '66fbaf738d9864e3b8420736', callId: callId.current });
+        socket.emit("joinCall", { from: data.from , projectId: '66fbaf738d9864e3b8420736', callId: callId.current });
         socket.emit("answer", {
             type: pc.localDescription?.type,
             sdp: pc.localDescription?.sdp,
