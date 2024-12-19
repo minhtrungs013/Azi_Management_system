@@ -82,23 +82,27 @@ export default function VideoCall() {
         };
     }, []);
 
-    const createPeerConnection = (userId: string): RTCPeerConnection => {
-        const peerConnection = new RTCPeerConnection(
-            {
-                iceServers: [
-                    { urls: 'stun:stun.l.google.com:19302' } // STUN server
-                ]
-            }
-        );
-    
-        // Thêm track vào peerConnection
-        myStream?.getTracks().forEach((track) => peerConnection.addTrack(track, myStream));
-        createOffer(peerConnection)
-        peerConnection.onicecandidate = (event: RTCPeerConnectionIceEvent) => {
+    const createPeerConnection =  (userId: string): RTCPeerConnection => {
+        console.log('Creating peer connection for user:', userId);
+        const peerConnection = new RTCPeerConnection({
+            iceServers: [
+                {
+                    urls: 'stun:stun.l.google.com:19302', // STUN server example
+                },
+                // You can add TURN server here if needed
+            ],
+        });
+        // createOffer(peerConnection);
+        
+        peerConnection.addEventListener('icecandidate', event =>  {
+            console.log("ICE Candidate Event:", event.candidate);
             if (event.candidate) {
-                console.log('ICE Candidate Event:', event.candidate);
                 socket.emit('signal', { roomId, signal: event.candidate });
             }
+        });
+        
+        peerConnection.onicegatheringstatechange = () => {
+            console.log("ICE gathering state:", peerConnection.iceGatheringState);
         };
     
         peerConnection.ontrack = (event: RTCTrackEvent) => {
@@ -108,6 +112,8 @@ export default function VideoCall() {
                 [userId]: event.streams[0],
             }));
         };
+    
+        remoteVideoRefs.current[userId] = peerConnection;
     
         return peerConnection;
     };
