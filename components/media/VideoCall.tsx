@@ -21,6 +21,8 @@ const VideoCall = () => {
 
         socket.on("incommingCall", async (offer: any) => {
             if (window.confirm("Incoming call. Accept?")) {
+                console.log('ye', offer);
+                
                 const pc = new RTCPeerConnection();
                 setPeerConnection(pc);
 
@@ -48,7 +50,7 @@ const VideoCall = () => {
                 const answer = await pc.createAnswer();
                 await pc.setLocalDescription(answer);
 
-                socket.emit("answer", answer);
+                socket.emit("answer", { answer, callId: callId.current });
             } else {
                 socket.emit("declineCall");
             }
