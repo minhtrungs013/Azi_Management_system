@@ -80,14 +80,16 @@ const VideoCall = () => {
             }
 
         };
-        socket.on("newParticipantJoinCall", handlerNewParticipantJoinCall);
-        socket.on("answer", handlerAnswer);
-        socket.on("iceCandidate", handleIceCandidate);
-        return () => {
-            socket.off("newParticipantJoinCall", handlerNewParticipantJoinCall);
-            socket.off("answer", handlerAnswer);
-            socket.off("iceCandidate", handleIceCandidate);
-        };
+        if (peerConnection) {
+            socket.on("newParticipantJoinCall", handlerNewParticipantJoinCall);
+            socket.on("answer", handlerAnswer);
+            socket.on("iceCandidate", handleIceCandidate);
+        }
+        // return () => {
+        //     socket.off("newParticipantJoinCall", handlerNewParticipantJoinCall);
+        //     socket.off("answer", handlerAnswer);
+        //     socket.off("iceCandidate", handleIceCandidate);
+        // };
     }, [peerConnection]);
 
     console.log(peerConnection);
