@@ -63,9 +63,22 @@ const VideoCall = () => {
             socket.emit("answer", answer);
         });
 
-        socket.on("answer", async (answer: RTCSessionDescriptionInit) => {
+        socket.on("answer", async (answer: any) => {
+            console.log(answer);
+            
+            if (!answer || !answer.type || !answer.sdp) {
+                console.error("Invalid answer received:", answer);
+                return;
+            }
+        
             if (peerConnection) {
-                await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+                try {
+                    await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+                } catch (error) {
+                    console.error("Error setting remote description:", error);
+                }
+            } else {
+                console.error("PeerConnection is not initialized.");
             }
         });
 
