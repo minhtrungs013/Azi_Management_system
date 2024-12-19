@@ -20,10 +20,16 @@ const VideoCall = () => {
         if (!socket) return;
 
         let pendingCandidates: RTCIceCandidate[] = [];
-
-        socket.on("incommingCall", (data: any) => {
+        const configuration = {
+            iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+        };
+        let testpeerConnection = new RTCPeerConnection(configuration);
+        socket.on("incommingCall", async (data: any) => {
             setTest(data)
             setIsJoinCall(true)
+            await testpeerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
+            setPeerConnection(testpeerConnection);
+
         });
 
         socket.on("newParticipantJoinCall", async (offer: any) => {
@@ -67,9 +73,9 @@ const VideoCall = () => {
                 return;
             }
 
-            if (peerConnection) {
+            if (testpeerConnection) {
                 try {
-                    await peerConnection.setRemoteDescription(new RTCSessionDescription(answer.answer));
+                    await testpeerConnection.setRemoteDescription(new RTCSessionDescription(answer.answer));
                 } catch (error) {
                     console.error("Error setting remote description:", error);
                 }
@@ -79,9 +85,9 @@ const VideoCall = () => {
         });
 
         socket.on("iceCandidate", async (candidate: any) => {
-            if (peerConnection) {
-                if (peerConnection.remoteDescription && peerConnection.remoteDescription.type) {
-                    await peerConnection.addIceCandidate(new RTCIceCandidate(candidate[0])).catch((err) =>
+            if (testpeerConnection) {
+                if (testpeerConnection.remoteDescription && testpeerConnection.remoteDescription.type) {
+                    await testpeerConnection.addIceCandidate(new RTCIceCandidate(candidate[0])).catch((err) =>
                         console.error("Error adding ICE candidate:", err)
                     );
                 } else {
@@ -144,7 +150,15 @@ const VideoCall = () => {
         const configuration = {
             iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
         };
-        const pc = new RTCPeerConnection(configuration);
+        let pc = new RTCPeerConnection(configuration);;
+        if (peerConnection) {
+            console.log(true);
+            
+            pc = peerConnection;
+        } else {
+            console.log(false);
+            pc = new RTCPeerConnection(configuration);
+        }
 
         // Xử lý ICE candidate
         pc.onicecandidate = (event: RTCPeerConnectionIceEvent) => {
