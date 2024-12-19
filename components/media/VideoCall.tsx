@@ -123,9 +123,19 @@ export default function VideoCall() {
         return peerConnection;
     };
     const createOffer = async (peerConnection: RTCPeerConnection) => {
-        const offer = await peerConnection.createOffer();
-        await peerConnection.setLocalDescription(offer);
-        socket.emit('signal', { roomId, signal: offer });
+        try {
+            // Kiểm tra trạng thái của peerConnection
+            if (peerConnection.signalingState === 'stable') {
+                // Nếu peer connection đang ở trạng thái stable, tạo offer
+                const offer = await peerConnection.createOffer();
+                await peerConnection.setLocalDescription(offer);
+                socket.emit('signal', { roomId, signal: offer });
+            } else {
+                console.log("Cannot create offer: Peer connection is not in stable state.");
+            }
+        } catch (error) {
+            console.error("Error creating offer:", error);
+        }
     };
     console.log(remoteStreams);
 
