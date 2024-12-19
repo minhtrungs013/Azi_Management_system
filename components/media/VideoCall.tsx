@@ -27,8 +27,18 @@ const VideoCall = () => {
         socket.on("incommingCall", async (data: any) => {
             setTest(data)
             setIsJoinCall(true)
-            await testpeerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
-            setPeerConnection(testpeerConnection);
+            // Kiểm tra trạng thái signalingState
+            if (testpeerConnection.signalingState !== "stable") {
+                console.warn("PeerConnection is not in a stable state, skipping setRemoteDescription.");
+                return;
+            }
+
+            try {
+                await testpeerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
+                setPeerConnection(testpeerConnection);
+            } catch (error) {
+                console.error("Error setting remote description:", error);
+            }
 
         });
 
