@@ -127,15 +127,24 @@ const VideoCall: React.FC = () => {
             }
         };
 
-        // Đảm bảo nhận được remote stream
-        peerConnection.current.ontrack = (event) => {
-            if (remoteVideoRef.current && event.streams.length > 0) {
-                remoteVideoRef.current.srcObject = event.streams[0];
-                console.log("set remote streams received", event.streams[0]);
+        peerConnection.current.addEventListener('track', (event) => {
+            if (remoteVideoRef.current) {
+                let remoteStream = remoteVideoRef.current.srcObject as MediaStream;
+        
+                if (!remoteStream) {
+                    // Nếu không có stream hiện tại, tạo mới
+                    remoteStream = new MediaStream();
+                    remoteVideoRef.current.srcObject = remoteStream;
+                    console.log("New remote stream created");
+                }
+        
+                // Thêm track vào stream
+                remoteStream.addTrack(event.track);
+                console.log("Track added to remote stream:", event.track);
             } else {
-                console.error("No remote streams received");
+                console.error("Remote video element is not available");
             }
-        };
+        });
 
         // Tạo SDP Answer và gửi về cho caller
         const answer = await peerConnection.current.createAnswer();
