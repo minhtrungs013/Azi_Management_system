@@ -1,161 +1,117 @@
 'use client';
-import { useSocket } from '@/contexts/SocketContext';
-import { useEffect, useRef, useState } from 'react';
-import { io } from 'socket.io-client';
+import React, { useRef, useState } from 'react';
+import { io, Socket } from 'socket.io-client';
 
-interface RemoteStreams {
-    [userId: string]: MediaStream;
-}
 
-export default function VideoCall() {
-    const [myStream, setMyStream] = useState<MediaStream | null>(null); // Video của mình
-    const [remoteStreams, setRemoteStreams] = useState<RemoteStreams>({}); // Video của những người khác
-    const roomId = 'test-room'; // Phòng cố định
-    const localVideoRef = useRef<HTMLVideoElement | null>(null); // Video của mình
-    const remoteVideoRefs = useRef<{ [key: string]: RTCPeerConnection }>({}); // Video của các user khác
+
+const VideoCall: React.FC = () => {
+    const [username, setUsername] = useState('');
+    const [callTo, setCallTo] = useState('');
+    const localVideoRef = useRef<HTMLVideoElement>(null);
+    const remoteVideoRef = useRef<HTMLVideoElement>(null);
+    const peerConnection = useRef<RTCPeerConnection | null>(null);
+    
     const socket = io("https://azi-api-nestjs.onrender.com/notifications", {
         extraHeaders: {
             Authorization: `Bearer ${localStorage.getItem("access_token")}`,
         },
     });
+    const config = {
+        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
+    };
 
-    useEffect(() => {
-        navigator.mediaDevices
-            .getUserMedia({ video: true, audio: true })
-            .then((stream) => {
-                setMyStream(stream);
-                if (localVideoRef.current) {
-                    localVideoRef.current.srcObject = stream;
-                }
+    const handleRegister = () => {
+        socket.emit('register', username);
+    };
 
-                socket.emit('join-room', roomId);
+    const handleCall = async () => {
+        peerConnection.current = new RTCPeerConnection(config);
 
-                socket.on('user-connected', (userId: string) => {
-                    console.log(`User connected: ${userId}`);
-                    const peerConnection = createPeerConnection(userId);
-                    myStream?.getTracks().forEach((track) => peerConnection.addTrack(track, myStream));
-                });
+        // Thêm local stream
+        const localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        if (localVideoRef.current) localVideoRef.current.srcObject = localStream;
+        localStream.getTracks().forEach((track) => peerConnection.current!.addTrack(track, localStream));
 
-                socket.on('signal', async ({ from, signal }: { from: string; signal: RTCSessionDescriptionInit | RTCIceCandidate }) => {
-                    console.log(`Received signal from ${from}:`, signal);
-
-                    if (!remoteVideoRefs.current[from]) {
-                        const peerConnection = createPeerConnection(from);
-                        remoteVideoRefs.current[from] = peerConnection;
-                    }
-
-                    const peerConnection = remoteVideoRefs.current[from];
-
-                    if (signal && (signal as RTCSessionDescriptionInit).type) {
-                        const type = (signal as RTCSessionDescriptionInit).type;
-                        console.log(`Signal type: ${type}`);
-
-                        if (type === 'offer') {
-                            // Nếu peerConnection chưa có remote description, nhận offer và tạo answer
-                            if (peerConnection.signalingState === 'stable') {
-                                await peerConnection.setRemoteDescription(signal as RTCSessionDescriptionInit);
-                                const answer = await peerConnection.createAnswer();
-                                await peerConnection.setLocalDescription(answer);
-                                socket.emit('signal', { roomId, signal: answer });
-                            }
-                        } else if (type === 'answer') {
-                            // Nếu nhận được answer, chỉ cần set remote description
-                            await peerConnection.setRemoteDescription(signal as RTCSessionDescriptionInit);
-                        }
-                    } else if ((signal as RTCIceCandidate).candidate) {
-                        // Thêm ICE Candidate nếu có
-                        await peerConnection.addIceCandidate(signal as RTCIceCandidate);
-                    }
-                });
-
-                socket.on('user-disconnected', (userId: string) => {
-                    console.log(`User disconnected: ${userId}`);
-                    if (remoteVideoRefs.current[userId]) {
-                        remoteVideoRefs.current[userId].close();
-                        delete remoteVideoRefs.current[userId];
-                        setRemoteStreams((prev) => {
-                            const newStreams = { ...prev };
-                            delete newStreams[userId];
-                            return newStreams;
-                        });
-                    }
-                });
-            });
-
-        return () => {
-            socket.disconnect();
-        };
-    }, []);
-
-    const createPeerConnection = (userId: string): RTCPeerConnection => {
-        console.log('Creating peer connection for user:', userId);
-        const peerConnection = new RTCPeerConnection({
-            iceServers: [
-                {
-                    urls: 'stun:stun.l.google.com:19302', // STUN server example
-                },
-                // You can add TURN server here if needed
-            ],
-        });
-      
-
-        
-        peerConnection.addEventListener('icecandidate', event =>  {
-            console.log("ICE Candidate Event:", event.candidate);
+        peerConnection.current.onicecandidate = (event) => {
             if (event.candidate) {
-                socket.emit('signal', { roomId, signal: event.candidate });
+                socket.emit('ice-candidate', { to: callTo, candidate: event.candidate });
             }
-        });
-
-        peerConnection.onicegatheringstatechange = () => {
-            console.log("ICE gathering state:", peerConnection.iceGatheringState);
         };
 
-        peerConnection.ontrack = (event: RTCTrackEvent) => {
-            console.log('Received track event:', event.streams[0]);
-            setRemoteStreams((prev) => ({
-                ...prev,
-                [userId]: event.streams[0],
-            }));
+        peerConnection.current.ontrack = (event) => {
+            if (remoteVideoRef.current) remoteVideoRef.current.srcObject = event.streams[0];
         };
-        createOffer(peerConnection);
-        remoteVideoRefs.current[userId] = peerConnection;
 
-        return peerConnection;
+        const offer = await peerConnection.current.createOffer();
+        await peerConnection.current.setLocalDescription(offer);
+        socket.emit('call', { to: callTo, sdp: offer });
     };
-    const createOffer = async (peerConnection: RTCPeerConnection) => {
-        try {
-            // Kiểm tra trạng thái của peerConnection
-            if (peerConnection.signalingState === 'stable') {
-                // Nếu peer connection đang ở trạng thái stable, tạo offer
-                const offer = await peerConnection.createOffer();
-                await peerConnection.setLocalDescription(offer);
-                socket.emit('signal', { roomId, signal: offer });
-            } else {
-                console.log("Cannot create offer: Peer connection is not in stable state.");
+
+    socket.on('offer', async ({ from, sdp }) => {
+        peerConnection.current = new RTCPeerConnection(config);
+
+        const remoteDesc = new RTCSessionDescription(sdp);
+        await peerConnection.current.setRemoteDescription(remoteDesc);
+
+        const localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        if (localVideoRef.current) localVideoRef.current.srcObject = localStream;
+        localStream.getTracks().forEach((track) => peerConnection.current!.addTrack(track, localStream));
+
+        peerConnection.current.onicecandidate = (event) => {
+            if (event.candidate) {
+                socket.emit('ice-candidate', { to: from, candidate: event.candidate });
             }
-        } catch (error) {
-            console.error("Error creating offer:", error);
+        };
+
+        peerConnection.current.ontrack = (event) => {
+            if (remoteVideoRef.current) remoteVideoRef.current.srcObject = event.streams[0];
+        };
+
+        const answer = await peerConnection.current.createAnswer();
+        await peerConnection.current.setLocalDescription(answer);
+        socket.emit('answer', { to: from, sdp: answer });
+    });
+
+    socket.on('answer', async ({ sdp }) => {
+        const remoteDesc = new RTCSessionDescription(sdp);
+        await peerConnection.current!.setRemoteDescription(remoteDesc);
+    });
+
+    socket.on('ice-candidate', async ({ candidate }) => {
+        if (peerConnection.current) {
+            await peerConnection.current.addIceCandidate(candidate);
         }
-    };
-    console.log(remoteStreams);
+    });
 
     return (
         <div>
-            <h1>Video Call</h1>
-            <video ref={localVideoRef} autoPlay muted style={{ width: '300px', border: '1px solid black' }}></video>
             <div>
-                {Object.keys(remoteStreams).map((userId) => (
-                    <video
-                        key={userId}
-                        autoPlay
-                        ref={(ref) => {
-                            if (ref && remoteStreams[userId]) ref.srcObject = remoteStreams[userId];
-                        }}
-                        style={{ width: '300px', border: '1px solid black' }}
-                    ></video>
-                ))}
+                <input
+                    placeholder="Your Username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                />
+                <button onClick={handleRegister}>Register</button>
+            </div>
+
+            <div>
+                <input
+                    placeholder="Call To Username"
+                    value={callTo}
+                    onChange={(e) => setCallTo(e.target.value)}
+                />
+                <button onClick={handleCall}>Call</button>
+            </div>
+
+            <div>
+                <video ref={localVideoRef} autoPlay muted style={{ width: '300px' }}></video>
+                <video ref={remoteVideoRef} autoPlay style={{ width: '300px' }}></video>
             </div>
         </div>
     );
-}
+};
+
+export default VideoCall;
+
+
+
