@@ -78,8 +78,15 @@ const VideoCall: React.FC = () => {
     };
 
     const handleIceCandidate = async ({ candidate }: { candidate: RTCIceCandidateInit }) => {
-        if (peerConnection.current) {
-            await peerConnection.current.addIceCandidate(candidate);
+        if (peerConnection.current && candidate) {
+            try {
+                await peerConnection.current.addIceCandidate(candidate);
+            } catch (error) {
+                console.error("Error adding received ice candidate", error);
+            }
+        }else {
+            console.log('không nhận');
+            
         }
     };
 
@@ -114,6 +121,9 @@ const VideoCall: React.FC = () => {
         peerConnection.current.onicecandidate = (event) => {
           if (event.candidate) {
             socket.current!.emit('ice-candidate', { to: from, candidate: event.candidate });
+          }else {
+            console.log('không cảu đc ice-candidate ');
+            
           }
         };
       
