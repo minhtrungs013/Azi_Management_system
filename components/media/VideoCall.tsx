@@ -128,9 +128,7 @@ console.log(peerConnection);
         };
         
         peerConnection.current.onicecandidate = (event) => {
-            if (event.candidate) {
                 console.log("ICE Candidate:", event.candidate);
-        
                 const candidateData = { to: from, candidate: event.candidate };
                 if (socket.current) {
                     // Gửi ngay nếu socket sẵn sàng
@@ -139,7 +137,6 @@ console.log(peerConnection);
                     console.log("Socket chưa sẵn sàng, bắt đầu retry");
                     sendIceCandidate(candidateData);
                 }
-            }
         };
 
         // Đảm bảo nhận được remote stream
