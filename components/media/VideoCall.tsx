@@ -86,41 +86,41 @@ const VideoCall: React.FC = () => {
             } catch (error) {
                 console.error("Error adding received ice candidate", error);
             }
-        }else {
+        } else {
             console.log('không nhận');
-            
+
         }
     };
 
     const joinCall = async () => {
         if (!incomingCall || !socket.current) return;
-      
+
         const { from, sdp } = incomingCall;
-      
+
         // Tạo peer connection
         peerConnection.current = new RTCPeerConnection(config);
-      
+
         const remoteDesc = new RTCSessionDescription(sdp);
         await peerConnection.current.setRemoteDescription(remoteDesc);
-      
+
         // Lấy luồng video/audio từ camera/mic
         const localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         if (localVideoRef.current) localVideoRef.current.srcObject = localStream;
         localStream.getTracks().forEach((track) => {
-          peerConnection.current!.addTrack(track, localStream); // Thêm track từ local stream
+            peerConnection.current!.addTrack(track, localStream); // Thêm track từ local stream
         });
-      
-         // Xử lý ICE Candidate
-         peerConnection.current.onicecandidate = (event) => {
+
+        // Xử lý ICE Candidate
+        peerConnection.current.onicecandidate = (event) => {
             console.log(event.candidate);
-            
-            if (event.candidate) {
-              socket.current!.emit('ice-candidate', { to: from, candidate: event.candidate });
-            }else {
-              console.log('không xử lý đc ice-candidate join');
-              
+
+            if (socket.current) {
+                socket.current!.emit('ice-candidate', { to: from, candidate: event.candidate });
+            } else {
+                console.log('không xử lý đc ice-candidate join');
+
             }
-          };
+        };
 
         // Đảm bảo nhận được remote stream
         peerConnection.current.ontrack = (event) => {
@@ -130,16 +130,16 @@ const VideoCall: React.FC = () => {
                 console.error("No remote streams received");
             }
         };
-      
+
         // Tạo SDP Answer và gửi về cho caller
         const answer = await peerConnection.current.createAnswer();
         await peerConnection.current.setLocalDescription(answer);
         socket.current.emit('answer', { to: from, sdp: answer });
-      
+
         // Reset trạng thái cuộc gọi
         setIncomingCall(null);
         setCallStatus('In Call');
-      };
+    };
 
     const declineCall = () => {
         setIncomingCall(null);
