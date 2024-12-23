@@ -85,35 +85,45 @@ const VideoCall: React.FC = () => {
 
     const joinCall = async () => {
         if (!incomingCall || !socket.current) return;
-
+      
         const { from, sdp } = incomingCall;
-
+      
+        // Tạo peer connection
         peerConnection.current = new RTCPeerConnection(config);
-
+      
         const remoteDesc = new RTCSessionDescription(sdp);
         await peerConnection.current.setRemoteDescription(remoteDesc);
-
+      
+        // Lấy luồng video/audio từ camera/mic
         const localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         if (localVideoRef.current) localVideoRef.current.srcObject = localStream;
-        localStream.getTracks().forEach((track) => peerConnection.current!.addTrack(track, localStream));
-
-        peerConnection.current.onicecandidate = (event) => {
-            if (event.candidate) {
-                socket.current!.emit('ice-candidate', { to: from, candidate: event.candidate });
-            }
-        };
-
+        localStream.getTracks().forEach((track) => {
+          peerConnection.current!.addTrack(track, localStream); // Thêm track từ local stream
+        });
+      
+        // Đảm bảo nhận được remote stream
         peerConnection.current.ontrack = (event) => {
-            if (remoteVideoRef.current) remoteVideoRef.current.srcObject = event.streams[0];
+          if (remoteVideoRef.current) {
+            remoteVideoRef.current.srcObject = event.streams[0];
+          }
         };
-
+      
+        // Xử lý ICE Candidate
+        peerConnection.current.onicecandidate = (event) => {
+          if (event.candidate) {
+            socket.current!.emit('ice-candidate', { to: from, candidate: event.candidate });
+          }
+        };
+      
+        // Tạo SDP Answer và gửi về cho caller
         const answer = await peerConnection.current.createAnswer();
         await peerConnection.current.setLocalDescription(answer);
         socket.current.emit('answer', { to: from, sdp: answer });
-
+      
+        // Reset trạng thái cuộc gọi
         setIncomingCall(null);
         setCallStatus('In Call');
-    };
+      };
 
     const declineCall = () => {
         setIncomingCall(null);
