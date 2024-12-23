@@ -54,16 +54,13 @@ const VideoCall: React.FC = () => {
         localStream.getTracks().forEach((track) => peerConnection.current!.addTrack(track, localStream));
 
         peerConnection.current.onicecandidate = (event) => {
-            const interval = setInterval(() => {
+            if (socket.current && event.candidate) {
                 const candidateData = { to: callTo, candidate: event.candidate };
-                if (socket.current && event.candidate) {
-                    console.log("Socket sẵn sàng, gửi ICE candidate");
-                    socket.current.emit('ice-candidate', candidateData);
-                    clearInterval(interval); // Dừng retry sau khi gửi thành công
-                } else {
-                    console.log("Socket chưa sẵn sàng, retry sau 1 giây");
-                }
-            }, 1000);
+                console.log("Socket sẵn sàng, gửi ICE candidate");
+                socket.current.emit('ice-candidate', candidateData);
+            } else {
+                console.log("Socket chưa sẵn sàng, retry sau 1 giây");
+            };
         };
 
         peerConnection.current.ontrack = (event) => {
@@ -121,22 +118,20 @@ const VideoCall: React.FC = () => {
 
         // Xử lý ICE Candidate
         peerConnection.current.onicecandidate = (event) => {
-            const interval = setInterval(() => {
+            if (socket.current && event.candidate) {
+                console.log("Socket sẵn sàng, gửi ICE candidate", event.candidate);
                 const candidateData = { to: from, candidate: event.candidate };
-                if (socket.current && event.candidate) {
-                    console.log("Socket sẵn sàng, gửi ICE candidate");
-                    socket.current.emit('ice-candidate', candidateData);
-                    clearInterval(interval); // Dừng retry sau khi gửi thành công
-                } else {
-                    console.log("Socket chưa sẵn sàng, retry sau 1 giây");
-                }
-            }, 1000);
+                socket.current.emit('ice-candidate', candidateData);
+            } else {
+                console.log("Socket chưa sẵn sàng, retry sau 1 giây");
+            }
         };
 
         // Đảm bảo nhận được remote stream
         peerConnection.current.ontrack = (event) => {
             if (remoteVideoRef.current && event.streams.length > 0) {
                 remoteVideoRef.current.srcObject = event.streams[0];
+                console.log("set remote streams received", event.streams[0]);
             } else {
                 console.error("No remote streams received");
             }
