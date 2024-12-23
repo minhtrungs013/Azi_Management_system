@@ -40,11 +40,11 @@ const VideoCall: React.FC = () => {
         socket.current.emit('register', username);
         alert(`Registered as ${username}`);
     };
-console.log(peerConnection);
+    console.log(peerConnection);
 
     const handleCall = async () => {
-        if (!socket.current ) return;
-        if (!peerConnection.current ) return console.log('peer not connection');
+        if (!socket.current) return;
+        if (!peerConnection.current) return console.log('peer not connection');
 
         // peerConnection.current = new RTCPeerConnection(config);
 
@@ -54,11 +54,16 @@ console.log(peerConnection);
         localStream.getTracks().forEach((track) => peerConnection.current!.addTrack(track, localStream));
 
         peerConnection.current.onicecandidate = (event) => {
-            if (socket.current) {
-                socket.current.emit('ice-candidate', { to: callTo, candidate: event.candidate });
-            } else {
-                console.error('Socket is not connected');
-            }
+            const interval = setInterval(() => {
+                const candidateData = { to: callTo, candidate: event.candidate };
+                if (socket.current && event.candidate) {
+                    console.log("Socket sẵn sàng, gửi ICE candidate");
+                    socket.current.emit('ice-candidate', candidateData);
+                    clearInterval(interval); // Dừng retry sau khi gửi thành công
+                } else {
+                    console.log("Socket chưa sẵn sàng, retry sau 1 giây");
+                }
+            }, 1000);
         };
 
         peerConnection.current.ontrack = (event) => {
@@ -82,8 +87,8 @@ console.log(peerConnection);
     };
 
     const handleIceCandidate = async ({ candidate }: { candidate: RTCIceCandidateInit }) => {
-        console.log('handleIceCandidate',candidate);
-        
+        console.log('handleIceCandidate', candidate);
+
         if (peerConnection.current && candidate) {
             try {
                 await peerConnection.current.addIceCandidate(candidate);
@@ -98,7 +103,7 @@ console.log(peerConnection);
 
     const joinCall = async () => {
         if (!incomingCall || !socket.current) return;
-        if (!peerConnection.current ) return console.log('peer not connection');
+        if (!peerConnection.current) return console.log('peer not connection');
         const { from, sdp } = incomingCall;
 
         // Tạo peer connection
@@ -116,16 +121,16 @@ console.log(peerConnection);
 
         // Xử lý ICE Candidate
         peerConnection.current.onicecandidate = (event) => {
-                const interval = setInterval(() => {
+            const interval = setInterval(() => {
                 const candidateData = { to: from, candidate: event.candidate };
-                    if (socket.current) {
-                        console.log("Socket sẵn sàng, gửi ICE candidate");
-                        socket.current.emit('ice-candidate', candidateData);
-                        clearInterval(interval); // Dừng retry sau khi gửi thành công
-                    } else {
-                        console.log("Socket chưa sẵn sàng, retry sau 1 giây");
-                    }
-                }, 1000);
+                if (socket.current && event.candidate) {
+                    console.log("Socket sẵn sàng, gửi ICE candidate");
+                    socket.current.emit('ice-candidate', candidateData);
+                    clearInterval(interval); // Dừng retry sau khi gửi thành công
+                } else {
+                    console.log("Socket chưa sẵn sàng, retry sau 1 giây");
+                }
+            }, 1000);
         };
 
         // Đảm bảo nhận được remote stream
