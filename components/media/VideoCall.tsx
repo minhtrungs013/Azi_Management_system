@@ -72,11 +72,28 @@ const VideoCall: React.FC = () => {
     };
 
     const handleAnswer = async ({ sdp }: { sdp: RTCSessionDescriptionInit }) => {
-        const remoteDesc = new RTCSessionDescription(sdp);
-        await peerConnection.current!.setRemoteDescription(remoteDesc);
-        setCallStatus('In Call');
+        if (!peerConnection.current) {
+            console.error('PeerConnection is not initialized.');
+            return;
+        }
+    
+        try {
+            const remoteDesc = new RTCSessionDescription(sdp);
+            await peerConnection.current.setRemoteDescription(remoteDesc);
+    
+            // Đảm bảo nhận được remote stream
+            peerConnection.current.ontrack = (event) => {
+                if (remoteVideoRef.current) {
+                    remoteVideoRef.current.srcObject = event.streams[0];
+                }
+            };
+    
+            setCallStatus('In Call');
+        } catch (error) {
+            console.error('Error setting remote description:', error);
+        }
     };
-
+    
     const handleIceCandidate = async ({ candidate }: { candidate: RTCIceCandidateInit }) => {
         if (peerConnection.current) {
             await peerConnection.current.addIceCandidate(candidate);
