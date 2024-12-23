@@ -115,14 +115,30 @@ console.log(peerConnection);
         });
 
         // Xử lý ICE Candidate
+        const sendIceCandidate = (candidateData: any) => {
+            const interval = setInterval(() => {
+                if (socket.current) {
+                    console.log("Socket sẵn sàng, gửi ICE candidate");
+                    socket.current.emit('ice-candidate', candidateData);
+                    clearInterval(interval); // Dừng retry sau khi gửi thành công
+                } else {
+                    console.log("Socket chưa sẵn sàng, retry sau 1 giây");
+                }
+            }, 1000); // Retry mỗi 1 giây
+        };
+        
         peerConnection.current.onicecandidate = (event) => {
-            console.log(event.candidate);
-
-            if (socket.current) {
-                socket.current!.emit('ice-candidate', { to: from, candidate: event.candidate });
-            } else {
-                console.log('không xử lý đc ice-candidate join');
-
+            if (event.candidate) {
+                console.log("ICE Candidate:", event.candidate);
+        
+                const candidateData = { to: from, candidate: event.candidate };
+                if (socket.current) {
+                    // Gửi ngay nếu socket sẵn sàng
+                    socket.current.emit('ice-candidate', candidateData);
+                } else {
+                    console.log("Socket chưa sẵn sàng, bắt đầu retry");
+                    sendIceCandidate(candidateData);
+                }
             }
         };
 
