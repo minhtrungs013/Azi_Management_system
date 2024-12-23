@@ -54,7 +54,10 @@ const VideoCall: React.FC = () => {
         peerConnection.current.onicecandidate = (event) => {
             if (event.candidate) {
                 socket.current!.emit('ice-candidate', { to: callTo, candidate: event.candidate });
-            }
+            }else {
+                console.log('không xử lý đc ice-candidate call ');
+                
+              }
         };
 
         peerConnection.current.ontrack = (event) => {
@@ -122,7 +125,7 @@ const VideoCall: React.FC = () => {
           if (event.candidate) {
             socket.current!.emit('ice-candidate', { to: from, candidate: event.candidate });
           }else {
-            console.log('không cảu đc ice-candidate ');
+            console.log('không xử lý đc ice-candidate join');
             
           }
         };
