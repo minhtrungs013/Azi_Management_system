@@ -135,14 +135,14 @@ console.log(remoteVideoRef);
                 }
         };
 
-        // Đảm bảo nhận được remote stream
-        peerConnection.current.ontrack = (event) => {
-            if (remoteVideoRef.current && event.streams.length > 0) {
-                remoteVideoRef.current.srcObject = event.streams[0];
-            } else {
-                console.error("No remote streams received");
-            }
-        };
+        // // Đảm bảo nhận được remote stream
+        // peerConnection.current.ontrack = (event) => {
+        //     if (remoteVideoRef.current) {
+        //         remoteVideoRef.current.srcObject = event.streams[0];
+        //     } else {
+        //         console.error("No remote streams received");
+        //     }
+        // };
 
         // Tạo SDP Answer và gửi về cho caller
         const answer = await peerConnection.current.createAnswer();
