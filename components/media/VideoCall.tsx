@@ -14,9 +14,13 @@ const VideoCall: React.FC = () => {
 
     const socket = useRef<Socket | null>(null);
     const config = {
-        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
+        iceServers: [{ urls: [
+            'stun:stun.l.google.com:19302',
+            'stun:stun1.l.google.com:19302',
+            'stun:stun2.l.google.com:19302',
+            'stun:stun3.l.google.com:19302',
+        ] }],
     };
-    console.log(remoteVideoRef);
 
     // Kết nối socket khi component mount
     useEffect(() => {
