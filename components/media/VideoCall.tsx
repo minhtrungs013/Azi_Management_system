@@ -87,7 +87,7 @@ const VideoCall: React.FC = () => {
     const handleAnswer = async ({ sdp }: { sdp: RTCSessionDescriptionInit }) => {
         const remoteDesc = new RTCSessionDescription(sdp);
         await peerConnection.current!.setRemoteDescription(remoteDesc);
-        joinCall();
+        handleCall();
         setCallStatus('In Call');
     };
 
