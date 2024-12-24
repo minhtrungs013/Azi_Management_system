@@ -78,11 +78,11 @@ console.log(remoteVideoRef);
 
     const handleOffer = async ({ from, sdp }: { from: string; sdp: RTCSessionDescriptionInit }) => {
         setIncomingCall({ from, sdp });
-        const remoteDesc = new RTCSessionDescription(sdp);
-        await peerConnection.current!.setRemoteDescription(remoteDesc);
-        peerConnection.current!.ontrack = (event) => {
-            if (remoteVideoRef.current) remoteVideoRef.current.srcObject = event.streams[0];
-        };
+        // const remoteDesc = new RTCSessionDescription(sdp);
+        // await peerConnection.current!.setRemoteDescription(remoteDesc);
+        // peerConnection.current!.ontrack = (event) => {
+        //     if (remoteVideoRef.current) remoteVideoRef.current.srcObject = event.streams[0];
+        // };
     };
 
     const handleAnswer = async ({ sdp }: { sdp: RTCSessionDescriptionInit }) => {
