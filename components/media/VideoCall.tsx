@@ -82,6 +82,11 @@ const VideoCall: React.FC = () => {
 
     const handleOffer = async ({ from, sdp }: { from: string; sdp: RTCSessionDescriptionInit }) => {
         setIncomingCall({ from, sdp });
+        const remoteDesc = new RTCSessionDescription(sdp);
+        await peerConnection.current!.setRemoteDescription(remoteDesc);
+        peerConnection.current!.ontrack = (event) => {
+            remoteVideoRef.current!.srcObject = event.streams[0];
+        };
     };
 
     const handleAnswer = async ({ sdp }: { sdp: RTCSessionDescriptionInit }) => {
@@ -113,10 +118,9 @@ const VideoCall: React.FC = () => {
 
         // Tạo peer connection
         // peerConnection.current = new RTCPeerConnection(config);
-        console.log(sdp);
 
-        const remoteDesc = new RTCSessionDescription(sdp);
-        await peerConnection.current.setRemoteDescription(remoteDesc);
+        // const remoteDesc = new RTCSessionDescription(sdp);
+        // await peerConnection.current.setRemoteDescription(remoteDesc);
 
         // Lấy luồng video/audio từ camera/mic
         const localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
@@ -136,10 +140,10 @@ const VideoCall: React.FC = () => {
             }
         };
 
-        // // Đảm bảo nhận được remote stream
-        peerConnection.current.ontrack = (event) => {
-            remoteVideoRef.current!.srcObject = event.streams[0];
-        };
+        // // // Đảm bảo nhận được remote stream
+        // peerConnection.current.ontrack = (event) => {
+        //     remoteVideoRef.current!.srcObject = event.streams[0];
+        // };
 
         // Tạo SDP Answer và gửi về cho caller
         const answer = await peerConnection.current.createAnswer();
