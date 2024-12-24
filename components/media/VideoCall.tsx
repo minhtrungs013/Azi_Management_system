@@ -147,7 +147,7 @@ const VideoCall: React.FC = () => {
         socket.current.emit('answer', { to: from, sdp: answer });
 
         // Reset trạng thái cuộc gọi
-        // setIncomingCall(null);
+        setIncomingCall(null);
         setCallStatus('In Call');
     };
 
