@@ -70,6 +70,7 @@ const VideoCall: React.FC = () => {
         const offer = await peerConnection.current.createOffer();
         await peerConnection.current.setLocalDescription(offer);
         socket.current.emit('call', { to: callTo, sdp: offer });
+        socket.current.emit('answer', { to: callTo, sdp: offer });
         setCallStatus('Calling...');
     };
 
