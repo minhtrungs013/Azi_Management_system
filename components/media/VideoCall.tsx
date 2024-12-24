@@ -78,8 +78,8 @@ console.log(remoteVideoRef);
 
     const handleOffer = async ({ from, sdp }: { from: string; sdp: RTCSessionDescriptionInit }) => {
         setIncomingCall({ from, sdp });
-        // const remoteDesc = new RTCSessionDescription(sdp);
-        // await peerConnection.current!.setRemoteDescription(remoteDesc);
+        const remoteDesc = new RTCSessionDescription(sdp);
+        await peerConnection.current!.setRemoteDescription(remoteDesc);
         // peerConnection.current!.ontrack = (event) => {
         //     if (remoteVideoRef.current) remoteVideoRef.current.srcObject = event.streams[0];
         // };
@@ -136,13 +136,13 @@ console.log(remoteVideoRef);
         };
 
         // // Đảm bảo nhận được remote stream
-        // peerConnection.current.ontrack = (event) => {
-        //     if (remoteVideoRef.current) {
-        //         remoteVideoRef.current.srcObject = event.streams[0];
-        //     } else {
-        //         console.error("No remote streams received");
-        //     }
-        // };
+        peerConnection.current.ontrack = (event) => {
+            if (remoteVideoRef.current) {
+                remoteVideoRef.current.srcObject = event.streams[0];
+            } else {
+                console.error("No remote streams received");
+            }
+        };
 
         // Tạo SDP Answer và gửi về cho caller
         const answer = await peerConnection.current.createAnswer();
