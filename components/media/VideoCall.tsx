@@ -133,9 +133,7 @@ const VideoCall: React.FC = () => {
 
         // // Đảm bảo nhận được remote stream
         peerConnection.current.ontrack = (event) => {
-            console.log(event.streams);
             remoteVideoRef.current!.srcObject = event.streams[0];
-
         };
 
         // Tạo SDP Answer và gửi về cho caller
