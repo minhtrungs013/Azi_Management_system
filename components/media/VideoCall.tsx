@@ -1,11 +1,11 @@
-"use client";
-import React, { useRef, useState, useEffect } from "react";
-import { io, Socket } from "socket.io-client";
+'use client';
+import React, { useRef, useState, useEffect } from 'react';
+import { io, Socket } from 'socket.io-client';
 
 const VideoCall: React.FC = () => {
-    const [username, setUsername] = useState("");
-    const [callTo, setCallTo] = useState("");
-    const [callStatus, setCallStatus] = useState("");
+    const [username, setUsername] = useState('');
+    const [callTo, setCallTo] = useState('');
+    const [callStatus, setCallStatus] = useState('');
     const [incomingCall, setIncomingCall] = useState<{ from: string; sdp: RTCSessionDescriptionInit } | null>(null);
     const localVideoRef = useRef<HTMLVideoElement>(null);
     const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -15,11 +15,11 @@ const VideoCall: React.FC = () => {
     const config = {
         iceServers: [{
             urls: [
-                "stun:stun.l.google.com:19302",
-                "stun:stun1.l.google.com:19302",
-                "stun:stun2.l.google.com:19302",
-                "stun:stun3.l.google.com:19302",
-            ],
+                'stun:stun.l.google.com:19302',
+                'stun:stun1.l.google.com:19302',
+                'stun:stun2.l.google.com:19302',
+                'stun:stun3.l.google.com:19302',
+            ]
         }],
     };
 
@@ -29,11 +29,11 @@ const VideoCall: React.FC = () => {
                 Authorization: `Bearer ${localStorage.getItem("access_token")}`,
             },
         });
-        peerConnection.current = new RTCPeerConnection(config);
 
-        socket.current.on("offer", handleOffer);
-        socket.current.on("answer", handleAnswer);
-        socket.current.on("ice-candidate", handleIceCandidate);
+        socket.current.on('offer', handleOffer);
+        socket.current.on('answer', handleAnswer);
+        socket.current.on('ice-candidate', handleIceCandidate);
+        socket.current.on('request-media', handleRequestMedia); // Lắng nghe yêu cầu gửi lại media
 
         return () => {
             socket.current?.disconnect();
@@ -42,20 +42,21 @@ const VideoCall: React.FC = () => {
 
     const handleRegister = () => {
         if (!socket.current) return;
-        socket.current.emit("register", username);
+        socket.current.emit('register', username);
         alert(`Registered as ${username}`);
     };
 
     const handleCall = async () => {
         if (!socket.current || !peerConnection.current) return;
 
+        // Lấy local stream
         const localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         if (localVideoRef.current) localVideoRef.current.srcObject = localStream;
         localStream.getTracks().forEach((track) => peerConnection.current!.addTrack(track, localStream));
 
         peerConnection.current.onicecandidate = (event) => {
-            if (event.candidate) {
-                socket.current?.emit("ice-candidate", { to: callTo, candidate: event.candidate });
+            if (event.candidate  && socket.current) {
+                socket.current.emit('ice-candidate', { to: callTo, candidate: event.candidate });
             }
         };
 
@@ -63,28 +64,11 @@ const VideoCall: React.FC = () => {
             if (remoteVideoRef.current) remoteVideoRef.current.srcObject = event.streams[0];
         };
 
-        const createAndSendOffer = async () => {
-            const offer = await peerConnection.current!.createOffer();
-            await peerConnection.current!.setLocalDescription(offer);
-            socket.current?.emit("call", { to: callTo, sdp: offer });
-            setCallStatus("Calling...");
-        };
+        const offer = await peerConnection.current.createOffer();
+        await peerConnection.current.setLocalDescription(offer);
+        socket.current.emit('call', { to: callTo, sdp: offer });
 
-        await createAndSendOffer();
-
-        let retryCount = 0;
-        const maxRetries = 3;
-        const retryInterval = 5000;
-
-        const retryIfNeeded = () => {
-            if (peerConnection.current?.iceConnectionState !== "connected" && retryCount < maxRetries) {
-                retryCount++;
-                createAndSendOffer();
-                setTimeout(retryIfNeeded, retryInterval);
-            }
-        };
-
-        setTimeout(retryIfNeeded, retryInterval);
+        setCallStatus('Calling...');
     };
 
     const handleOffer = async ({ from, sdp }: { from: string; sdp: RTCSessionDescriptionInit }) => {
@@ -92,11 +76,9 @@ const VideoCall: React.FC = () => {
     };
 
     const handleAnswer = async ({ sdp }: { sdp: RTCSessionDescriptionInit }) => {
-        if (peerConnection.current) {
-            const remoteDesc = new RTCSessionDescription(sdp);
-            await peerConnection.current.setRemoteDescription(remoteDesc);
-            setCallStatus("In Call");
-        }
+        const remoteDesc = new RTCSessionDescription(sdp);
+        await peerConnection.current!.setRemoteDescription(remoteDesc);
+        setCallStatus('In Call');
     };
 
     const handleIceCandidate = async ({ candidate }: { candidate: RTCIceCandidateInit }) => {
@@ -109,10 +91,29 @@ const VideoCall: React.FC = () => {
         }
     };
 
+    // Xử lý yêu cầu gửi lại media khi B chưa nhận được
+    const handleRequestMedia = async ({ to }: { to: string }) => {
+        if (peerConnection.current && !remoteVideoRef.current?.srcObject) {
+            console.log("B yêu cầu A gửi lại media.");
+
+            // Lấy lại local stream
+            const localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            if (localVideoRef.current) localVideoRef.current.srcObject = localStream;
+
+            localStream.getTracks().forEach((track) => peerConnection.current!.addTrack(track, localStream));
+
+            // Tạo offer mới và gửi lại media cho B
+            const offer = await peerConnection.current.createOffer();
+            await peerConnection.current.setLocalDescription(offer);
+            socket.current?.emit('call', { to, sdp: offer });
+        }
+    };
+
     const joinCall = async () => {
         if (!incomingCall || !socket.current || !peerConnection.current) return;
         const { from, sdp } = incomingCall;
 
+        // Thiết lập remote description
         const remoteDesc = new RTCSessionDescription(sdp);
         await peerConnection.current.setRemoteDescription(remoteDesc);
 
@@ -121,21 +122,27 @@ const VideoCall: React.FC = () => {
         localStream.getTracks().forEach((track) => peerConnection.current!.addTrack(track, localStream));
 
         peerConnection.current.onicecandidate = (event) => {
-            if (event.candidate) {
-                socket.current?.emit("ice-candidate", { to: from, candidate: event.candidate });
+            if (event.candidate && socket.current) {
+                socket.current.emit('ice-candidate', { to: from, candidate: event.candidate });
             }
         };
 
         peerConnection.current.ontrack = (event) => {
-            if (remoteVideoRef.current) remoteVideoRef.current.srcObject = event.streams[0];
+            // Kiểm tra nếu media từ A chưa có
+            if (!remoteVideoRef.current?.srcObject && socket.current ) {
+                console.log("B chưa nhận được media từ A, yêu cầu A gửi lại");
+                socket.current.emit('request-media', { to: from });
+            } else {
+                remoteVideoRef.current!.srcObject = event.streams[0];
+            }
         };
 
         const answer = await peerConnection.current.createAnswer();
         await peerConnection.current.setLocalDescription(answer);
-        socket.current.emit("answer", { to: from, sdp: answer });
+        socket.current.emit('answer', { to: from, sdp: answer });
 
         setIncomingCall(null);
-        setCallStatus("In Call");
+        setCallStatus('In Call');
     };
 
     const declineCall = () => {
@@ -173,8 +180,8 @@ const VideoCall: React.FC = () => {
             )}
 
             <div>
-                <video ref={localVideoRef} autoPlay muted style={{ width: "300px" }}></video>
-                <video ref={remoteVideoRef} autoPlay style={{ width: "300px" }}></video>
+                <video ref={localVideoRef} autoPlay muted style={{ width: '300px' }}></video>
+                <video ref={remoteVideoRef} autoPlay style={{ width: '300px' }}></video>
             </div>
         </div>
     );
