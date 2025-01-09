@@ -1,18 +1,19 @@
 'use client';
 import React, { useRef, useState, useEffect } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { log } from 'util';
 
 const VideoCall: React.FC = () => {
     const [username, setUsername] = useState('');
     const [callTo, setCallTo] = useState('');
-    const [callStatus, setCallStatus] = useState(''); // Trạng thái cuộc gọi
+    const [callStatus, setCallStatus] = useState('');
     const [incomingCall, setIncomingCall] = useState<{ from: string; sdp: RTCSessionDescriptionInit } | null>(null);
     const localVideoRef = useRef<HTMLVideoElement>(null);
     const remoteVideoRef = useRef<HTMLVideoElement>(null);
     const peerConnection = useRef<RTCPeerConnection | null>(null);
-
+    const iceCandidateQueue = useRef<RTCIceCandidateInit[]>([]);
     const socket = useRef<Socket | null>(null);
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     const config = {
         iceServers: [{ urls: [
             'stun:stun.l.google.com:19302',
@@ -22,7 +23,6 @@ const VideoCall: React.FC = () => {
         ] }],
     };
 
-    // Kết nối socket khi component mount
     useEffect(() => {
         socket.current = io("https://azi-api-nestjs.onrender.com/notifications", {
             extraHeaders: {
@@ -30,43 +30,33 @@ const VideoCall: React.FC = () => {
             },
         });
         peerConnection.current = new RTCPeerConnection(config);
-        // Lắng nghe các sự kiện socket
+
         socket.current.on('offer', handleOffer);
         socket.current.on('answer', handleAnswer);
         socket.current.on('ice-candidate', handleIceCandidate);
 
         return () => {
-            // Hủy kết nối socket khi component unmount
             socket.current?.disconnect();
         };
-    }, []);
+    }, [config]);
 
     const handleRegister = () => {
         if (!socket.current) return;
         socket.current.emit('register', username);
         alert(`Registered as ${username}`);
     };
-    console.log(peerConnection);
 
     const handleCall = async () => {
-        if (!socket.current) return;
-        if (!peerConnection.current) return console.log('peer not connection');
+        if (!peerConnection.current || !socket.current) return;
 
-        // peerConnection.current = new RTCPeerConnection(config);
-
-        // Thêm local stream
         const localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         if (localVideoRef.current) localVideoRef.current.srcObject = localStream;
         localStream.getTracks().forEach((track) => peerConnection.current!.addTrack(track, localStream));
 
         peerConnection.current.onicecandidate = (event) => {
-            if (socket.current && event.candidate) {
-                const candidateData = { to: callTo, candidate: event.candidate };
-                console.log("Socket sẵn sàng, gửi ICE candidate");
-                socket.current.emit('ice-candidate', candidateData);
-            } else {
-                console.log("Socket chưa sẵn sàng, retry sau 1 giây");
-            };
+            if (event.candidate) {
+                socket.current!.emit('ice-candidate', { to: callTo, candidate: event.candidate });
+            }
         };
 
         peerConnection.current.ontrack = (event) => {
@@ -76,7 +66,6 @@ const VideoCall: React.FC = () => {
         const offer = await peerConnection.current.createOffer();
         await peerConnection.current.setLocalDescription(offer);
         socket.current.emit('call', { to: callTo, sdp: offer });
-
         setCallStatus('Calling...');
     };
 
@@ -87,64 +76,57 @@ const VideoCall: React.FC = () => {
     const handleAnswer = async ({ sdp }: { sdp: RTCSessionDescriptionInit }) => {
         const remoteDesc = new RTCSessionDescription(sdp);
         await peerConnection.current!.setRemoteDescription(remoteDesc);
+
+        // Xử lý hàng đợi ICE
+        while (iceCandidateQueue.current.length > 0) {
+            const candidate = iceCandidateQueue.current.shift();
+            await peerConnection.current!.addIceCandidate(candidate!);
+        }
+
         setCallStatus('In Call');
     };
 
     const handleIceCandidate = async ({ candidate }: { candidate: RTCIceCandidateInit }) => {
-        console.log('handleIceCandidate', candidate);
-
-        if (peerConnection.current && candidate) {
-            try {
+        if (peerConnection.current) {
+            if (peerConnection.current.remoteDescription) {
                 await peerConnection.current.addIceCandidate(candidate);
-            } catch (error) {
-                console.error("Error adding received ice candidate", error);
+            } else {
+                iceCandidateQueue.current.push(candidate); // Thêm vào hàng đợi nếu remote chưa sẵn sàng
             }
-        } else {
-            console.log('không nhận');
-
         }
     };
 
     const joinCall = async () => {
-        if (!incomingCall || !socket.current) return;
-        if (!peerConnection.current) return console.log('peer not connection');
-        const { from, sdp } = incomingCall;
+        if (!incomingCall || !peerConnection.current || !socket.current) return;
 
-        // Tạo peer connection
-        // peerConnection.current = new RTCPeerConnection(config);
+        const { from, sdp } = incomingCall;
 
         const remoteDesc = new RTCSessionDescription(sdp);
         await peerConnection.current.setRemoteDescription(remoteDesc);
 
-        // Lấy luồng video/audio từ camera/mic
         const localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         if (localVideoRef.current) localVideoRef.current.srcObject = localStream;
-        localStream.getTracks().forEach((track) => {
-            peerConnection.current!.addTrack(track, localStream); // Thêm track từ local stream
-        });
+        localStream.getTracks().forEach((track) => peerConnection.current!.addTrack(track, localStream));
 
-        // Xử lý ICE Candidate
         peerConnection.current.onicecandidate = (event) => {
-            if (socket.current && event.candidate) {
-                const candidateData = { to: from, candidate: event.candidate };
-                console.log("Socket sẵn sàng, gửi ICE candidate");
-                socket.current.emit('ice-candidate', candidateData);
-            } else {
-                console.log("Socket chưa sẵn sàng, retry sau 1 giây");
+            if (event.candidate) {
+                socket.current!.emit('ice-candidate', { to: from, candidate: event.candidate });
             }
         };
 
-        // // Đảm bảo nhận được remote stream
         peerConnection.current.ontrack = (event) => {
-            remoteVideoRef.current!.srcObject = event.streams[0];
+            if (remoteVideoRef.current) remoteVideoRef.current.srcObject = event.streams[0];
         };
 
-        // Tạo SDP Answer và gửi về cho caller
         const answer = await peerConnection.current.createAnswer();
         await peerConnection.current.setLocalDescription(answer);
         socket.current.emit('answer', { to: from, sdp: answer });
 
-        // Reset trạng thái cuộc gọi
+        while (iceCandidateQueue.current.length > 0) {
+            const candidate = iceCandidateQueue.current.shift();
+            await peerConnection.current!.addIceCandidate(candidate!);
+        }
+
         setIncomingCall(null);
         setCallStatus('In Call');
     };
