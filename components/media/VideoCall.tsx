@@ -14,13 +14,9 @@ const VideoCall: React.FC = () => {
 
     const socket = useRef<Socket | null>(null);
     const config = {
-        iceServers: [{ urls: [
-            'stun:stun.l.google.com:19302',
-            'stun:stun1.l.google.com:19302',
-            'stun:stun2.l.google.com:19302',
-            'stun:stun3.l.google.com:19302',
-        ] }],
+        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
     };
+console.log(remoteVideoRef);
 
     // Kết nối socket khi component mount
     useEffect(() => {
@@ -76,12 +72,17 @@ const VideoCall: React.FC = () => {
         const offer = await peerConnection.current.createOffer();
         await peerConnection.current.setLocalDescription(offer);
         socket.current.emit('call', { to: callTo, sdp: offer });
-
+        
         setCallStatus('Calling...');
     };
 
     const handleOffer = async ({ from, sdp }: { from: string; sdp: RTCSessionDescriptionInit }) => {
         setIncomingCall({ from, sdp });
+        const remoteDesc = new RTCSessionDescription(sdp);
+        await peerConnection.current!.setRemoteDescription(remoteDesc);
+        peerConnection.current!.ontrack = (event) => {
+            if (remoteVideoRef.current) remoteVideoRef.current.srcObject = event.streams[0];
+        };
     };
 
     const handleAnswer = async ({ sdp }: { sdp: RTCSessionDescriptionInit }) => {
@@ -112,7 +113,6 @@ const VideoCall: React.FC = () => {
 
         // Tạo peer connection
         // peerConnection.current = new RTCPeerConnection(config);
-        console.log(sdp);
 
         const remoteDesc = new RTCSessionDescription(sdp);
         await peerConnection.current.setRemoteDescription(remoteDesc);
@@ -127,17 +127,21 @@ const VideoCall: React.FC = () => {
         // Xử lý ICE Candidate
         peerConnection.current.onicecandidate = (event) => {
             if (socket.current && event.candidate) {
-                const candidateData = { to: from, candidate: event.candidate };
-                console.log("Socket sẵn sàng, gửi ICE candidate");
-                socket.current.emit('ice-candidate', candidateData);
-            } else {
-                console.log("Socket chưa sẵn sàng, retry sau 1 giây");
-            }
+                    const candidateData = { to: from, candidate: event.candidate };
+                    console.log("Socket sẵn sàng, gửi ICE candidate");
+                    socket.current.emit('ice-candidate', candidateData);
+                } else {
+                    console.log("Socket chưa sẵn sàng, retry sau 1 giây");
+                }
         };
 
-        // // Đảm bảo nhận được remote stream
+        // Đảm bảo nhận được remote stream
         peerConnection.current.ontrack = (event) => {
-            remoteVideoRef.current!.srcObject = event.streams[0];
+            if (remoteVideoRef.current && event.streams.length > 0) {
+                remoteVideoRef.current.srcObject = event.streams[0];
+            } else {
+                console.error("No remote streams received");
+            }
         };
 
         // Tạo SDP Answer và gửi về cho caller
