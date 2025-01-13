@@ -34,7 +34,6 @@ const VideoCall: React.FC = () => {
         socket.current.on('offer', handleOffer);
         socket.current.on('answer', handleAnswer);
         socket.current.on('ice-candidate', handleIceCandidate);
-        socket.current.on('request-media', handleRequestMedia); 
 
         return () => {
             // Hủy kết nối socket khi component unmount
@@ -106,24 +105,6 @@ const VideoCall: React.FC = () => {
         }
     };
 
-     // Xử lý yêu cầu gửi lại media khi B chưa nhận được
-     const handleRequestMedia = async ({ to }: { to: string }) => {
-        if (peerConnection.current && !remoteVideoRef.current?.srcObject) {
-            console.log("B yêu cầu A gửi lại media.");
-
-            // Lấy lại local stream
-            const localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-            if (localVideoRef.current) localVideoRef.current.srcObject = localStream;
-
-            localStream.getTracks().forEach((track) => peerConnection.current!.addTrack(track, localStream));
-
-            // Tạo offer mới và gửi lại media cho B
-            const offer = await peerConnection.current.createOffer();
-            await peerConnection.current.setLocalDescription(offer);
-            socket.current?.emit('call', { to, sdp: offer });
-        }
-    };
-
     const joinCall = async () => {
         if (!incomingCall || !socket.current) return;
         if (!peerConnection.current) return console.log('peer not connection');
@@ -131,6 +112,7 @@ const VideoCall: React.FC = () => {
 
         // Tạo peer connection
         // peerConnection.current = new RTCPeerConnection(config);
+        console.log(sdp);
 
         const remoteDesc = new RTCSessionDescription(sdp);
         await peerConnection.current.setRemoteDescription(remoteDesc);
@@ -155,14 +137,9 @@ const VideoCall: React.FC = () => {
 
         // // Đảm bảo nhận được remote stream
         peerConnection.current.ontrack = (event) => {
-            // Kiểm tra nếu media từ A chưa có
-            if (!remoteVideoRef.current?.srcObject) {
-                console.log("B chưa nhận được media từ A, yêu cầu A gửi lại");
-                socket.current?.emit('request-media', { to: from });
-            } else {
-                remoteVideoRef.current.srcObject = event.streams[0];
-            }
+            remoteVideoRef.current!.srcObject = event.streams[0];
         };
+
         // Tạo SDP Answer và gửi về cho caller
         const answer = await peerConnection.current.createAnswer();
         await peerConnection.current.setLocalDescription(answer);
