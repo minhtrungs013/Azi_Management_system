@@ -1,6 +1,7 @@
 'use client';
 import React, { useRef, useState, useEffect } from 'react';
 import { io, Socket } from 'socket.io-client';
+import { log } from 'util';
 
 const VideoCall: React.FC = () => {
     const [username, setUsername] = useState('');
@@ -13,7 +14,14 @@ const VideoCall: React.FC = () => {
 
     const socket = useRef<Socket | null>(null);
     const config = {
-        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
+        iceServers: [{
+            urls: [
+                'stun:stun.l.google.com:19302',
+                'stun:stun1.l.google.com:19302',
+                'stun:stun2.l.google.com:19302',
+                'stun:stun3.l.google.com:19302',
+            ]
+        }],
     };
 
     // Kết nối socket khi component mount
@@ -28,6 +36,7 @@ const VideoCall: React.FC = () => {
         socket.current.on('offer', handleOffer);
         socket.current.on('answer', handleAnswer);
         socket.current.on('ice-candidate', handleIceCandidate);
+        socket.current.on('request-media', handleRequestMedia);
 
         return () => {
             // Hủy kết nối socket khi component unmount
@@ -70,6 +79,7 @@ const VideoCall: React.FC = () => {
         const offer = await peerConnection.current.createOffer();
         await peerConnection.current.setLocalDescription(offer);
         socket.current.emit('call', { to: callTo, sdp: offer });
+
         setCallStatus('Calling...');
     };
 
@@ -98,19 +108,37 @@ const VideoCall: React.FC = () => {
         }
     };
 
+    // Xử lý yêu cầu gửi lại media khi B chưa nhận được
+    const handleRequestMedia = async ({ to }: { to: string }) => {
+        if (peerConnection.current && !remoteVideoRef.current?.srcObject) {
+            console.log("B yêu cầu A gửi lại media.");
+
+            // Lấy lại local stream
+            const localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            if (localVideoRef.current) localVideoRef.current.srcObject = localStream;
+
+            localStream.getTracks().forEach((track) => peerConnection.current!.addTrack(track, localStream));
+
+            // Tạo offer mới và gửi lại media cho B
+            const offer = await peerConnection.current.createOffer();
+            await peerConnection.current.setLocalDescription(offer);
+            socket.current?.emit('call', { to, sdp: offer });
+        }
+    };
+
     const joinCall = async () => {
         if (!incomingCall || !socket.current || !peerConnection.current) return;
         console.log('Joining call with peer connection', peerConnection.current);
-        
+
         const { from, sdp } = incomingCall;
         const remoteDesc = new RTCSessionDescription(sdp);
         await peerConnection.current.setRemoteDescription(remoteDesc);
         console.log('Set remote description');
-        
+
         const localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         if (localVideoRef.current) localVideoRef.current.srcObject = localStream;
         localStream.getTracks().forEach((track) => peerConnection.current!.addTrack(track, localStream));
-    
+
         peerConnection.current.onicecandidate = (event) => {
             if (socket.current && event.candidate) {
                 console.log("Socket sẵn sàng, gửi ICE candidate", event.candidate);
@@ -118,7 +146,7 @@ const VideoCall: React.FC = () => {
                 socket.current.emit('ice-candidate', candidateData);
             }
         };
-    
+
         // Kiểm tra ontrack lại lần nữa
         peerConnection.current.addEventListener('track', (event) => {
             console.log("Track added", event);
@@ -127,11 +155,11 @@ const VideoCall: React.FC = () => {
                 if (remoteVideoRef.current) remoteVideoRef.current.srcObject = remoteStream;
             }
         });
-    
+
         const answer = await peerConnection.current.createAnswer();
         await peerConnection.current.setLocalDescription(answer);
         socket.current.emit('answer', { to: from, sdp: answer });
-    
+
         setIncomingCall(null);
         setCallStatus('In Call');
     };
