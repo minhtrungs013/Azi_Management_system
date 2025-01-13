@@ -1,7 +1,6 @@
 'use client';
 import React, { useRef, useState, useEffect } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { log } from 'util';
 
 const VideoCall: React.FC = () => {
     const [username, setUsername] = useState('');
@@ -16,7 +15,6 @@ const VideoCall: React.FC = () => {
     const config = {
         iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
     };
-console.log(remoteVideoRef);
 
     // Kết nối socket khi component mount
     useEffect(() => {
@@ -72,17 +70,12 @@ console.log(remoteVideoRef);
         const offer = await peerConnection.current.createOffer();
         await peerConnection.current.setLocalDescription(offer);
         socket.current.emit('call', { to: callTo, sdp: offer });
-        
+        socket.current.emit('answer', { to: callTo, sdp: offer });
         setCallStatus('Calling...');
     };
 
     const handleOffer = async ({ from, sdp }: { from: string; sdp: RTCSessionDescriptionInit }) => {
         setIncomingCall({ from, sdp });
-        const remoteDesc = new RTCSessionDescription(sdp);
-        await peerConnection.current!.setRemoteDescription(remoteDesc);
-        peerConnection.current!.ontrack = (event) => {
-            if (remoteVideoRef.current) remoteVideoRef.current.srcObject = event.streams[0];
-        };
     };
 
     const handleAnswer = async ({ sdp }: { sdp: RTCSessionDescriptionInit }) => {
@@ -127,22 +120,32 @@ console.log(remoteVideoRef);
         // Xử lý ICE Candidate
         peerConnection.current.onicecandidate = (event) => {
             if (socket.current && event.candidate) {
-                    const candidateData = { to: from, candidate: event.candidate };
-                    console.log("Socket sẵn sàng, gửi ICE candidate");
-                    socket.current.emit('ice-candidate', candidateData);
-                } else {
-                    console.log("Socket chưa sẵn sàng, retry sau 1 giây");
-                }
-        };
-
-        // Đảm bảo nhận được remote stream
-        peerConnection.current.ontrack = (event) => {
-            if (remoteVideoRef.current && event.streams.length > 0) {
-                remoteVideoRef.current.srcObject = event.streams[0];
+                console.log("Socket sẵn sàng, gửi ICE candidate", event.candidate);
+                const candidateData = { to: from, candidate: event.candidate };
+                socket.current.emit('ice-candidate', candidateData);
             } else {
-                console.error("No remote streams received");
+                console.log("Socket chưa sẵn sàng, retry sau 1 giây");
             }
         };
+
+        peerConnection.current.addEventListener('track', (event) => {
+            if (remoteVideoRef.current) {
+                let remoteStream = remoteVideoRef.current.srcObject as MediaStream;
+        
+                if (!remoteStream) {
+                    // Nếu không có stream hiện tại, tạo mới
+                    remoteStream = new MediaStream();
+                    remoteVideoRef.current.srcObject = remoteStream;
+                    console.log("New remote stream created");
+                }
+        
+                // Thêm track vào stream
+                remoteStream.addTrack(event.track);
+                console.log("Track added to remote stream:", event.track);
+            } else {
+                console.error("Remote video element is not available");
+            }
+        });
 
         // Tạo SDP Answer và gửi về cho caller
         const answer = await peerConnection.current.createAnswer();
