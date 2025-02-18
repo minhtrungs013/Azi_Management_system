@@ -26,11 +26,8 @@ const VideoCall: React.FC = () => {
 
     // Kết nối socket khi component mount
     useEffect(() => {
-        socket.current = io("https://azi-api-nestjs.onrender.com/notifications", {
-            extraHeaders: {
-                Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-            },
-        });
+        socket.current = io("http://localhost:5000/");
+        // socket.current = io("https://azi-management-system-be.onrender.com");
         peerConnection.current = new RTCPeerConnection(config);
         // Lắng nghe các sự kiện socket
         socket.current.on('offer', handleOffer);

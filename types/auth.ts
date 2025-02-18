@@ -8,7 +8,8 @@ export interface LoginPayload {
 export interface User {
   _id: string;
   username: string;
-  name?: string;
+  lastname?: string;
+  firstname?: string;
   email?: string;
   location?: string;
   avatar_url?: string;

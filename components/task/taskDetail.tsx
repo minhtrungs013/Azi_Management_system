@@ -1,23 +1,37 @@
 "use client"
-import { setRefresh, updateTask } from "@/lib/store/features/taskSlice";
+import { useSocket } from "@/contexts/SocketContext";
+import { createNotification } from "@/lib/store/features/notificationSlice";
+import { getAllMemberProject, getListByProjectIdSlice } from "@/lib/store/features/projectSlice";
+import { getTasksByIdSlice, moveTask, setRefresh, updateTask } from "@/lib/store/features/taskSlice";
 import { AppDispatch, RootState } from "@/lib/store/store";
 import { checkRuleAccess, handleUploadCloudinary } from "@/lib/utils";
 import { members } from "@/types/auth";
-import { Cards, issueTypes } from "@/types/project";
-import { CaseSensitive, Edit, FileCheck2, Power, Save, Send } from "lucide-react";
+import { notificationCreate } from "@/types/notification";
+import { Cards, issueTypes, listtest } from "@/types/project";
+import { Select } from "@radix-ui/react-select";
+import { BookOpenText, Bug, CalendarDays, ChartCandlestick, ClipboardList, Edit, FileArchive, Leaf, MessagesSquare, Save, Send, Users, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
+import CopyButton from "../common/copyButton";
+import { Button } from "../ui/button";
+import { SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
-const TaskDetail = ({ closeModal, task, allMemberProject }: { closeModal: () => void, task: Cards | undefined, allMemberProject: members[] | undefined }) => {
+const TaskDetail = ({ taskId, projjectId }: { taskId: string, projjectId: string }) => {
     const dispatch = useDispatch<AppDispatch>();
     const [selectedRole, setSelectedRole] = useState(issueTypes[0].value);
     const [isEditTask, setIsEditTask] = useState<boolean>(true);
     const [filteredUsers, setFilteredUsers] = useState<members[]>();
+    const [task, setTask] = useState<Cards>();
+    const [allMemberProject, setAllMemberProject] = useState<members[]>();
     const [isShowSearchUser, sethowSearchUser] = useState<boolean>(false);
-    const [value, setValue] = useState<string>(task?.assignee?.name || '');
+    const [value, setValue] = useState<string>(task?.assignee?.firstname + " " + task?.assignee?.lastname || '');
     const authState = useSelector((state: RootState) => state.auth);
+    const userIds = allMemberProject?.map(item => item.user._id);
+    const { socket, sendMessage } = useSocket();
     const [editTask, setEditTask] = useState({
         listId: task?.listId,
         title: task?.title,
@@ -26,21 +40,83 @@ const TaskDetail = ({ closeModal, task, allMemberProject }: { closeModal: () => 
         issueType: task?.issueType,
         position: task?.position,
         image_urls: task?.image_urls || [],
-        dueDate: "2024-10-02T08:56:50.403Z",
-        assignee: task?.assignee?._id
+        startDate: task?.startDate,
+        endDate: task?.endDate,
+        assignee: task?.assignee?._id,
+        reporter: task?.reporter?._id
     });
+    const [value1, setValue1] = useState('');
+    const [list, setList] = useState<listtest[]>([]);
+
+    const toolbarOptions = [
+        ['bold', 'italic', 'underline', 'strike'],        // toggled buttons
+        ['blockquote', 'code-block'],
+        ['link', 'image', 'video', 'formula'],
+
+        // [{ 'header': 1 }, { 'header': 2 }],               // custom button values
+        [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'list': 'check' }],
+        [{ 'script': 'sub' }, { 'script': 'super' }],      // superscript/subscript
+        [{ 'indent': '-1' }, { 'indent': '+1' }],          // outdent/indent
+        [{ 'direction': 'rtl' }],                         // text direction
+
+        // [{ 'size': ['small', false, 'large', 'huge'] }],  // custom dropdown
+        [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+
+        [{ 'color': [] }, { 'background': [] }],          // dropdown with defaults from theme
+        [{ 'font': [] }],
+        [{ 'align': [] }],
+
+        ['clean']                                         // remove formatting button
+    ];
+    const module = { toolbar: toolbarOptions }
+    const fetchTask = async () => {
+        const resGetTasksById = await dispatch(getTasksByIdSlice(taskId));
+        if (getTasksByIdSlice.fulfilled.match(resGetTasksById)) {
+            setTask(resGetTasksById.payload);
+            setEditTask((prevEditTask) => ({
+                ...prevEditTask,
+                listId: resGetTasksById.payload?.listId,
+                title: resGetTasksById.payload?.title,
+                description: resGetTasksById.payload?.description,
+                priority: resGetTasksById.payload?.priority,
+                issueType: resGetTasksById.payload?.issueType,
+                position: resGetTasksById.payload?.position,
+                image_urls: resGetTasksById.payload?.image_urls || [],
+                startDate: resGetTasksById.payload?.startDate,
+                endDate: resGetTasksById.payload?.endDate,
+                reporter: resGetTasksById.payload.reporter._id,
+                assignee: resGetTasksById.payload.assignee._id
+            }));
+            setValue(resGetTasksById.payload?.assignee?.firstname + " " + resGetTasksById.payload?.assignee?.lastname || '');
+
+        }
+    }
+    useEffect(() => {
+        (async () => {
+            const resAllMemberProject = await dispatch(getAllMemberProject(projjectId));
+            if (getAllMemberProject.fulfilled.match(resAllMemberProject)) {
+                setAllMemberProject(resAllMemberProject.payload);
+
+            }
+            const resgetListByProjectId = await dispatch(getListByProjectIdSlice(projjectId));
+            if (getListByProjectIdSlice.fulfilled.match(resgetListByProjectId)) {
+                setList(resgetListByProjectId.payload);
+            }
+            fetchTask();
+        })();
+    }, [projjectId, taskId])
 
     const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
+        const dateFields = ['startDate', 'endDate'];
+        const newValue = dateFields.includes(name) ? value + ':00.000Z' : value;
         setEditTask((prevEditTask) => {
             return {
                 ...prevEditTask,
-                [name]: value || '',
+                [name]: newValue || '',
             };
         });
     };
-
-
 
     const handleImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target?.files
@@ -89,7 +165,8 @@ const TaskDetail = ({ closeModal, task, allMemberProject }: { closeModal: () => 
             return;
         }
         const filteredUsers = allMemberProject?.filter((user) =>
-            user?.user.name && user?.user.name.toLowerCase().includes(lowerCaseValue) ||
+            user?.user.firstname && user?.user.firstname.toLowerCase().includes(lowerCaseValue) ||
+            user?.user.lastname && user?.user.lastname.toLowerCase().includes(lowerCaseValue) ||
             user?.user.email && user?.user.email.toLowerCase().includes(lowerCaseValue)
         );
         setFilteredUsers(filteredUsers)
@@ -102,7 +179,7 @@ const TaskDetail = ({ closeModal, task, allMemberProject }: { closeModal: () => 
                 assignee: value.user._id || '',
             };
         });
-        setValue(value.user.name || '')
+        setValue((value.user.firstname ?? '') + " " + (value.user.lastname ?? '') || '')
         sethowSearchUser(false);
     };
     const handleEditTask = async () => {
@@ -114,7 +191,7 @@ const TaskDetail = ({ closeModal, task, allMemberProject }: { closeModal: () => 
                     autoClose: 5000,
                 });
                 dispatch(setRefresh(true));
-                // closeModal();
+                fetchTask();
                 setIsEditTask(!isEditTask);
             } else {
                 console.log(result);
@@ -135,37 +212,82 @@ const TaskDetail = ({ closeModal, task, allMemberProject }: { closeModal: () => 
         return `${day}-${month}-${year}   ${hours}:${minutes}`;
     }
 
+    const formatDateTimeForInput = (dateString: string) => {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return '';
+        return date.toISOString().slice(0, 16);
+    };
+
+    const handleOnValueChange = (value: string) => {
+        if (!task) return;
+        dispatch(moveTask({ taskId: task?._id, listId: value }))
+        const notification: notificationCreate = {
+            title: 'Move Task',
+            message: authState.name + ' has been moved ' + task?.title + ' to ' + list.find(item => item._id == editTask.listId)?.name,
+            type: 'Task',
+            link: `/projects/${projjectId}/tasks/${task?.identifier}`,
+            senderId: authState.userId || '',
+            notificationRecipients: userIds || []
+        }
+        dispatch(createNotification(notification))
+        setTimeout(() => {
+            sendMessage('sendNotification', { group: projjectId, message: authState.name + ' has been moved ' + task?.title + ' to ' + list.find(item => item._id == value)?.name });
+        }, 1000);
+        setEditTask((prevEditTask) => ({ ...prevEditTask, listId: value }))
+    }
     return (
-        <div className="min-w-[900px]  flex flex-col justify-center sm:py-12">
+        <div className="">
             <div className="py-3 ">
-                <div className="relative px-4 py-5 bg-white shadow-lg sm:rounded-xl sm:p-10">
+                <div className="relative ">
                     <div className="min-w-[900px] min-h-[600px] mx-auto max-h-[800px]  overflow-y-auto section">
-                        <h1 className="text-2xl font-semibold text-gray-700  flex items-center ">{task?.title}</h1>
-                        <div className="flex items-center mb-8 mt-3">
-                            {isEditTask ?
-                                <button onClick={() => handleOpenEditTask()} className="px-4 py-3 bg-gray-50  shadow-md border-gray-50  rounded-md flex items-center text-sm font-medium hover:text-red-500"><Edit className='h-5 w-5 mr-2 ' /> Edit</button>
-                                :
-                                <button onClick={() => handleEditTask()} className="px-4 py-3 bg-gray-50  shadow-md border-gray-50  rounded-md flex items-center text-sm font-medium hover:text-blue-500"><Save className='h-5 w-5 mr-2 ' /> Save</button>
-                            }
+                        <div className="grid grid-cols-3 gap-4  my-5 ">
+                            <div className="col-start-1 col-span-2  p-2 ">
+                                <div className="flex items-center">
+                                    {task?.issueType === 'task' ? <ClipboardList className='h-11 w-11  p-3 rounded-sm mr-2 text-green-600 shadow-md bg-green-50' /> :
+                                        <Bug className='h-11 w-11  p-3 rounded-sm mr-2 text-red-600 shadow-md bg-red-50' />}
+
+                                    {isEditTask ?
+                                        <h1 className="text-2xl font-semibold text-gray-700  line-clamp-2">{task?.title}</h1>
+                                        :
+                                        <input
+                                            type="text"
+                                            id="title"
+                                            defaultValue={task?.title}
+                                            onChange={handleChange}
+                                            name="title"
+                                            className="ml-2 text-2xl font-semibold text-black w-full border border-gray-300 rounded-md  p-2"
+                                            placeholder="eg.., Maria, Maria@gmail.com"
+                                            required
+                                        />
+                                    }
+                                </div>
+                            </div>
+                            <div className="col-start-3 col-span-3 flex justify-between items-center">
+                                <div className="">
+                                    <CopyButton label={`${task?.identifier}`} copyText={`http://localhost:3000/projects/${projjectId}/tasks/${task?.identifier}`} />
+                                </div>
+                                <div className="flex mt-2">
+                                    {isEditTask ?
+                                        <Button onClick={() => handleOpenEditTask()} variant="secondary" size="sm" className="mr-2 hover:text-red-500"><Edit className='h-5 w-5 mr-2 ' /> Edit</Button>
+                                        :
+                                        <div>
+                                            <Button onClick={() => setIsEditTask(!isEditTask)} variant="destructive" size="sm" className="mr-2 "><X className='h-5 w-5 ' /> Cancel</Button>
+                                            <Button onClick={() => handleEditTask()} variant="secondary" size="sm" className="mr-2 hover:text-blue-500"><Save className='h-5 w-5 mr-2' /> Save</Button>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
                         </div>
                         <div className="grid grid-cols-3 gap-4 my-5 ">
                             <div className=" col-start-1 col-span-2  p-2 ">
-                                <div className="mb-2">
+                                {/* <div className="mb-2">
                                     <label htmlFor="title" className=" text-black flex items-center font-semibold mb-1"> Detail: </label>
                                     <div className="ml-2 py-2">
                                         <div className="flex items-center mb-2  text-red-700">
-                                            issueType: <select
-                                                id="issueType"
-                                                name="issueType"
-                                                disabled={true}
-                                                onChange={handleChange}
-                                                defaultValue={task?.issueType}
-                                                className="border border-gray-300 text-black rounded-md p-[9px] w-full cursor-pointer ml-2 ">
-                                                <option value="">Select issue</option>
-                                                <option value="task"> Task </option>
-                                                <option value="bug">Bug</option>
-                                                <option value="story">Story</option>
-                                            </select>
+                                            issueType: <p className=" text-black p-[9px] w-full cursor-pointer ml-2 ">
+                                                {task?.issueType}
+                                            </p>
                                         </div>
                                         <div className="flex items-center  text-blue-700">
                                             Priority: <select
@@ -182,23 +304,23 @@ const TaskDetail = ({ closeModal, task, allMemberProject }: { closeModal: () => 
                                             </select>
                                         </div>
                                     </div>
-                                </div>
+                                </div> */}
                                 <div className="mb-2">
-                                    <label htmlFor="title" className=" text-black flex items-center font-semibold mb-1"> Description: </label>
+                                    <label htmlFor="title" className=" text-black flex items-center font-semibold mb-3"> <BookOpenText className='h-11 w-11  p-3 rounded-sm mr-2 text-blue-600 shadow-md bg-blue-50' /> Description: </label>
                                     <textarea
                                         id="description"
                                         name="description"
                                         disabled={isEditTask}
                                         onChange={handleChange}
                                         defaultValue={task?.description}
-                                        className="border border-gray-300 rounded-md p-2 w-full"
+                                        className="border border-gray-300 rounded-md p-2 w-full min-h-[200px]"
                                         placeholder="Enter project description"
                                         // rows="4"
                                         required
                                     ></textarea>
                                 </div>
                                 <div className="mb-2">
-                                    <label htmlFor="title" className=" text-black flex items-center font-semibold mb-1"> Attachments: </label>
+                                    <label htmlFor="title" className=" text-black flex items-center font-semibold mb-1"> <FileArchive className='h-11 w-11  p-3 rounded-sm mr-2 text-blue-600 shadow-md bg-blue-50' /> Attachments: </label>
                                     {!isEditTask && <input type="file" onChange={handleImage} multiple />}
                                     {editTask?.image_urls.length == 0 ? <p className="ml-2 text-sm text-black  p-2"> No file Attachments...</p> :
                                         <div className="flex items-center pt-4">
@@ -210,7 +332,7 @@ const TaskDetail = ({ closeModal, task, allMemberProject }: { closeModal: () => 
                                     }
                                 </div>
                                 <div className="">
-                                    <label className=" text-black flex items-center font-semibold mb-1"> Activity: </label>
+                                    <label className=" text-black flex items-center font-semibold mb-1"> <MessagesSquare className='h-11 w-11  p-3 rounded-sm mr-2 text-blue-600 shadow-md bg-blue-50' /> Activity: </label>
                                     <div className="my-5 p-2 max-h-44  overflow-y-auto section border-gray-300 rounded-md border">
                                         {editTask?.image_urls.length == 0 ?
                                             <p className="ml-2 text-sm text-black  p-2"> No comment this task...</p>
@@ -225,62 +347,98 @@ const TaskDetail = ({ closeModal, task, allMemberProject }: { closeModal: () => 
                                             </div>
                                         }
                                     </div>
-                                    <div className="flex items-center mt-5">
-                                        <input type="text" className="p-2 w-full border border-gray-400 rounded-md mr-3" placeholder="Add Comment" />
+                                    <div className="flex items-center mt-5 mb-10">
+                                        <ReactQuill modules={module} theme="snow" value={value1} onChange={setValue1} className="w-full" />
+
                                         <Send className="h-5 w-5 text-blue-600 cursor-pointer" />
                                     </div>
                                 </div>
                             </div>
                             <div className="col-start-3 col-span-3 ">
+                                <div className="flex items-center mb-2">
+                                    <label htmlFor="title" className=" text-black flex items-center font-semibold mr-2">  <Leaf className='h-11 w-11  p-3 rounded-sm mr-2 text-green-600 shadow-md bg-green-50' /> Status: </label>
+                                    <Select value={editTask.listId} onValueChange={(value) => handleOnValueChange(value)}>
+                                        <SelectTrigger className="w-[150px] px-4 py-3 h-auto text-sm font-medium">
+                                            <SelectValue>
+                                                {list.find(item => item._id == editTask.listId)?.name}
+                                            </SelectValue>
+                                        </SelectTrigger>
+                                        <SelectContent >
+                                            {list?.map((item, index) => (
+                                                <SelectItem key={index} value={item._id}>{item.name}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                                 <div className="mb-2">
-                                    <label className=" text-black flex items-center font-semibold mb-1"> People: </label>
+                                    <label className=" text-black flex items-center font-semibold mb-1"><Users className='h-11 w-11  p-3 rounded-sm mr-2 text-blue-600 shadow-md bg-blue-50' /> People: </label>
                                     <div className="ml-2 py-2">
                                         <div className="flex items-center mb-2  text-red-700">
-                                            Reporter: <input type="text" className="ml-2 text-sm text-black w-full border border-gray-300 rounded-md p-2" disabled={true} placeholder="" defaultValue={task?.reporter?.name} />
+                                            Reporter:  <img src={task?.reporter.avatar_url} alt="" className="ml-2 h-10 min-w-10 w-10 rounded-full border-2  border-gray-100" />
+                                            <p className=" text-sm text-black w-full p-2">{task?.reporter?.firstname + " " + task?.reporter?.lastname}</p>
                                         </div>
                                         <div className="relative flex items-center  text-blue-700">
                                             Assignee:
-                                            <input
-                                                type="text"
-                                                id="assignedUserId"
-                                                value={value}
-                                                onChange={handleSeachUser}
-                                                disabled={isEditTask}
-                                                name="assignedUserId"
-                                                className="text-md ml-2 text-sm text-black w-full border border-gray-300 rounded-md  p-2"
-                                                placeholder="eg.., Maria, Maria@gmail.com"
-                                                required
-                                            />
-                                            {isShowSearchUser && filteredUsers && filteredUsers?.length > 0 &&
-                                                <ul className="absolute top-[40px] w-full bg-white border rounded-md mt-1 shadow-lg z-10 overflow-y-auto max-h-52">
-                                                    {filteredUsers?.map((filteredUser) => (
-                                                        <li
-                                                            key={filteredUser.user._id}
-                                                            onClick={() => handleSubmitUser(filteredUser)}
-                                                            className={`p-2 hover:bg-blue-100 cursor-pointer`}
-                                                        >
-                                                            <div className="flex">
-                                                                <img src={filteredUser.user.avatar_url} alt="" className="h-10 w-10 rounded-full border-2  border-gray-100 mr-2" />
-                                                                <div>
-                                                                    <div className={` text-base text-gray-900 `}>{filteredUser.user.name}</div>
-                                                                    <p className="text-xs text-gray-600">{filteredUser.user.email}</p>
-                                                                </div>
-                                                            </div>
-                                                        </li>
-                                                    ))}
-                                                </ul>
+                                            {isEditTask ?
+                                                <>
+                                                    <img src={task?.assignee.avatar_url} alt="" className="ml-2 h-10 w-10 rounded-full border-2  border-gray-100" />
+                                                    <p className=" text-sm text-black w-full p-2">{task?.assignee?.firstname + " " + task?.assignee?.lastname}</p>
+                                                </> :
+                                                <>
+                                                    <input
+                                                        type="text"
+                                                        id="assignedUserId"
+                                                        value={value}
+                                                        onChange={handleSeachUser}
+                                                        disabled={isEditTask}
+                                                        name="assignedUserId"
+                                                        className="text-md ml-2 text-sm text-black w-full border border-gray-300 rounded-md  p-2"
+                                                        placeholder="eg.., Maria, Maria@gmail.com"
+                                                        required
+                                                    />
+                                                    {isShowSearchUser && filteredUsers && filteredUsers?.length > 0 &&
+                                                        <ul className="absolute top-[40px] w-full bg-white border rounded-md mt-1 shadow-lg z-10 overflow-y-auto max-h-52">
+                                                            {filteredUsers?.map((filteredUser) => (
+                                                                <li
+                                                                    key={filteredUser.user._id}
+                                                                    onClick={() => handleSubmitUser(filteredUser)}
+                                                                    className={`p-2 hover:bg-blue-100 cursor-pointer`}
+                                                                >
+                                                                    <div className="flex">
+                                                                        <img src={filteredUser.user.avatar_url} alt="" className="h-10 w-10 rounded-full border-2  border-gray-100 mr-2" />
+                                                                        <div>
+                                                                            <div className={` text-base text-gray-900 `}>{filteredUser.user?.firstname + " " + filteredUser.user?.lastname}</div>
+                                                                            <p className="text-xs text-gray-600">{filteredUser.user.email}</p>
+                                                                        </div>
+                                                                    </div>
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                    }
+                                                </>
                                             }
                                         </div>
                                     </div>
                                 </div>
                                 <div className="mb-2">
-                                    <label htmlFor="title" className=" text-black flex items-center font-semibold mb-1"> Dates: </label>
+                                    <label htmlFor="title" className=" text-black flex items-center font-semibold mb-1"><CalendarDays className='h-11 w-11  p-3 rounded-sm mr-2 text-blue-600 shadow-md bg-blue-50' /> Dates: </label>
                                     <div className="ml-2 py-2">
                                         <div className="flex items-center mb-2  text-green-700">
                                             Create: <span className="text-md ml-2 text-xs text-black">{formatTime(task?.createdAt)}</span>
                                         </div>
                                         <div className="flex items-center  text-blue-700">
                                             Updated: <span className="text-md ml-2 text-xs text-black">{formatTime(task?.updatedAt)}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="mb-2">
+                                    <label htmlFor="title" className=" text-black flex items-center font-semibold mb-1"><ChartCandlestick className='h-11 w-11  p-3 rounded-sm mr-2 text-blue-600 shadow-md bg-blue-50' /> Progress: </label>
+                                    <div className="ml-2 py-2">
+                                        <div className="flex items-center mb-2 text-blue-700">
+                                            <span className="text-md w-[110px]  text-green-700">Start Date: </span>  <input type="datetime-local" className="ml-2 text-sm text-black  w-full border border-gray-300 rounded-md p-2" name="startDate" onChange={handleChange} disabled={isEditTask} placeholder="" defaultValue={formatDateTimeForInput(task?.startDate || '')} />
+                                        </div>
+                                        <div className="flex items-center mb-2 text-blue-700">
+                                            <span className="text-md w-[110px] text-red-700">End Date: </span>     <input type="datetime-local" className="ml-2 text-sm text-red-600 font-semibold w-full border border-gray-300 rounded-md p-2" name="endDate" onChange={handleChange} disabled={isEditTask} placeholder="" defaultValue={formatDateTimeForInput(task?.endDate || '')} />
                                         </div>
                                     </div>
                                 </div>

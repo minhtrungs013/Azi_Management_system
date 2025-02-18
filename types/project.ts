@@ -25,15 +25,18 @@ export type ProjectList = Project[];
 
 export interface Cards {
   _id: string;
+  identifier: string;
   title: string;
   description: string;
-  assignee?: User;
+  assignee: User;
   issueType: string,
   image_urls: string[];
   listId: string;
   position: string;
   priority: string;
-  reporter?: User;
+  reporter: User;
+  startDate: string,
+  endDate: string,
   createdAt: string;
   updatedAt: string;
 }
@@ -46,7 +49,7 @@ export interface List {
   position: number;
   createdAt: string;
   updatedAt: string;
-  cards: Cards[];
+  tasks: Cards[];
 }
 export interface PostList {
   projectId: string;
@@ -77,9 +80,10 @@ export interface permission {
   description: string;
 }
 
-export interface AddUserPermissionforProject  {
-  userId: string;
-  permissionIds: string[];
+export interface AddUserPermissionforProject {
+  user: string;
+  projectId: string;
+  permissions: string[];
 }
 
 export const issueTypes = [
@@ -96,3 +100,7 @@ export const issueTypes = [
     value: 'Epic',
   },
 ];
+export interface listtest {
+  _id: string;
+  name: string;
+}

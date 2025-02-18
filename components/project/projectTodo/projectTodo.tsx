@@ -1,20 +1,19 @@
 'use client';
 import Modal from '@/components/Modal/Modal';
-import NotificationListener from '@/components/Notification/NotificationListener';
-import TaskDetail from '@/components/task/taskDetail';
+import TaskDetailModal from '@/components/task/taskDetailModal';
+import { createNotification, refreshNotification, updateNotification } from '@/lib/store/features/notificationSlice';
 import { getAllMemberProject } from '@/lib/store/features/projectSlice';
 import { moveTask, setRefresh } from '@/lib/store/features/taskSlice';
 import { AppDispatch, RootState } from '@/lib/store/store';
+import { checkRuleAccess } from '@/lib/utils';
 import { members } from '@/types/auth';
-import { Cards, List, permission, ProjectDetails } from '@/types/project';
-import { Dot, Ellipsis, Plus } from 'lucide-react';
+import { notificationCreate } from '@/types/notification';
+import { Cards, List, ProjectDetails } from '@/types/project';
+import { Dot, Ellipsis } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useSocket } from "../../../contexts/SocketContext";
-import { io } from 'socket.io-client';
 import { toast } from 'react-toastify';
-import { updateNotification } from '@/lib/store/features/notificationSlice';
-import { checkRuleAccess } from '@/lib/utils';
+import { useSocket } from "../../../contexts/SocketContext";
 // import { socket } from '@/lib/socket';
 
 interface Notification {
@@ -34,17 +33,13 @@ export default function ProjectTodo({ data }: { data: ProjectDetails | undefined
   const { socket, sendMessage } = useSocket();
   const [notification, setNotification] = useState<Notification[]>([]);
   const authState = useSelector((state: RootState) => state.auth);
+  const userIds = allMemberProject?.map(item => item.user._id);
 
   useEffect(() => {
 
     if (socket) {
-      socket.on("message", (message: any) => {
-        toast.info(message, {
-          position: "bottom-left",
-          autoClose: 5000,
-        });
+      socket.on("sendNotification", ({ group, message }) => {
         dispatch(setRefresh(true));
-        dispatch(updateNotification(message));
       });
     }
   }, [socket]);
@@ -76,7 +71,7 @@ export default function ProjectTodo({ data }: { data: ProjectDetails | undefined
     if (ruleAccess) {
       const hasPermission = await checkRuleAccess(['task_admin', 'project_admin'], ruleAccess)
       console.log(hasPermission);
-      
+
       if (!hasPermission && authState.userId !== card.reporter?._id && authState.userId !== card.assignee?._id) {
         toast.warning('You have no permission to drag and drop this task.', {
           position: "bottom-left",
@@ -107,10 +102,10 @@ export default function ProjectTodo({ data }: { data: ProjectDetails | undefined
         let cardToMove: Cards | null = null;
         const updatedLists = prevLists.map((list) => {
           if (list._id === sourceListId) {
-            cardToMove = list.cards.find((card) => card._id === cardId) || null;
+            cardToMove = list.tasks.find((card) => card._id === cardId) || null;
             return {
               ...list,
-              cards: list.cards.filter((card) => card._id !== cardId),
+              tasks: list.tasks.filter((card) => card._id !== cardId),
             };
           }
           return list;
@@ -121,12 +116,22 @@ export default function ProjectTodo({ data }: { data: ProjectDetails | undefined
           return updatedLists.map((list) => {
             if (list._id === targetListId) {
               dispatch(moveTask({ taskId: cardId, listId: targetListId }))
+              const notification: notificationCreate = {
+                title: 'Move Task',
+                message: authState.name + ' has been moved ' + cardToMove?.title + ' to ' + list.name,
+                type: 'Task',
+                link: `/projects/${data?._id}/tasks/${cardToMove?.identifier}`,
+                senderId: authState.userId || '',
+                notificationRecipients: userIds || []
+              }
+              dispatch(createNotification(notification))
+              // dispatch(refreshNotification(true));
               setTimeout(() => {
-                sendMessage('message', authState.name + ' has been moved ' + cardToMove?.title + ' to ' + list.name);
+                sendMessage('sendNotification', { group: data?._id, message: authState.name + ' has been moved ' + cardToMove?.title + ' to ' + list.name });
               }, 1000);
               return {
                 ...list,
-                cards: [...list.cards, cardToMove!],
+                tasks: [...list.tasks, cardToMove!],
               };
             }
             return list;
@@ -156,7 +161,7 @@ export default function ProjectTodo({ data }: { data: ProjectDetails | undefined
             <div className={`flex justify-between items-center pb-4 pt-2 mb-4 border-b-2 
                             ${list.name === 'TO DO' ? ' border-gray-500' :
                 list.name === 'IN PROGRESS' ? 'border-amber-500' :
-                  list.name === 'IN REVIEW' ? 'border-blue-500' :
+                  list.name === 'REVIEW' ? 'border-blue-500' :
                     list.name === 'BUG' ? 'border-red-500' :
                       list.name === 'DONE' ? 'border-green-500' :
                         ""}`}>
@@ -164,45 +169,51 @@ export default function ProjectTodo({ data }: { data: ProjectDetails | undefined
                 <Dot className={`w-3 h-3 rounded-full mr-2
                                     ${list.name === 'TO DO' ? ' bg-gray-500 text-gray-500' :
                     list.name === 'IN PROGRESS' ? 'bg-amber-500 text-amber-500' :
-                      list.name === 'IN REVIEW' ? 'bg-blue-500 text-blue-500' :
+                      list.name === 'REVIEW' ? 'bg-blue-500 text-blue-500' :
                         list.name === 'BUG' ? 'bg-red-500 text-red-500' :
                           list.name === 'DONE' ? 'bg-green-500 text-green-500' :
                             ""}`} />
                 <h2 className="text-base font-medium">{list.name}</h2>
               </div>
-              {list.name === 'TO DO' &&
-                <div className='flex items-center cursor-pointer'>
-                  <Plus className="w-6 h-6 rounded-sm border  text-green-500" />
-                </div>
-              }
+
             </div>
             <div className="space-y-4  min-h-[56vh] max-h-[56vh] section overflow-x-auto">
-              {list.cards.map(card => (
+              {list.tasks.map(card => (
                 <div onClick={() => openModal(card)}
                   className={`relative overflow-hidden bg-white dark:bg-[#020817] p-4 rounded-md shadow cursor-pointer mr-1 card ${draggingCard && draggingCard.cardId === card._id ? 'dragging' : ''}`} key={card._id}
                   draggable
                   onDragEnd={handleDragEnd}
                   onDragStart={(e) => handleDragStart(e, card._id, list._id, card)}>
                   <div className="flex justify-between items-center">
-                    <span className={`text-sm  font-medium rounded-sm py-1 px-2 ${card.priority === 'high' ? 'text-red-500 bg-red-200' :
-                      card.priority === 'medium' ? 'text-orange-500 bg-orange-200' :
-                        'text-gray-500 bg-gray-200'}`}>{card.priority}</span>
+                    <span className={`text-xs  font-normal rounded-sm py-1 px-2 ${card.priority === 'high' ? 'text-red-500  bg-red-100' :
+                      card.priority === 'medium' ? 'text-orange-500  bg-orange-100' :
+                        'text-green-500  bg-green-100'}`}>{card.priority}</span>
                     <Ellipsis className="w-6 h-6 text-gray-700" />
                   </div>
-                  <h3 className="text-base font-semibold pt-1">{card.title}</h3>
-                  <p className="text-gray-500 text-xs">{card.description}</p>
-                  <div className="flex items-center  justify-between space-x-2 mt-4 text-sm text-gray-500">
-                    <div className="flex -space-x-2">
-                      <img src={card.assignee?.avatar_url} alt="Avatar 1" className="h-7 w-7 rounded-full border-2 border-gray-100" />
-                    </div>
+                  <div>
+
+                    <h3 className="text-base font-semibold pt-1">{card.title}</h3>
+                    {/* {card.image_urls.length > 0 ?
                     <div>
-                      <span className='mr-2'>12 comments</span>
-                      <span>0 files</span>
+                      <img src={card.image_urls[0]} alt="Avatar 1" className="bg-white h-40 w-full rounded-md mr-2 cursor-pointer object-cover" />
                     </div>
+                    :
+                    <p className="text-gray-500 text-xs">{card.description}</p>
+                  } */}
+                    <p className="text-gray-500 text-xs line-clamp-2">{card.description}</p>
+                    <div className="flex items-center  justify-between space-x-2 mt-4 text-sm text-gray-500">
+                      <div className="flex -space-x-2">
+                        <img src={card.assignee?.avatar_url} alt="Avatar 1" className="h-7 w-7 rounded-full border-2 border-gray-100" />
+                      </div>
+                      <div>
+                        <span className='mr-2'>12 comments</span>
+                        <span>0 files</span>
+                      </div>
+                    </div>
+                    <div className={`absolute h-full  w-[5px] top-0 left-0 ${card.issueType == 'task' ? '  bg-blue-500 ' :
+                      card.issueType == 'bug' ? ' bg-red-500' : 'bg-green-500'
+                      }`}></div>
                   </div>
-                  <div className={`absolute h-full  w-[5px] top-0 left-0 ${card.issueType == 'task' ? '  bg-blue-500 ' :
-                    card.issueType == 'bug' ? ' bg-red-500' : 'bg-green-500'
-                    }`}></div>
                 </div>
               ))}
 
@@ -211,7 +222,7 @@ export default function ProjectTodo({ data }: { data: ProjectDetails | undefined
         ))}
 
         <Modal isOpen={isModalOpen} closeModal={closeModal} >
-          <TaskDetail closeModal={closeModal} task={task} allMemberProject={allMemberProject} />
+          <TaskDetailModal closeModal={closeModal} task={task} allMemberProject={allMemberProject} projjectId={data?._id}/>
         </Modal>
       </div>
     </section>

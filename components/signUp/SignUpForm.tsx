@@ -37,7 +37,15 @@ const SignUpForm = ({ toggleForm }: { toggleForm: () => void }) => {
     }
 
     try {
-      const response = await axios.post('http://192.168.188.71:5555/auth/register', {
+      // const response = await axios.post('https://azi-management-system-be.onrender.com/api/auth/register', {
+      const response = await axios.post('http://localhost:5000/api/auth/register', {
+        firstname: "estt",
+        lastname: "estt",
+        email: "test@gmail.com",
+        location: "admin@",
+        avatar_url: "admin@",
+        phone: "048888888",
+        isactive: true,
         username: account.username,
         password: account.password,
         confirmPassword: account.confirmPassword,

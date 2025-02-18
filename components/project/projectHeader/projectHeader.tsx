@@ -12,6 +12,7 @@ import InviteProject from './inviteProject';
 import CreateColumn from '../projectTodo/createColumn';
 import { toast } from 'react-toastify';
 import { checkRuleAccess } from '@/lib/utils';
+import Link from 'next/link';
 
 export default function ProjectHeader({ data }: { data: ProjectDetails | undefined }) {
     const dispatch = useDispatch<AppDispatch>();
@@ -22,10 +23,8 @@ export default function ProjectHeader({ data }: { data: ProjectDetails | undefin
     const [allUser, setAllUser] = useState<User[]>();
     const [allMemberProject, setAllMemberProject] = useState<members[]>();
     const authState = useSelector((state: RootState) => state.auth);
-
+    const user = allMemberProject?.find((user: members) => user.user._id === authState.userId)
     const openModal = async (status: string) => {
-        if (allMemberProject) {
-            const user = allMemberProject.find((user: members) => user.user._id === authState.userId)
             if (user) {
                 const hasPermissionCreateTask = await checkRuleAccess(['task_admin', 'project_admin'], user)
                 if (!hasPermissionCreateTask && (status === "createTask" || status === "createColumn")) {
@@ -43,8 +42,6 @@ export default function ProjectHeader({ data }: { data: ProjectDetails | undefin
                     });
                     return;
                 }
-
-            }
         }
         setShowModalByStatus(status)
         setModalOpen(true)
@@ -100,17 +97,20 @@ export default function ProjectHeader({ data }: { data: ProjectDetails | undefin
             </header>
             <div className="flex space-x-2 justify-between">
                 <div className='flex'>
-                    <button className="px-4 py-2 bg-white border rounded-md flex items-center mr-2">Member Management <ArrowDownWideNarrow className="w-4 h-4 ml-2" /></button>
-                    <button className="px-4 py-2 bg-white hover:bg-green-500 text-green-600 hover:text-white  border rounded-md flex items-center">Start Group Call <PhoneCall className="w-4 h-4 ml-2" /></button>
+                    <Link href={`/projects/${data?._id}`} className="px-4 py-2 bg-white border rounded-md flex items-center mr-2">Sprint<ArrowDownWideNarrow className="w-4 h-4 ml-2" /></Link>
+                    <Link href={`/projects/${data?._id}/tasks`} className="px-4 py-2 bg-white border rounded-md flex items-center mr-2">Task<ArrowDownWideNarrow className="w-4 h-4 ml-2" /></Link>
+                    {/* <Link href={`/projects/${data?._id}/member`} className="px-4 py-2 bg-white border rounded-md flex items-center mr-2">Member<ArrowDownWideNarrow className="w-4 h-4 ml-2" /></Link>
+                    <Link href={`/projects/${data?._id}/backlog`} className="px-4 py-2 bg-white border rounded-md flex items-center mr-2">Backlog<ArrowDownWideNarrow className="w-4 h-4 ml-2" /></Link> */}
                 </div>
                 <div className='flex'>
-                    <button onClick={() => openModal('createTask')} className="px-4 py-2 bg-white border rounded-md flex items-center mr-2">Create Task <ArrowDownWideNarrow className="w-4 h-4 ml-2" /></button>
-                    <button onClick={() => openModal('createColumn')} className="px-4 py-2 bg-white border rounded-md flex items-center">Create Column <CalendarDays className="w-4 h-4 ml-2" /></button>
+                    <button className="px-4 py-2 mr-2 bg-white hover:bg-green-500 text-green-600 hover:text-white  border rounded-md flex items-center">Start Group Call <PhoneCall className="w-4 h-4 ml-2" /></button>
+                    <button onClick={() => openModal('createTask')} className="px-4 py-2 bg-white border rounded-md flex items-center ">Create Task <ArrowDownWideNarrow className="w-4 h-4 ml-2" /></button>
+                    {/* <button onClick={() => openModal('createColumn')} className="px-4 py-2 bg-white border rounded-md flex items-center">Create Column <CalendarDays className="w-4 h-4 ml-2" /></button> */}
                 </div>
             </div>
             <Modal isOpen={isModalOpen} closeModal={closeModal}>
                 {showModalByStatus === 'invite' ?
-                    <InviteProject closeModal={closeModal} projectId={data?._id} permissions={permissions} allUser={allUser} /> :
+                    <InviteProject closeModal={closeModal} projectId={data?._id} permissions={permissions} allUser={allUser} user={user || undefined}/> :
                     showModalByStatus === 'createTask' ?
                         <CreateTask closeModal={closeModal} listId={list?._id} allMemberProject={allMemberProject} /> :
                         showModalByStatus === 'createColumn' ?

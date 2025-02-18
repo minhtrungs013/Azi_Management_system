@@ -2,34 +2,37 @@
 import { inviteMemberToProject } from "@/lib/store/features/projectSlice";
 import { setRefresh } from "@/lib/store/features/taskSlice";
 import { AppDispatch } from "@/lib/store/store";
-import { User } from "@/types/auth";
+import { members, User } from "@/types/auth";
 import { AddUserPermissionforProject, permission } from "@/types/project";
 import { ShieldCheck, UserPlus, UserSearch } from "lucide-react";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
 
-const InviteProject = ({ closeModal, projectId, permissions, allUser }: { closeModal: () => void, projectId: string | undefined, permissions: permission[] | undefined, allUser: User[] | undefined }) => {
+const InviteProject = ({ closeModal, projectId, permissions, allUser, user }: { closeModal: () => void, projectId: string | undefined, permissions: permission[] | undefined, allUser: User[] | undefined, user: members | undefined }) => {
     const dispatch = useDispatch<AppDispatch>();
     const [isShowSearchUser, sethowSearchUser] = useState<boolean>(false);
     const [value, setValue] = useState<string>('');
     const [filteredUsers, setFilteredUsers] = useState<User[]>();
     const [addUserPermission, setAddUserPermission] = useState<AddUserPermissionforProject>();
+    const isCheckRole = user?.permissions.some(permissions => permissions.label === 'project_admin')
 
     const handleSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.id;
         const isChecked = e.target.checked;
-        const index = addUserPermission?.permissionIds.findIndex((item) => item === value);
+        const index = addUserPermission?.permissions.findIndex((item) => item === value);
 
         if (index === -1 && isChecked) {
             setAddUserPermission((prev) => ({
-                userId: prev?.userId || '',
-                permissionIds: [...(prev?.permissionIds || []), value],
+                user: prev?.user || '',
+                projectId: prev?.projectId || '',
+                permissions: [...(prev?.permissions || []), value],
             }));
         } else if (index !== -1 && !isChecked) {
             setAddUserPermission((prev) => ({
-                userId: prev?.userId || '',
-                permissionIds: prev?.permissionIds.filter((item) => item !== value) || [],
+                user: prev?.user || '',
+                projectId: prev?.projectId || '',
+                permissions: prev?.permissions.filter((item) => item !== value) || [],
             }));
         }
     };
@@ -37,10 +40,11 @@ const InviteProject = ({ closeModal, projectId, permissions, allUser }: { closeM
 
     const handleSubmitUser = (value: User) => {
         setAddUserPermission((prev) => ({
-            userId: value._id || '',
-            permissionIds: prev?.permissionIds || [],
+            user: value._id || '',
+            projectId: projectId || '',
+            permissions: prev?.permissions || [],
         }));
-        setValue(value.name || '')
+        setValue(`${value.firstname || ''} ${value.lastname || ''}`.trim())
         sethowSearchUser(false);
     };
 
@@ -53,7 +57,8 @@ const InviteProject = ({ closeModal, projectId, permissions, allUser }: { closeM
             return;
         }
         const filteredUsers = allUser?.filter((user) =>
-            user?.name && user?.name.toLowerCase().includes(lowerCaseValue) ||
+            user?.firstname && user?.firstname.toLowerCase().includes(lowerCaseValue) ||
+            user?.lastname && user?.lastname.toLowerCase().includes(lowerCaseValue) ||
             user?.email && user?.email.toLowerCase().includes(lowerCaseValue)
         );
         setFilteredUsers(filteredUsers)
@@ -61,7 +66,7 @@ const InviteProject = ({ closeModal, projectId, permissions, allUser }: { closeM
 
     const handleCreateTask = async () => {
         if (addUserPermission && projectId) {
-            const result = await dispatch(inviteMemberToProject({ url: projectId, payload: addUserPermission }));
+            const result = await dispatch(inviteMemberToProject(addUserPermission));
             if (inviteMemberToProject.fulfilled.match(result)) {
                 toast.success("Add member to project successfully!", {
                     position: "bottom-right",
@@ -94,16 +99,16 @@ const InviteProject = ({ closeModal, projectId, permissions, allUser }: { closeM
                                 />
                                 {isShowSearchUser && filteredUsers && filteredUsers?.length > 0 &&
                                     <ul className="absolute w-full bg-white border rounded-md mt-1 shadow-lg z-10 overflow-y-auto max-h-60">
-                                        {filteredUsers?.map((filteredUser) => (
+                                        {filteredUsers?.map((filteredUser, index) => (
                                             <li
-                                                key={filteredUser._id}
+                                                // key={filteredUser._id || index}
                                                 onClick={() => handleSubmitUser(filteredUser)}
                                                 className={`p-2 hover:bg-blue-100 cursor-pointer`}
                                             >
                                                 <div className="flex">
                                                     <img src={filteredUser.avatar_url} alt="" className="h-10 w-10 rounded-full border-2  border-gray-100 mr-2" />
                                                     <div>
-                                                        <div className={` text-base text-gray-900 `}>{filteredUser.name}</div>
+                                                        <div className={` text-base text-gray-900 `}>{(filteredUser.firstname || '') + (filteredUser.lastname || '')}</div>
                                                         <p className="text-xs text-gray-600">{filteredUser.email}</p>
                                                     </div>
                                                 </div>
@@ -114,21 +119,21 @@ const InviteProject = ({ closeModal, projectId, permissions, allUser }: { closeM
                             </div>
                             <div className="relative mb-5">
                                 <label className=" text-gray-700 mb-2 flex items-center"> <ShieldCheck className="h-5 w-5 mr-2" />Permission</label>
-                                {permissions?.map((permission) => (
+                                {permissions?.map((permission, index) => (
                                     <>
-                                        {permission.name !== "project_admin" &&
-                                            <div className="flex items-center mb-1 ml-[2px]" key={permission._id}>
+                                        {(["commenter", "viewer", "content_editor", "task_admin"].includes(permission.label) || (permission.label === "member_manager" && isCheckRole)) &&
+                                            <div className="flex items-center mb-1 ml-[2px]" key={permission._id || index} >
                                                 <input
                                                     id={permission._id}
-                                                    name={permission.name}
+                                                    name={permission.label}
                                                     onChange={handleSelect}
                                                     type="checkbox"
                                                     className="h-4 w-4 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500"
                                                 />
                                                 <label htmlFor={permission._id} className="ml-2 text-sm  text-gray-900 cursor-pointer">
-                                                    {permission.label}
+                                                    {permission.name}
                                                 </label>
-                                            </div>
+                                            </div >
                                         }
                                     </>
                                 ))}
@@ -146,8 +151,8 @@ const InviteProject = ({ closeModal, projectId, permissions, allUser }: { closeM
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 };
 

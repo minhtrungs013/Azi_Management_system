@@ -13,8 +13,8 @@ export const handleUploadCloudinary = async (files: FileList) => {
     for (let i = 0; i < files.length; i++) {
       const fromData = new FormData()
       fromData.append("file", files[i])
-      fromData.append("upload_preset", "kozqobqt")
-      await axios.post(`https://api.cloudinary.com/v1_1/dax8xvyhi/upload`, fromData)
+      fromData.append("upload_preset", "azi_management")
+      await axios.post(`https://api.cloudinary.com/v1_1/dfakxuy7c/upload`, fromData)
         .then((res) => {
           newImages.push(res.data.url);
         }).catch((error) => {
@@ -27,7 +27,7 @@ export const handleUploadCloudinary = async (files: FileList) => {
 
 export const checkRuleAccess = async (rule: string[], RuleAccess: members) => {
    const hasAccess = rule.some((ruleName) =>
-    RuleAccess.permissions.some((perm) => perm.name === ruleName)
+    RuleAccess.permissions.some((perm) => perm.label === ruleName)
   );
   return hasAccess;
 };

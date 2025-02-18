@@ -1,5 +1,5 @@
 // lib/store/features/authSlice.ts
-import { CreateprojectService, deleteProjectIdByUserIdService, getAllMemberProjectService, getAllNonMemberToProjectService, getPermissionService, getProjectByUserIdService, getProjectIdService, inviteMemberToProjectService, postListToProjectService, updateListToProjectService, updateProjectIdByUserIdService } from '@/lib/services/project/projectService';
+import { CreateprojectService, deleteProjectIdByUserIdService, getAllMemberProjectService, getAllNonMemberToProjectService, getListByProjectIdService, getPermissionService, getProjectByUserIdService, getProjectIdService, inviteMemberToProjectService, postListToProjectService, updateListToProjectService, updateProjectIdByUserIdService } from '@/lib/services/project/projectService';
 import { AddUserPermissionforProject, PostList, projectPayload, updateList } from '@/types/project';
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 
@@ -47,7 +47,7 @@ export const deleteProjectById = createAsyncThunk('deleteProjectByUserId', async
     return rejectWithValue(' failed');
   }
 });
-export const inviteMemberToProject = createAsyncThunk('deleteProjectByUserId', async (body: { url: string; payload: AddUserPermissionforProject }, { rejectWithValue }) => {
+export const inviteMemberToProject = createAsyncThunk('deleteProjectByUserId', async (body: AddUserPermissionforProject, { rejectWithValue }) => {
   try {
     const response = await inviteMemberToProjectService(body);
     return response;
@@ -94,6 +94,14 @@ export const updateListToProject = createAsyncThunk('updateListToProject', async
   try {
     const response = await updateListToProjectService(payload);
     return response;
+  } catch (error) {
+    return rejectWithValue(error);
+  }
+});
+export const getListByProjectIdSlice = createAsyncThunk('getListByProjectIdSlice', async (projectId: string, { rejectWithValue }) => {
+  try {
+    const response = await getListByProjectIdService(projectId);
+    return response ;
   } catch (error) {
     return rejectWithValue(error);
   }

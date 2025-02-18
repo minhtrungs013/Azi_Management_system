@@ -1,11 +1,11 @@
 "use client"
 import { createtask, setRefresh } from "@/lib/store/features/taskSlice";
-import { AppDispatch } from "@/lib/store/store";
+import { AppDispatch, RootState } from "@/lib/store/store";
 import { members } from "@/types/auth";
 import { taskPayload } from "@/types/task";
 import { Bug, CaseSensitive, FileCheck2, ShieldAlert, UserPlus } from "lucide-react";
 import { useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 
 const CreateTask = ({ closeModal, listId, allMemberProject }: { closeModal: () => void, listId: string | undefined, allMemberProject: members[] | undefined }) => {
@@ -13,8 +13,7 @@ const CreateTask = ({ closeModal, listId, allMemberProject }: { closeModal: () =
     const [filteredUsers, setFilteredUsers] = useState<members[]>();
     const [isShowSearchUser, sethowSearchUser] = useState<boolean>(false);
     const [value, setValue] = useState<string>('');
-console.log(allMemberProject);
-
+    const authState = useSelector((state: RootState) => state.auth);
     const [createTask, setCreateTask] = useState({
         title: "",
         description: "",
@@ -40,7 +39,7 @@ console.log(allMemberProject);
                 assignee: value.user._id || '',
             };
         });
-        setValue(value.user.name || '')
+        setValue((value.user.firstname ?? '') + (value.user.lastname ?? '') || '')
         sethowSearchUser(false);
     };
 
@@ -53,7 +52,8 @@ console.log(allMemberProject);
             return;
         }
         const filteredUsers = allMemberProject?.filter((user) =>
-            user?.user.name && user?.user.name.toLowerCase().includes(lowerCaseValue) ||
+            user?.user.firstname && user?.user.firstname.toLowerCase().includes(lowerCaseValue) ||
+            user?.user.lastname && user?.user.lastname.toLowerCase().includes(lowerCaseValue) ||
             user?.user.email && user?.user.email.toLowerCase().includes(lowerCaseValue)
         );
         setFilteredUsers(filteredUsers)
@@ -69,6 +69,7 @@ console.log(allMemberProject);
                 priority: createTask.priority,
                 assignee: createTask.assignee,
                 image_urls: [],
+                reporter: authState.userId || ""
             }
             const result = await dispatch(createtask(task));
             if (createtask.fulfilled.match(result)) {
@@ -165,7 +166,7 @@ console.log(allMemberProject);
                                                 <div className="flex">
                                                     <img src={filteredUser.user.avatar_url} alt="" className="h-10 w-10 rounded-full border-2  border-gray-100 mr-2" />
                                                     <div>
-                                                        <div className={` text-base text-gray-900 `}>{filteredUser.user.name}</div>
+                                                        <div className={` text-base text-gray-900 `}>{(filteredUser.user.firstname ?? '') + (filteredUser.user.lastname ?? '')}</div>
                                                         <p className="text-xs text-gray-600">{filteredUser.user.email}</p>
                                                     </div>
                                                 </div>

@@ -7,7 +7,7 @@ import { ProjectDetails } from '@/types/project';
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
-export default function ProjjectId({ params }: { params: { projjectId: string } }) {
+export default function Member({ params }: { params: { projjectId: string } }) {
     const dispatch = useDispatch<AppDispatch>();
     const [data, setData] = useState<ProjectDetails>()
     const refresh = useSelector((state: RootState) => state.task.refresh);
@@ -24,8 +24,7 @@ export default function ProjjectId({ params }: { params: { projjectId: string } 
     return (
         <div >
             <div className="flex ">
-                <main className="flex-1 ">
-                    <ProjectHeader data={data} />
+                <main className="flex-1 p-6 ">
                     <ProjectTodo data={data} />
                 </main>
             </div>

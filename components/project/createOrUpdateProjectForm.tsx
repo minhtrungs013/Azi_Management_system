@@ -1,15 +1,17 @@
 "use client"
 import { createProject, setRefresh, updateProjectById } from '@/lib/store/features/projectSlice';
-import { AppDispatch } from '@/lib/store/store';
+import { AppDispatch, RootState } from '@/lib/store/store';
 import { Project, projectPayload, ProjectUpdate } from '@/types/project';
 import React, { useEffect, useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 
 const CreateOrUpdateProjectForm = ({ closeModal, projectId }: { closeModal: () => void; projectId: Project | undefined }) => {
+    const authState = useSelector((state: RootState) => state.auth);
     const [project, setProject] = useState<projectPayload>({
         name: '',
         description: '',
+        created_by: authState.userId || '',
     })
     const dispatch = useDispatch<AppDispatch>();
 

@@ -8,6 +8,7 @@ import type { Metadata } from "next";
 import { Inter as FontSans } from "next/font/google";
 import ClientProvider from "./ClientProvider";
 import "./globals.css";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -24,7 +25,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={cn("min-h-screen bg-background font-sans antialiased", fontSans.variable)} suppressHydrationWarning={true}>
@@ -36,14 +37,16 @@ export default function RootLayout({
         >
           <ClientProvider>
             <SocketProvider>
-              <div className="flex min-h-screen flex-col">
-                <div className="grid grid-cols-12 gap-4">
-                  <div className=" col-start-1 col-span-2"> <Navbar /></div>
-                  <div className=" col-start-3 col-span-12 "><Header />
-                    {children}
+              <TooltipProvider>
+                <div className="flex min-h-screen flex-col">
+                  <div className="grid grid-cols-12 gap-4">
+                    <div className=" col-start-1 col-span-2"> <Navbar /></div>
+                    <div className=" col-start-3 col-span-12 "><Header />
+                      {children}
+                    </div>
                   </div>
                 </div>
-              </div>
+              </TooltipProvider>
             </SocketProvider>
           </ClientProvider>
         </ThemeProvider>

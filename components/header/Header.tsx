@@ -2,6 +2,7 @@
 'use client';
 import { logout } from '@/lib/store/features/counterSlice';
 import { AppDispatch, RootState } from '@/lib/store/store';
+import { notification } from '@/types/notification';
 import { Bell, LogIn, Moon, Power, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
@@ -9,12 +10,13 @@ import { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast, ToastContainer } from 'react-toastify';
 import Modal from '../Modal/Modal';
+import NotificationListener from '../Notification/NotificationListener';
 import SignInForm from '../signIn/SignInForm';
 import SignUpForm from '../signUp/SignUpForm';
 import { Button } from '../ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
 import Profile from '../user/profile';
-import NotificationListener from '../Notification/NotificationListener';
+import { refreshNotification } from '@/lib/store/features/notificationSlice';
 
 // import { useSelector, useDispatch } from 'react-redux';
 // import { RootState, AppDispatch } from '../lib/store/store';
@@ -25,21 +27,22 @@ export function Header() {
   const [showSignUp, setShowSignUp] = useState<boolean>(false);
   const [showProfile, setShowProfile] = useState<boolean>(false);
   const authState = useSelector((state: RootState) => state.auth);
-  const notificationState = useSelector((state: RootState) => state.notification);
-  const notifications = notificationState.notification || [];
+  // const notifications = notificationState.notification || [];
+  const refreshNotificationSlice = useSelector((state: RootState) => state.notification);
   const dispatch = useDispatch<AppDispatch>();
-
   const toggleForm = () => setShowSignUp(!showSignUp);
   const openModal = (status: string) => {
     if (status === 'profile') {
       setShowProfile(true)
     }
+    dispatch(refreshNotification(false));
     setModalOpen(true);
   }
 
   const closeModal = () => {
     setShowProfile(false)
     setModalOpen(false);
+    dispatch(refreshNotification(false));
   }
 
   useEffect(() => {
@@ -64,15 +67,29 @@ export function Header() {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
+        // dispatch(refreshNotification(false));
       }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-  
+
+console.log(refreshNotificationSlice.refresh);
+
+
   const handleCloseNotification = () => {
     setIsOpen(false); // Đặt trạng thái isOpen về false để đóng thông báo
+  };
+  const handleCheckNotification = (notifications: notification[]) => {
+    // Kiểm tra nếu có ít nhất một thông báo mà userId chưa đọc
+    const hasUnreadForUser = notifications.some(notification =>
+      notification.notificationRecipients.some(nr =>
+        nr.isRead === false && nr.userId === authState.userId
+      )
+    );
+
+    return hasUnreadForUser;
   };
 
   return (
@@ -102,16 +119,21 @@ export function Header() {
               </div>
             </div>
             <div className="hidden md:flex items-center mr-5 ">
-              <div className='relative mr-3' ref={dropdownRef}>
-                <div className="relative cursor-pointer  p-[3px]  rounded-md hover:text-orange-500" onClick={() => setIsOpen(!isOpen)}>
+              <div className="relative mr-3" ref={dropdownRef}>
+                <div
+                  className="relative cursor-pointer p-[3px] rounded-md hover:text-orange-500"
+                  onClick={() => setIsOpen(!isOpen)}
+                >
                   <Bell className="w-6 h-6 font-light" />
-                  {notifications.length > 0 &&
-                    <div className="absolute top-0 right-0 bg-red-500 rounded-full w-2 h-2"></div>
-                  }
+                  {refreshNotificationSlice.refresh && (
+                    <div className="absolute top-0 right-0">
+                      {/* Dấu chấm đỏ thông báo */}
+                      <div className="bg-red-500 rounded-full w-2 h-2 animate-ping"></div>
+                    </div>
+                  )}
                 </div>
-                {isOpen && (
-                  <NotificationListener closeNotifitation={handleCloseNotification} />
-                )}
+
+                {isOpen && <NotificationListener closeNotifitation={handleCloseNotification} />}
               </div>
               <DropdownMenu >
                 <DropdownMenuTrigger asChild className='w-8 h-8 mr-3 border-none hover:bg-white hover:text-orange-500'>
