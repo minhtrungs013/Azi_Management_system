@@ -12,6 +12,8 @@ export interface taskPayload {
   priority: string;
   assignee: string;
   reporter?: string;
+  sprintId?: string;
+  isBacklog: boolean;
 }
 export interface getTaskByProjectIdPayload {
   _id?: string; 
@@ -25,6 +27,8 @@ export interface getTaskByProjectIdPayload {
   priority: string;
   assignee: User ;
   reporter?: User;
+  sprintId?: string;
+  isBacklog: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }

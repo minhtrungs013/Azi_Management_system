@@ -107,7 +107,9 @@ export default function GetTasksByProjectId({ projjectId }: { projjectId: string
                 </header>
                 <div className="flex space-x-2 justify-between">
                     <div className='flex'>
-                        <Link href={`/projects/${project?._id}`} className="px-4 py-2 bg-white border rounded-md flex items-center mr-2">Sprint<ArrowDownWideNarrow className="w-4 h-4 ml-2" /></Link>
+                        <Link href={`/projects/${project?._id}`} className="px-4 py-2 bg-white border rounded-md flex items-center mr-2">Dashboard<ArrowDownWideNarrow className="w-4 h-4 ml-2" /></Link>
+                        <Link href={`/projects/${project?._id}/backlog`} className="px-4 py-2 bg-white border rounded-md flex items-center mr-2">Backlog<ArrowDownWideNarrow className="w-4 h-4 ml-2" /></Link>
+                        <Link href={`/projects/${project?._id}/sprint`} className="px-4 py-2 bg-white border rounded-md flex items-center mr-2">Sprint<ArrowDownWideNarrow className="w-4 h-4 ml-2" /></Link>
                         <Link href={`/projects/${project?._id}/tasks`} className="px-4 py-2 bg-white border rounded-md flex items-center mr-2"><SquareChartGantt className="w-4 h-4 mr-2" />Task</Link>
                         {/* <Link href={`/projects/${data?._id}/member`} className="px-4 py-2 bg-white border rounded-md flex items-center mr-2">Member<ArrowDownWideNarrow className="w-4 h-4 ml-2" /></Link>
                     <Link href={`/projects/${data?._id}/backlog`} className="px-4 py-2 bg-white border rounded-md flex items-center mr-2">Backlog<ArrowDownWideNarrow className="w-4 h-4 ml-2" /></Link> */}

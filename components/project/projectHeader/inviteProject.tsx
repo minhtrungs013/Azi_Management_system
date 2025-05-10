@@ -101,7 +101,7 @@ const InviteProject = ({ closeModal, projectId, permissions, allUser, user }: { 
                                     <ul className="absolute w-full bg-white border rounded-md mt-1 shadow-lg z-10 overflow-y-auto max-h-60">
                                         {filteredUsers?.map((filteredUser, index) => (
                                             <li
-                                                // key={filteredUser._id || index}
+                                                key={index}
                                                 onClick={() => handleSubmitUser(filteredUser)}
                                                 className={`p-2 hover:bg-blue-100 cursor-pointer`}
                                             >

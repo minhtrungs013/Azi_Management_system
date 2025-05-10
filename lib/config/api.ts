@@ -2,9 +2,7 @@ import axios, { AxiosRequestHeaders, InternalAxiosRequestConfig } from 'axios';
 
 // Cấu hình baseURL nếu cần thiết
 const api = axios.create({
-  // baseURL: 'https://azi-management-system-be.onrender.com/api', // URL của API
-  baseURL: 'http://localhost:5000/api', // URL của API
-  // baseURL: 'https://azi-api-nestjs.onrender.com', // URL của API
+  baseURL: process.env.NEXT_PUBLIC_API_URL
 });
 
 // Tạo middleware để thêm Bearer Token vào mỗi request

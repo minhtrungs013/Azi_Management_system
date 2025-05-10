@@ -1,4 +1,5 @@
 import { User } from "./auth";
+import { sprint } from "./sprint";
 
 export interface projectPayload {
   name: string;
@@ -103,4 +104,24 @@ export const issueTypes = [
 export interface listtest {
   _id: string;
   name: string;
+}
+
+export interface Dashboard {
+  project: {
+      taskCount: number;
+      bugCount: number;
+      memberCount: number;
+      sprintCount: number;
+  };
+  sprint: {
+      currentSprint: sprint; // Hoặc kiểu dữ liệu phù hợp (có thể là object nếu chứa nhiều thông tin)
+      lowTaskCount: number;
+      mediumTaskCount: number;
+      highTaskCount: number;
+      inprogressPercentage: number;
+      reviewPercentage: number;
+      todoPercentage: number;
+      donePercentage: number;
+      bugPercentage: number;
+  };
 }

@@ -17,6 +17,7 @@ import { Button } from '../ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
 import Profile from '../user/profile';
 import { refreshNotification } from '@/lib/store/features/notificationSlice';
+import { AvatarUser } from '../common/AvatarUser';
 
 // import { useSelector, useDispatch } from 'react-redux';
 // import { RootState, AppDispatch } from '../lib/store/store';
@@ -162,9 +163,7 @@ console.log(refreshNotificationSlice.refresh);
                   <button onClick={logOut} className=" p-[5px]  flex items-center text-sm font-medium hover:text-red-500"><Power className='h-5 w-5 ' /></button>
                   <button className="flex items-center w-full text-sm font-medium p-2  mr-3 hover:text-red-500" onClick={() => openModal('profile')}>
                     {authState.name ? authState.name : authState.username}
-                    {authState.avatar_url ?
-                      <img src={authState.avatar_url} alt="Avatar 2" className="h-10 w-10 rounded-full  border-gray-100 ml-2" />
-                      : <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR_s87zYsrB1nvFfUvNPUJm6KlFP5wIYz0Nxg&s" alt="Avatar 2" className="h-10 w-10 rounded-full border-2 border-gray-100 mr-2" />
+                    {authState.avatar_url && authState?.name &&  <AvatarUser url={authState.avatar_url} name={authState?.name}  className='ml-2'/>
                     }
                   </button>
                 </div>

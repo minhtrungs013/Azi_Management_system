@@ -7,6 +7,7 @@ import { Bug, CaseSensitive, FileCheck2, ShieldAlert, UserPlus } from "lucide-re
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
+import { Checkbox } from "../ui/checkbox";
 
 const CreateTask = ({ closeModal, listId, allMemberProject }: { closeModal: () => void, listId: string | undefined, allMemberProject: members[] | undefined }) => {
     const dispatch = useDispatch<AppDispatch>();
@@ -21,6 +22,7 @@ const CreateTask = ({ closeModal, listId, allMemberProject }: { closeModal: () =
         issueType: '',
         position: 0,
         assignee: '',
+        isBacklog: true,
     })
 
     const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement | HTMLSelectElement>) => {
@@ -69,7 +71,9 @@ const CreateTask = ({ closeModal, listId, allMemberProject }: { closeModal: () =
                 priority: createTask.priority,
                 assignee: createTask.assignee,
                 image_urls: [],
-                reporter: authState.userId || ""
+                reporter: authState.userId || "",
+                sprintId: !createTask.isBacklog ? "add" : "no",
+                isBacklog: createTask.isBacklog,
             }
             const result = await dispatch(createtask(task));
             if (createtask.fulfilled.match(result)) {
@@ -174,6 +178,29 @@ const CreateTask = ({ closeModal, listId, allMemberProject }: { closeModal: () =
                                         ))}
                                     </ul>
                                 }
+                            </div>
+                            <div className="flex items-center mb-4 mt-2">
+                                <div className="mb-4 w-full mr-2">
+                                    <div className="flex items-center space-x-2">
+                                        <Checkbox
+                                            id="isBacklog"
+                                            checked={createTask.isBacklog}
+                                            onCheckedChange={(checked) =>
+                                                setCreateTask((prev) => ({ ...prev, isBacklog: !!checked }))
+                                            }
+                                        />
+                                        <label
+                                            htmlFor="isBacklog"
+                                            className="cursor-pointer text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-gray-700 "
+                                        >
+                                            Add to backlog 
+                                        </label>
+                                    </div>
+                                    <span className="text-xs font-normal text-gray-400">
+                                        If the &apos;Add to Backlog&apos; checkbox is not selected, the task will be automatically assigned to the active sprint. If no active sprint is found, the system will proceed to create a new sprint for the task.
+                                    </span>
+                                </div>
+                               
                             </div>
                         </form>
                         <div className='flex justify-end'>

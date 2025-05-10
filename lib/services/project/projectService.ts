@@ -1,6 +1,6 @@
 import { List } from 'postcss/lib/list';
 import api from '../../../lib/config/api';
-import { AddUserPermissionforProject, listtest, permission, PostList, ProjectList, projectPayload, updateList } from '@/types/project';
+import { AddUserPermissionforProject, Dashboard, listtest, permission, PostList, ProjectList, projectPayload, updateList } from '@/types/project';
 
 export async function CreateprojectService(payload: projectPayload): Promise<any> {
   try {
@@ -134,6 +134,17 @@ export async function updateListToProjectService(payload: updateList): Promise<a
 export async function getListByProjectIdService(projectId: string): Promise<listtest[]> {
   try {
     const response = await api.get(`/list/projectId/${projectId}`);
+    return response.data.data;
+  } catch (error: any) {
+    return Promise.reject({
+      message: error.response?.data?.message || 'Something went wrong',
+      status: error.response?.status || 500,
+    });
+  }
+}
+export async function getProjectDashboardByIdService(projectId: string): Promise<Dashboard> {
+  try {
+    const response = await api.get(`/projects/dashboard/${projectId}`);
     return response.data.data;
   } catch (error: any) {
     return Promise.reject({

@@ -68,7 +68,7 @@ const TaskDetail = ({ taskId, projjectId }: { taskId: string, projjectId: string
 
         ['clean']                                         // remove formatting button
     ];
-    const module = { toolbar: toolbarOptions }
+    const editorModule  = { toolbar: toolbarOptions }
     const fetchTask = async () => {
         const resGetTasksById = await dispatch(getTasksByIdSlice(taskId));
         if (getTasksByIdSlice.fulfilled.match(resGetTasksById)) {
@@ -348,7 +348,7 @@ const TaskDetail = ({ taskId, projjectId }: { taskId: string, projjectId: string
                                         }
                                     </div>
                                     <div className="flex items-center mt-5 mb-10">
-                                        <ReactQuill modules={module} theme="snow" value={value1} onChange={setValue1} className="w-full" />
+                                        <ReactQuill modules={editorModule} theme="snow" value={value1} onChange={setValue1} className="w-full" />
 
                                         <Send className="h-5 w-5 text-blue-600 cursor-pointer" />
                                     </div>

@@ -1,5 +1,4 @@
 'use client';
-import ProjectDashBoard from '@/components/project/projectDashBoard/projectDashBoard';
 import ProjectHeader from '@/components/project/projectHeader/projectHeader';
 import ProjectTodo from '@/components/project/projectTodo/projectTodo';
 import { getProjectId } from '@/lib/store/features/projectSlice';
@@ -27,9 +26,7 @@ export default function ProjjectId({ params }: { params: { projjectId: string } 
             <div className="flex ">
                 <main className="flex-1 ">
                     <ProjectHeader data={data} />
-                    <div>
-                        <ProjectDashBoard projjectId={params.projjectId}/>
-                    </div>
+                    <ProjectTodo data={data} />
                 </main>
             </div>
         </div>

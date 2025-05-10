@@ -144,3 +144,28 @@
   display: none;
 }
 
+
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+.bouncing-text {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.bounce {
+  display: inline-block;
+  animation: bounce 2s ease-in-out infinite alternate;
+}
+
+@keyframes bounce {
+  0% { transform: translateY(0); opacity: 1; }
+  50% { transform: translateY(-5px); opacity: 0.8; }
+  100% { transform: translateY(0); opacity: 1; }
+}

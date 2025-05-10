@@ -13,6 +13,7 @@ import CreateColumn from '../projectTodo/createColumn';
 import { toast } from 'react-toastify';
 import { checkRuleAccess } from '@/lib/utils';
 import Link from 'next/link';
+import { AvatarUser } from '@/components/common/AvatarUser';
 
 export default function ProjectHeader({ data }: { data: ProjectDetails | undefined }) {
     const dispatch = useDispatch<AppDispatch>();
@@ -85,6 +86,7 @@ export default function ProjectHeader({ data }: { data: ProjectDetails | undefin
                         <div className="flex -space-x-4">
                             {allMemberProject?.slice(0, 3).map((item) => (
                                 <img key={item.user._id} src={`${item.user.avatar_url ? item.user.avatar_url : 'https://internetviettel.vn/wp-content/uploads/2017/05/1-2.jpg'}`} alt="Avatar 1" className="bg-white h-10 w-10 rounded-full border-2 border-gray-300" />
+                                // <AvatarUser key={item.user._id} url={item.user.avatar_url} name={item.user.firstname}  className='bg-white h-10 w-10 rounded-full border-2 border-gray-300'/>
                             ))}
                             {/* <!-- Additional avatar circle for +2 --> */}
                             {allMemberProject && allMemberProject.length > 3 &&
@@ -97,7 +99,9 @@ export default function ProjectHeader({ data }: { data: ProjectDetails | undefin
             </header>
             <div className="flex space-x-2 justify-between">
                 <div className='flex'>
-                    <Link href={`/projects/${data?._id}`} className="px-4 py-2 bg-white border rounded-md flex items-center mr-2">Sprint<ArrowDownWideNarrow className="w-4 h-4 ml-2" /></Link>
+                    <Link href={`/projects/${data?._id}`} className="px-4 py-2 bg-white border rounded-md flex items-center mr-2">Dashboard<ArrowDownWideNarrow className="w-4 h-4 ml-2" /></Link>
+                    <Link href={`/projects/${data?._id}/backlog`} className="px-4 py-2 bg-white border rounded-md flex items-center mr-2">Backlog<ArrowDownWideNarrow className="w-4 h-4 ml-2" /></Link>
+                    <Link href={`/projects/${data?._id}/sprint`} className="px-4 py-2 bg-white border rounded-md flex items-center mr-2">Sprint<ArrowDownWideNarrow className="w-4 h-4 ml-2" /></Link>
                     <Link href={`/projects/${data?._id}/tasks`} className="px-4 py-2 bg-white border rounded-md flex items-center mr-2">Task<ArrowDownWideNarrow className="w-4 h-4 ml-2" /></Link>
                     {/* <Link href={`/projects/${data?._id}/member`} className="px-4 py-2 bg-white border rounded-md flex items-center mr-2">Member<ArrowDownWideNarrow className="w-4 h-4 ml-2" /></Link>
                     <Link href={`/projects/${data?._id}/backlog`} className="px-4 py-2 bg-white border rounded-md flex items-center mr-2">Backlog<ArrowDownWideNarrow className="w-4 h-4 ml-2" /></Link> */}

@@ -14,6 +14,7 @@ import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { useSocket } from "../../../contexts/SocketContext";
+import { AvatarUser } from '@/components/common/AvatarUser';
 // import { socket } from '@/lib/socket';
 
 interface Notification {
@@ -203,7 +204,7 @@ export default function ProjectTodo({ data }: { data: ProjectDetails | undefined
                     <p className="text-gray-500 text-xs line-clamp-2">{card.description}</p>
                     <div className="flex items-center  justify-between space-x-2 mt-4 text-sm text-gray-500">
                       <div className="flex -space-x-2">
-                        <img src={card.assignee?.avatar_url} alt="Avatar 1" className="h-7 w-7 rounded-full border-2 border-gray-100" />
+                         <AvatarUser url={card.assignee?.avatar_url} name={card.assignee?.lastname}  className='h-8 w-8 ml-2'/>
                       </div>
                       <div>
                         <span className='mr-2'>12 comments</span>
