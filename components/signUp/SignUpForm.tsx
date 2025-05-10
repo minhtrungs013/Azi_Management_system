@@ -37,8 +37,8 @@ const SignUpForm = ({ toggleForm }: { toggleForm: () => void }) => {
     }
 
     try {
-      // const response = await axios.post('https://azi-management-system-be.onrender.com/api/auth/register', {
-      const response = await axios.post('http://localhost:5000/api/auth/register', {
+      const response = await axios.post('https://azi-management-system-be.onrender.com/api/auth/register', {
+      // const response = await axios.post('http://localhost:5000/api/auth/register', {
         firstname: "estt",
         lastname: "estt",
         email: "test@gmail.com",

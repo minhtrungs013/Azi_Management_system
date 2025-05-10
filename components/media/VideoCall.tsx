@@ -25,7 +25,8 @@ const VideoCall: React.FC = () => {
         ;
 
     useEffect(() => {
-        socket.current = io('http://localhost:5000');
+        // socket.current = io('http://localhost:5000');
+        socket.current = io('https://azi-management-system-be.onrender.com');
         peerConnection.current = new RTCPeerConnection(config);
         peerConnection.current.ontrack = (event) => {
             console.log('Received remote track!', event);
