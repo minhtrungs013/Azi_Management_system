@@ -64,11 +64,11 @@ export default function PieChartComponent({ data1 }: { data1: Dashboard | undefi
     const filteredData = rawData.filter(item => item.value > 0);
 
     const data = {
-        labels: filteredData.map(item => item.label),
+        labels: filteredData?.map(item => item.label),
         datasets: [
             {
-                data: filteredData.map(item => item.value),
-                backgroundColor: filteredData.map(item => item.color),
+                data: filteredData?.map(item => item.value),
+                backgroundColor: filteredData?.map(item => item.color),
                 borderColor: "#ffffff",
                 borderWidth: 2,
                 hoverOffset: 10,

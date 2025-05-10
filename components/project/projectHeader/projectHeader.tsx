@@ -84,7 +84,7 @@ export default function ProjectHeader({ data }: { data: ProjectDetails | undefin
                             <button className='text-purple-600 font-semibold'> Invite</button>
                         </div>
                         <div className="flex -space-x-4">
-                            {allMemberProject?.slice(0, 3).map((item) => (
+                            {allMemberProject?.slice(0, 3)?.map((item) => (
                                 <img key={item.user._id} src={`${item.user.avatar_url ? item.user.avatar_url : 'https://internetviettel.vn/wp-content/uploads/2017/05/1-2.jpg'}`} alt="Avatar 1" className="bg-white h-10 w-10 rounded-full border-2 border-gray-300" />
                                 // <AvatarUser key={item.user._id} url={item.user.avatar_url} name={item.user.firstname}  className='bg-white h-10 w-10 rounded-full border-2 border-gray-300'/>
                             ))}

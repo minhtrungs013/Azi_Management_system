@@ -114,7 +114,7 @@ export default function ProjectTodo({ data }: { data: ProjectDetails | undefined
 
         // Add the card to the new list
         if (cardToMove) {
-          return updatedLists.map((list) => {
+          return updatedLists?.map((list) => {
             if (list._id === targetListId) {
               dispatch(moveTask({ taskId: cardId, listId: targetListId }))
               const notification: notificationCreate = {
@@ -152,7 +152,7 @@ export default function ProjectTodo({ data }: { data: ProjectDetails | undefined
     <section className="overflow-x-auto section1 ">
       <div className="grid grid-flow-col gap-4 my-5 auto-cols-[minmax(25%,1fr)]">
         {/* <!-- To Do Column --> */}
-        {lists.map(list => (
+        {lists?.map(list => (
           <div className='rounded-xl bg-gray-100 dark:bg-[#131822] p-2' key={list._id}
 
             onDrop={(e) => handleDrop(e, list._id)}
@@ -179,7 +179,7 @@ export default function ProjectTodo({ data }: { data: ProjectDetails | undefined
 
             </div>
             <div className="space-y-4  min-h-[56vh] max-h-[56vh] section overflow-x-auto">
-              {list.tasks.map(card => (
+              {list.tasks?.map(card => (
                 <div onClick={() => openModal(card)}
                   className={`relative overflow-hidden bg-white dark:bg-[#020817] p-4 rounded-md shadow cursor-pointer mr-1 card ${draggingCard && draggingCard.cardId === card._id ? 'dragging' : ''}`} key={card._id}
                   draggable

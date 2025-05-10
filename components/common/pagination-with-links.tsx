@@ -189,7 +189,7 @@ function SelectRowsPerPage({
                     <SelectValue placeholder="Select page size">{String(pageSize)}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                    {options.map((option) => (
+                    {options?.map((option) => (
                         <SelectItem key={option} value={String(option)}>
                             {option}
                         </SelectItem>

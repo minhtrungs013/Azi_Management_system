@@ -76,7 +76,7 @@ export function Navbar() {
             </div>
             <div className="space-y-8 p-4">
                 <nav className="space-y-4">
-                    {navbars.map(navbarItem => (
+                    {navbars?.map(navbarItem => (
                         <Link
                             key={navbarItem.id}
                             href={navbarItem.href}
@@ -102,7 +102,7 @@ export function Navbar() {
                         </button>
                     </div>
                     <ul className="space-y-2  p-4">
-                        {projects.map(project => (
+                        {projects?.map(project => (
                             <li key={project._id} className={`flex w-full group/item justify-between items-center rounded-md ${pathname.replace("/projects/", "") === project._id
                                 ? 'bg-purple-100 text-purple-600'
                                 : 'bg-gray-100 hover:bg-gray-200'

@@ -48,7 +48,7 @@ export default function GanttChart() {
 
   const chartSeries = [
     {
-      data: tasks.map((task) => ({
+      data: tasks?.map((task) => ({
         x: task.name,
         y: [task.start.getTime(), task.end.getTime()], // Dùng nguyên getTime() (milliseconds)
       })),

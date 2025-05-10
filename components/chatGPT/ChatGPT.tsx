@@ -41,7 +41,7 @@ export default function ChatGPT() {
         <h3>Write your question</h3>
         <PromptForm isLoading={isLoading} onSubmit={onSubmit} />
 
-        {choices.map((choice) => {
+        {choices?.map((choice) => {
           return (
             <p key={choice.index} >
               {choice.message.content}

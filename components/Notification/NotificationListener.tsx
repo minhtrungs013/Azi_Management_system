@@ -68,7 +68,7 @@ const NotificationListener: React.FC<NotificationListenerProps> = ({ closeNotifi
                 )}
                 {/* Hiển thị thông báo */}
                 {notifications.length > 0 ? (
-                    notifications.map((item, index) => (
+                    notifications?.map((item, index) => (
 
                         <li
                             onClick={() => handleUpdateNotification(item)}
