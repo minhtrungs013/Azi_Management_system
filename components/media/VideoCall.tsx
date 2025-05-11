@@ -1,7 +1,7 @@
 'use client';
 import React, { useRef, useState, useEffect } from 'react';
 import { io, Socket } from 'socket.io-client';
-
+import { URL } from '@/lib/config/api';
 const VideoCall: React.FC = () => {
     const [username, setUsername] = useState('');
     const [callTo, setCallTo] = useState('');
@@ -25,8 +25,7 @@ const VideoCall: React.FC = () => {
         ;
 
     useEffect(() => {
-        // socket.current = io('http://localhost:5000');
-        socket.current = io('https://azi-management-system-be.onrender.com');
+        socket.current = io(`${URL}`);
         peerConnection.current = new RTCPeerConnection(config);
         peerConnection.current.ontrack = (event) => {
             console.log('Received remote track!', event);

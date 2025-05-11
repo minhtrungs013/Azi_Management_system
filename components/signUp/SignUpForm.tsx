@@ -1,5 +1,6 @@
 // components/LoginForm.tsx
 "use client"
+import { URL } from '@/lib/config/api';
 import { AppDispatch } from '@/lib/store/store'; // Import the AppDispatch type
 import axios from 'axios';
 import React, { useState } from 'react';
@@ -37,7 +38,7 @@ const SignUpForm = ({ toggleForm }: { toggleForm: () => void }) => {
     }
 
     try {
-      const response = await axios.post('https://azi-management-system-be.onrender.com/api/auth/register', {
+      const response = await axios.post(`${URL}/api/auth/register`, {
       // const response = await axios.post('http://localhost:5000/api/auth/register', {
         firstname: "estt",
         lastname: "estt",
