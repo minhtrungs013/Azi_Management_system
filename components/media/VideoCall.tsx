@@ -1,67 +1,53 @@
 'use client';
-import React, { useRef, useState, useEffect } from 'react';
-import { io, Socket } from 'socket.io-client';
-import { URL } from '@/lib/config/api';
+import { useSocket } from '@/contexts/SocketContext';
+import { config } from '@/lib/config/socketConfig';
+import React, { useEffect, useRef, useState } from 'react';
+import { toast } from 'react-toastify';
 const VideoCall: React.FC = () => {
     const [username, setUsername] = useState('');
     const [callTo, setCallTo] = useState('');
-    const [test, setTest] = useState<RTCIceCandidateInit>();
     const [callStatus, setCallStatus] = useState('');
     const [incomingCall, setIncomingCall] = useState<{ from: string; signal: RTCSessionDescriptionInit } | null>(null);
     const localVideoRef = useRef<HTMLVideoElement>(null);
     const remoteVideoRef = useRef<HTMLVideoElement>(null);
     const peerConnection = useRef<RTCPeerConnection | null>(null);
-    const socket = useRef<Socket | null>(null);
-
-    const config = {
-        iceServers: [
-            {
-                urls: 'turn:my-turn-server.mycompany.com:19403',
-                username: 'optional-username',
-                credential: 'auth-token'
-            }
-        ]
-    }
-        ;
+    const { socket } = useSocket();
 
     useEffect(() => {
-        socket.current = io(`${URL}`);
         peerConnection.current = new RTCPeerConnection(config);
         peerConnection.current.ontrack = (event) => {
-            console.log('Received remote track!', event);
             if (remoteVideoRef.current) {
                 remoteVideoRef.current.srcObject = event.streams[0];
             }
         };
-    
-        peerConnection.current.onicecandidate = (event) => {
-            if (event.candidate && socket.current && callTo) {
-                socket.current.emit('ice-candidate', {
-                    to: callTo,
-                    candidate: event.candidate,
-                });
-            }
-        };
 
-        socket.current.on('callIncoming', handleOffer);
-        socket.current.on('callAccepted', handleAnswer);
-        socket.current.on('ice-candidate', handleIceCandidate);
-        socket.current.on('callEnded', handleCallEnded);
+        socket?.on('callIncoming', handleOffer);
+        socket?.on('callAccepted', handleAnswer);
+        socket?.on('ice-candidate', handleIceCandidate);
+        socket?.on('callEnded', handleCallEnded);
 
         return () => {
-            socket.current?.disconnect();
+            socket?.disconnect();
             peerConnection.current?.close();
         };
-    }, []);
+    }, [socket]);
+
 
     const handleRegister = () => {
-        if (!socket.current) return;
-        socket.current.emit('register', username);
-        alert(`Registered as ${username}`);
+        if (!socket) return;
+        socket.emit('register', username);
+        toast.success('Registered successfully!', {
+            position: "top-right", 
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+        });
     };
 
     const handleCall = async () => {
-        if (!socket.current || !peerConnection.current) return;
+        if (!socket || !peerConnection.current) return;
 
         const localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         if (localVideoRef.current) localVideoRef.current.srcObject = localStream;
@@ -69,24 +55,20 @@ const VideoCall: React.FC = () => {
 
         peerConnection.current.onicecandidate = (event) => {
             if (event.candidate) {
-                socket.current!.emit('ice-candidate', {
+                socket!.emit('ice-candidate', {
                     to: callTo,
                     candidate: event.candidate,
                 });
             }
         };
 
-        peerConnection.current.ontrack = (event) => {
-            if (remoteVideoRef.current) remoteVideoRef.current.srcObject = event.streams[0];
-        };
-        console.log(peerConnection.current);
         const offer = await peerConnection.current.createOffer();
         await peerConnection.current.setLocalDescription(offer);
 
-        socket.current.emit('callUser', {
+        socket.emit('callUser', {
             to: callTo,
             signalData: offer,
-            from: socket.current.id,
+            from: socket.id,
             name: username,
         });
 
@@ -97,7 +79,6 @@ const VideoCall: React.FC = () => {
         if (!peerConnection.current) {
             peerConnection.current = new RTCPeerConnection(config);
         }
-
         const remoteDesc = new RTCSessionDescription(signal);
         await peerConnection.current.setRemoteDescription(remoteDesc);
 
@@ -105,7 +86,7 @@ const VideoCall: React.FC = () => {
     };
 
     const joinCall = async () => {
-        if (!incomingCall || !peerConnection.current || !socket.current) return;
+        if (!incomingCall || !peerConnection.current || !socket) return;
         const { from, signal } = incomingCall;
 
         const remoteDesc = new RTCSessionDescription(signal);
@@ -123,20 +104,14 @@ const VideoCall: React.FC = () => {
 
         peerConnection.current.onicecandidate = (event) => {
             if (event.candidate) {
-                socket.current!.emit('ice-candidate', {
+                socket!.emit('ice-candidate', {
                     to: from,
                     candidate: event.candidate,
                 });
             }
         };
 
-        peerConnection.current.ontrack = (event) => {
-            console.log('Received remote track!', event);
-            if (remoteVideoRef.current) {
-                remoteVideoRef.current.srcObject = event.streams[0];
-            }
-        };
-        socket.current.emit('answerCall', {
+        socket.emit('answerCall', {
             to: from,
             signal: answer,
         });
@@ -171,7 +146,6 @@ const VideoCall: React.FC = () => {
     };
 
     const handleIceCandidate = async ({ candidate }: { candidate: RTCIceCandidateInit }) => {
-        setTest(candidate);
         if (peerConnection.current) {
             if (peerConnection.current.remoteDescription) {
                 try {
@@ -186,24 +160,62 @@ const VideoCall: React.FC = () => {
         }
     };
 
+    const handleClearlocalStreamAndRemoteStream = () => {
+        // Clear local video stream
+        if (localVideoRef.current?.srcObject) {
+            const tracks = (localVideoRef.current.srcObject as MediaStream).getTracks();
+            tracks.forEach(track => track.stop());
+            localVideoRef.current.srcObject = null;
+        }
+
+        // Clear remote video stream
+        if (remoteVideoRef.current?.srcObject) {
+            const tracks = (remoteVideoRef.current.srcObject as MediaStream).getTracks();
+            tracks.forEach(track => track.stop());
+            remoteVideoRef.current.srcObject = null;
+        }
+    }
+
     const handleEndCall = () => {
-        if (!socket.current || !callTo) return;
-        socket.current.emit('endCall', { to: callTo });
+        if (!socket || !callTo) return;
+        socket.emit('endCall', { to: callTo });
         setCallStatus('');
         peerConnection.current?.close();
         peerConnection.current = new RTCPeerConnection(config);
+        handleClearlocalStreamAndRemoteStream();
+        toast.info('📞 Call ended.', {
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+        });
+
     };
 
     const handleCallEnded = () => {
-        alert('Call ended by other user');
+        
         setCallStatus('');
         peerConnection.current?.close();
         peerConnection.current = new RTCPeerConnection(config);
+        setIncomingCall(null);
+        handleClearlocalStreamAndRemoteStream();
+
+        toast.warning('📞 The call has ended.', {
+            position: "top-center",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+        });
     };
 
     const declineCall = () => {
         setIncomingCall(null);
     };
+
 
     return (
         <div className="p-4 space-y-4">

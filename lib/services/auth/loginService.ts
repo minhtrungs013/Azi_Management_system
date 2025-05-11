@@ -4,7 +4,7 @@ import axios from 'axios';
 
 export async function loginService(payload: LoginPayload): Promise<any> {
   try {
-    const response = await axios.post(`${URL}/api/auth/login`, payload);
+    const response = await axios.post(`${URL}/auth/login`, payload);
     return response.data; // Return the actual response data
   } catch (error: any) {
     return Promise.reject({

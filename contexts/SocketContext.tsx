@@ -7,7 +7,7 @@ import React, { createContext, useContext, useRef, useEffect, useState } from "r
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import { io, Socket } from "socket.io-client";
-
+import { URL } from '@/lib/config/api';
 interface SocketContextType {
     socket: Socket | undefined;
     sendMessage: (event: string, data: any) => void; // Hàm gửi dữ liệu
@@ -25,8 +25,8 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const dispatch = useDispatch<AppDispatch>();
     // Kết nối socket chỉ một lần khi provider được mount
     useEffect(() => {
-        // const socketInstance = io("http://localhost:5000");
-        const socketInstance = io("https://azi-management-system-be.onrender.com");
+        const socketInstance = io('http://localhost:5000');
+        // const socketInstance = io("https://azi-management-system-be.onrender.com");
         // Log khi kết nối socket thành công
         socketInstance.on("connect", () => {
             console.log("Socket connected:", socketInstance?.id);
