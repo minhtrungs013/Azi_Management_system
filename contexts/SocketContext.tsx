@@ -140,7 +140,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             peerConnection.current = new RTCPeerConnection(config);
         }
         const remoteDesc = new RTCSessionDescription(signal);
-        await peerConnection.current.setRemoteDescription;
+        peerConnection.current.setRemoteDescription;
 
         setPeers((prev) => new Map(prev.set(from, peerConnection.current)));
     };
