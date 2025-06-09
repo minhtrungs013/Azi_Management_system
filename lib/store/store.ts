@@ -6,6 +6,7 @@ import counterReducer from './features/counterSlice';
 import projectSlice from './features/projectSlice';
 import taskSlice from './features/taskSlice';
 import notificationSlice from './features/notificationSlice';
+import socialSlice from './features/socialSlice';
 // export const store = configureStore({
 //   reducer: {
 //     auth: counterReducer,
@@ -27,6 +28,7 @@ const store = configureStore({
     project: projectSlice, // Replace your authReducer with the persisted reducer
     task: taskSlice, // Replace your authReducer with the persisted reducer
     notification: notificationSlice, // Replace your authReducer with the persisted reducer
+    social: socialSlice, // Replace your authReducer with the persisted reducer
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

@@ -28,6 +28,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const [socket, setSocket] = useState<Socket>();
     const [notification, setNotification] = useState<any>([])
     const authState = useSelector((state: RootState) => state.auth);
+    const socialState = useSelector((state: RootState) => state.social);
     const dispatch = useDispatch<AppDispatch>();
     const peerConnection = useRef<RTCPeerConnection | null>(null);
     const localVideoRef = useRef<HTMLVideoElement>(null);
@@ -141,7 +142,6 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         }
         const remoteDesc = new RTCSessionDescription(signal);
         peerConnection.current.setRemoteDescription;
-
         setPeers((prev) => new Map(prev.set(from, peerConnection.current)));
     };
 
