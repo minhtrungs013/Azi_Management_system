@@ -10,11 +10,13 @@ import { io, Socket } from "socket.io-client";
 import { URL } from '@/lib/config/api';
 import { config } from '@/lib/config/socketConfig';
 import { ProjectDetails } from "@/types/project";
+import { answerCall, setIncomingCall } from '@/lib/store/features/socialSlice';
+import { setProjectId } from '@/lib/store/features/projectSlice';
 interface SocketContextType {
     socket: Socket | undefined;
     sendMessage: (event: string, data: any) => void; // Hàm gửi dữ liệu
     handleGroupCall: (data: ProjectDetails) => void; // Hàm gửi dữ liệu
-    handleGroupAnswer: (data: ProjectDetails) => void; // Hàm gửi dữ liệu
+    handleGroupAnswer: (projectId: string) => void; // Hàm gửi dữ liệu
 }
 
 const SocketContext = createContext<SocketContextType>({
@@ -134,8 +136,8 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     }
 
-    const handleIncomingCall = async ({ from, signal, socketId }: { from: string; signal: RTCSessionDescriptionInit, socketId: string }) => {
-        console.log('from', from, 'socketId', socketId);
+    const handleIncomingCall = async ({ from, signal, socketId, groupId }: { from: string; signal: RTCSessionDescriptionInit, socketId: string, groupId: string }) => {
+        console.log('from', from, 'socketId', socketId, groupId);
 
         if (!peerConnection.current) {
             peerConnection.current = new RTCPeerConnection(config);
@@ -143,32 +145,36 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         const remoteDesc = new RTCSessionDescription(signal);
         peerConnection.current.setRemoteDescription;
         setPeers((prev) => new Map(prev.set(from, peerConnection.current)));
+
+        dispatch(answerCall());
+        dispatch(setIncomingCall({from, signal, socketId, groupId}));
+        dispatch(setProjectId(groupId));
     };
 
 
-    const handleGroupAnswer = async () => {
-        // if (!peerConnection.current) {
-        //     peerConnection.current = new RTCPeerConnection(config);
-        // }
+    const handleGroupAnswer = async (projectId: string) => {
+        if (!peerConnection.current) {
+            peerConnection.current = new RTCPeerConnection(config);
+        }
 
-        // const localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-        // if (localVideoRef.current) localVideoRef.current.srcObject = localStream;
-        // localStream.getTracks().forEach((track) => {
-        //     peerConnection.current!.addTrack(track, localStream);
-        // });
+        const localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        if (localVideoRef.current) localVideoRef.current.srcObject = localStream;
+        localStream.getTracks().forEach((track) => {
+            peerConnection.current!.addTrack(track, localStream);
+        });
 
-        //  peerConnection.current.onicecandidate = (event) => {
-        //     if (event.candidate) {
-        //         socket?.emit('groupIceCandidate', {
-        //             to: data?._id,
-        //             candidate: event.candidate,
-        //         });
-        //     }
-        // };
+        peerConnection.current.onicecandidate = (event) => {
+            if (event.candidate) {
+                socket?.emit('groupIceCandidate', {
+                    to: projectId,
+                    candidate: event.candidate,
+                });
+            }
+        };
 
         //  peerConnection.current.ontrack = (event) => {
         //     const stream = event.streams[0];
-        //     setRemoteStreams((prev) => new Map(prev.set(from, stream)));
+        //     setPeers((prev) => new Map(prev.set(from, stream)));
         // };
 
         // await  peerConnection.current.setRemoteDescription(new RTCSessionDescription(signal));

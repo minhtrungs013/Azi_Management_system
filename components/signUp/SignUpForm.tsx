@@ -38,7 +38,7 @@ const SignUpForm = ({ toggleForm }: { toggleForm: () => void }) => {
     }
 
     try {
-      const response = await axios.post(`${URL}/api/auth/register`, {
+      const response = await axios.post(`${URL}/auth/register`, {
       // const response = await axios.post('http://localhost:5000/api/auth/register', {
         firstname: "estt",
         lastname: "estt",

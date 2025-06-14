@@ -1,6 +1,6 @@
 // lib/store/features/authSlice.ts
-import { createSprintService, getAllSprintByProjectIdService } from '@/lib/services/sprint/sprintService';
-import { sprintPayload } from '@/types/sprint';
+import { completeSprintByIdService, createSprintService, getAllSprintByProjectIdService, updateSprintByIdService } from '@/lib/services/sprint/sprintService';
+import { sprint, sprintPayload } from '@/types/sprint';
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 
 
@@ -17,6 +17,24 @@ export const createSprintSlice = createAsyncThunk('createSprintSlice', async (pa
 export const getAllSprintByProjectIdSlice = createAsyncThunk('getAllSprintByProjectIdSlice', async (projectId: string, { rejectWithValue }) => {
   try {
     const response = await getAllSprintByProjectIdService(projectId);
+    return response;
+  } catch (error) {
+    return rejectWithValue(' failed');
+  }
+});
+
+export const updateSprintByIdSlice = createAsyncThunk('updateSprintByIdSlice', async (sprint: sprint, { rejectWithValue }) => {
+  try {
+    const response = await updateSprintByIdService(sprint);
+    return response;
+  } catch (error) {
+    return rejectWithValue(' failed');
+  }
+});
+
+export const completeSprintByIdSlice = createAsyncThunk('completeSprintByIdSlice', async (sprintId: string, { rejectWithValue }) => {
+  try {
+    const response = await completeSprintByIdService(sprintId);
     return response;
   } catch (error) {
     return rejectWithValue(' failed');

@@ -48,8 +48,6 @@ export default function ProjectHeader({ data }: { data: ProjectDetails | undefin
             }
         }
         if (status === 'meeting' && data) {
-            console.log("meeting");
-            
             handleGroupCall(data);
         }
         setShowModalByStatus(status)

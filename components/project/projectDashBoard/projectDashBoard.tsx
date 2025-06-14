@@ -24,8 +24,6 @@ export default function ProjectDashBoard({ projjectId }: { projjectId: string })
             }
         })();
     }, [projjectId])
-    const text = "Running";
-    console.log(data);
 
     return (
         <div >

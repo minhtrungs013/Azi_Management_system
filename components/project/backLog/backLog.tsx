@@ -1,29 +1,27 @@
 'use client';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { getAllMemberProject, getProjectId } from '@/lib/store/features/projectSlice';
-import { getTaskByCurrentSprintSlice, getTasksByProjectIdSlice, getTasksOnBacklogSlice } from '@/lib/store/features/taskSlice';
+import { getAllMemberProject, getProjectId, setRefresh } from '@/lib/store/features/projectSlice';
+import { completeSprintByIdSlice, getAllSprintByProjectIdSlice, updateSprintByIdSlice } from "@/lib/store/features/spintSlice";
+import { getTaskByCurrentSprintSlice, getTasksBySprintIdSlice, getTasksOnBacklogSlice } from '@/lib/store/features/taskSlice';
 import { AppDispatch, RootState } from '@/lib/store/store';
 import { checkRuleAccess } from '@/lib/utils';
 import { members } from '@/types/auth';
 import { ProjectDetails } from '@/types/project';
+import { sprint } from "@/types/sprint";
 import { getTaskByProjectIdPayload, tasksFilterParams } from '@/types/task';
-import { ArrowDownWideNarrow, ClipboardList, Ellipsis, Eye, RefreshCcwDot, Search, SquareChartGantt, UserCheck } from 'lucide-react';
+import { ArrowDownWideNarrow, Ellipsis, RefreshCcwDot, SquareChartGantt } from 'lucide-react';
 import Link from 'next/link';
-import { useSearchParams, usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
-import { PaginationWithLinks } from '../../common/pagination-with-links';
 import Modal from '../../Modal/Modal';
 import CreateTask from '../../task/createTask';
 import Sprint from "../sprint/sprint";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { getAllSprintByProjectIdSlice } from "@/lib/store/features/spintSlice";
-import { sprintPayload, sprint } from "@/types/sprint";
 
 export default function BackLog({ projjectId }: { projjectId: string }) {
     const searchParams = useSearchParams();
@@ -38,6 +36,7 @@ export default function BackLog({ projjectId }: { projjectId: string }) {
     const [sprints, setSprints] = useState<sprint[]>();
     const [allMemberProject, setAllMemberProject] = useState<members[]>();
     const authState = useSelector((state: RootState) => state.auth);
+    const projectState = useSelector((state: RootState) => state.project);
     const [showModalByStatus, setShowModalByStatus] = useState<string>('');
     const [filterParams, setFilterParams] = useState<tasksFilterParams>({
         assignee: '',
@@ -96,7 +95,7 @@ export default function BackLog({ projjectId }: { projjectId: string }) {
                 setSprints(resGetAllSprintByProjectId.payload)
             }
         })();
-    }, [projjectId, filterParams])
+    }, [projjectId, filterParams, projectState.refresh])
 
     const handleFilterChange = (key: keyof tasksFilterParams, value: string) => {
         setFilterParams((prev) => ({
@@ -104,7 +103,22 @@ export default function BackLog({ projjectId }: { projjectId: string }) {
             [key]: value,
         }));
     };
-    console.log(data);
+
+    const handleChangeStatusSprint = (sprint: sprint) => {
+        sprint.status === 'Pending' ? sprint.status = 'Running' : sprint.status === 'Running' ? sprint.status = 'Completed' : sprint.status
+        dispatch(updateSprintByIdSlice(sprint))
+        dispatch(setRefresh(true))
+    }
+    const handleSwithSprint = async (sprintId: string) => {
+
+        const res = await dispatch(getTasksBySprintIdSlice(sprintId))
+        if (getTasksBySprintIdSlice.fulfilled.match(res)) {
+            if (data) {
+                setData({ tasks: res.payload.tasks, sprint: res.payload.sprint, completionPercentage: data.completionPercentage });
+            }
+
+        }
+    }
 
 
     return (
@@ -128,7 +142,7 @@ export default function BackLog({ projjectId }: { projjectId: string }) {
                         <Link href={`/projects/${project?._id}/tasks`} className="px-4 py-2 bg-white border rounded-md flex items-center mr-2"><SquareChartGantt className="w-4 h-4 mr-2" />Task</Link>
                     </div>
                     <div>
-                        <Select>
+                        <Select onValueChange={e => handleSwithSprint(e)}>
                             <SelectTrigger className="w-[180px]">
                                 <SelectValue placeholder="Sprint" />
                             </SelectTrigger>
@@ -154,12 +168,20 @@ export default function BackLog({ projjectId }: { projjectId: string }) {
                             <div className="flex items-center justify-between w-full bg-gray-50 rounded-t-sm pl-3">
                                 <AccordionTrigger>
                                     <div className="flex items-center">
-                                        <h3 className="ml-3 bg-gray-200 rounded-sm p-2 text-sm font-medium">{data?.sprint.name}</h3>
+                                        <h3 className=" min-w-[100px] ml-3 bg-gray-200 rounded-sm p-2 text-sm font-medium">{data?.sprint.name}</h3>
                                         <span className=" text-gray-400 font-normal text-xs ml-2">{data?.sprint.startDate} - {data?.sprint.endDate} | {data?.sprint.status} | {data?.tasks.length} issues</span>
                                     </div>
                                 </AccordionTrigger>
                                 <div className="flex items-center">
-                                    <Button variant={"secondary"} className="ml-3 bg-green-100 hover:bg-green-100  rounded-sm p-2 text-sm font-medium text-green-500  hover:text-green-700">Complete Sprint</Button>
+                                    <Button variant={"secondary"} onClick={() => handleChangeStatusSprint(data.sprint)}
+                                        disabled={data.sprint.status === "Completed"}
+                                        className={`ml-3 rounded-sm p-2 text-sm font-medium w-[120px]
+                                            ${data.sprint.status === "Pending" ? "bg-gray-100 hover:bg-gray-100 hover:text-gray-700 text-gray-500" :
+                                                data.sprint.status === "Running" ? "bg-green-100 hover:bg-green-100 hover:text-green-700 text-green-500" :
+                                                    "bg-purple-100 hover:bg-purple-100 hover:text-purple-700 text-purple-500"}
+                                     `}>
+                                        {data.sprint.status === "Pending" ? "Start Sprint" : data.sprint.status === "Running" ? " Complete Sprint" : "Finish"}
+                                    </Button>
                                     <Ellipsis className="text-gray-400 font-normal text-xs ml-2 cursor-pointer" />
                                 </div>
                             </div>
@@ -170,11 +192,11 @@ export default function BackLog({ projjectId }: { projjectId: string }) {
                                         <tbody className="text-gray-700">
                                             {data?.tasks?.map((task) => (
                                                 <tr className="border text-xs  drop-shadow-sm" key={task._id}>
-                                                    <td className="relative py-2 px-4 max-w-[350px] text-sm">
+                                                    <td className="relative py-2 px-4 min-w-[350px] max-w-[350px] text-sm">
                                                         <Tooltip>
                                                             <TooltipTrigger asChild>
                                                                 <Link target="_blank" href={`/projects/${projjectId}/tasks/${task.identifier}`}
-                                                                    className="mr-2 px-2  line-clamp-1 underline text-blue-600">
+                                                                    className="mr-2 px-2  line-clamp-1 underline text-blue-600 ">
                                                                     {task.title}
                                                                 </Link>
                                                             </TooltipTrigger>
@@ -218,7 +240,7 @@ export default function BackLog({ projjectId }: { projjectId: string }) {
                         <div className="flex items-center justify-between w-full bg-gray-50 rounded-t-sm pl-3">
                             <AccordionTrigger>
                                 <div className="flex items-center">
-                                    <h3 className="ml-3 bg-gray-200 rounded-sm p-2 text-sm font-medium">BackLog</h3>
+                                    <h3 className=" min-w-[100px] ml-3 bg-gray-200 rounded-sm p-2 text-sm font-medium">BackLog</h3>
                                     <span className=" text-gray-400 font-normal text-xs ml-2"> </span>
                                 </div>
                             </AccordionTrigger>
@@ -232,7 +254,7 @@ export default function BackLog({ projjectId }: { projjectId: string }) {
                                     <tbody className="text-gray-700">
                                         {backlog?.map((task) => (
                                             <tr className="border text-xs  drop-shadow-sm" key={task._id}>
-                                                <td className="relative py-2 px-4 max-w-[350px] text-sm">
+                                                <td className="relative py-2 px-4 min-w-[350px] max-w-[350px] text-sm">
                                                     <Tooltip>
                                                         <TooltipTrigger asChild>
                                                             <Link target="_blank" href={`/projects/${projjectId}/tasks/${task.identifier}`}
@@ -249,7 +271,7 @@ export default function BackLog({ projjectId }: { projjectId: string }) {
                                                         }`}></div>
                                                 </td>
                                                 <td className="py-2 px-4 ">
-                                                    <span className={`font-normal rounded-sm py-1 px-2 ${task.priority === 'high' ? 'text-red-500  bg-red-100' :
+                                                    <span className={`font-normal rounded-sm py-1 px-2  ${task.priority === 'high' ? 'text-red-500  bg-red-100' :
                                                         task.priority === 'medium' ? 'text-orange-500  bg-orange-100' :
                                                             'text-green-500  bg-green-100'}`}>{task.priority}</span>
                                                 </td>

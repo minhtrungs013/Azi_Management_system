@@ -81,3 +81,14 @@ export async function getTasksOnBacklogService(projectId: string): Promise<getTa
     });
   }
 }
+export async function getTasksBySprintIdService(sprintId: string): Promise<{tasks: getTaskByProjectIdPayload[], sprint: sprint}> {
+  try {
+    const response = await api.get(`/tasks/sprint/${sprintId}`);
+    return response.data.data;
+  } catch (error: any) {
+    return Promise.reject({
+      message: error.response?.data?.message || 'Something went wrong',
+      status: error.response?.status || 500,
+    });
+  }
+}

@@ -62,6 +62,7 @@ export default function ProjectTodo({ data }: { data: ProjectDetails | undefined
     setTask(task);
     setModalOpen(true)
   };
+
   const closeModal = () => setModalOpen(false);
   useEffect(() => {
     setLists(data?.lists || []);
@@ -204,7 +205,7 @@ export default function ProjectTodo({ data }: { data: ProjectDetails | undefined
                     <p className="text-gray-500 text-xs line-clamp-2">{card.description}</p>
                     <div className="flex items-center  justify-between space-x-2 mt-4 text-sm text-gray-500">
                       <div className="flex -space-x-2">
-                         <AvatarUser url={card.assignee?.avatar_url} name={card.assignee?.lastname}  className='h-8 w-8 ml-2'/>
+                        <AvatarUser url={card.assignee?.avatar_url} name={card.assignee?.lastname} className='h-8 w-8 ml-2' />
                       </div>
                       <div>
                         <span className='mr-2'>12 comments</span>
@@ -223,7 +224,7 @@ export default function ProjectTodo({ data }: { data: ProjectDetails | undefined
         ))}
 
         <Modal isOpen={isModalOpen} closeModal={closeModal} >
-          <TaskDetailModal closeModal={closeModal} task={task} allMemberProject={allMemberProject} projjectId={data?._id}/>
+          <TaskDetailModal closeModal={closeModal} task={task} allMemberProject={allMemberProject} projjectId={data?._id} />
         </Modal>
       </div>
     </section>

@@ -17,7 +17,9 @@ import { Button } from '../ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu';
 import Profile from '../user/profile';
 import { refreshNotification } from '@/lib/store/features/notificationSlice';
+import { hideAnswer } from '@/lib/store/features/socialSlice';
 import { AvatarUser } from '../common/AvatarUser';
+import AnswerCall from '../media/answerCall';
 
 // import { useSelector, useDispatch } from 'react-redux';
 // import { RootState, AppDispatch } from '../lib/store/store';
@@ -25,30 +27,45 @@ import { AvatarUser } from '../common/AvatarUser';
 export function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const [isModalOpen, setModalOpen] = useState<boolean>(false);
-  const [showSignUp, setShowSignUp] = useState<boolean>(false);
-  const [showProfile, setShowProfile] = useState<boolean>(false);
+  const [showModalByStatus, setShowModalByStatus] = useState<string>('');
   const authState = useSelector((state: RootState) => state.auth);
+  const socialState = useSelector((state: RootState) => state.social);
   // const notifications = notificationState.notification || [];
   const refreshNotificationSlice = useSelector((state: RootState) => state.notification);
   const dispatch = useDispatch<AppDispatch>();
-  const toggleForm = () => setShowSignUp(!showSignUp);
+  const toggleForm = () => {
+    if (showModalByStatus === "signIn") {
+      setShowModalByStatus("signUp")
+    }
+    if (showModalByStatus === "signUp") {
+      setShowModalByStatus("signIn")
+    }
+  };
   const openModal = (status: string) => {
     if (status === 'profile') {
-      setShowProfile(true)
+      setShowModalByStatus("profile")
+    }
+    if (status === 'answerCall') {
+      setShowModalByStatus("answerCall")
+    }
+    if (status === 'signUp') {
+      setShowModalByStatus("signUp")
+    }
+    if (status === 'signIn') {
+      setShowModalByStatus("signIn")
     }
     dispatch(refreshNotification(false));
     setModalOpen(true);
   }
 
   const closeModal = () => {
-    setShowProfile(false)
     setModalOpen(false);
     dispatch(refreshNotification(false));
+    dispatch(hideAnswer());
   }
 
   useEffect(() => {
     if (!isModalOpen) {
-      setShowSignUp(false)
     }
   }, [isModalOpen])
 
@@ -76,7 +93,12 @@ export function Header() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-console.log(refreshNotificationSlice.refresh);
+  useEffect(() => {
+    if (socialState.isAnwer) {
+      openModal('answerCall')
+    }
+  }, [socialState.isAnwer]);
+
 
 
   const handleCloseNotification = () => {
@@ -157,13 +179,13 @@ console.log(refreshNotificationSlice.refresh);
                 </DropdownMenuContent>
               </DropdownMenu>
               {!authState.isLogged ?
-                <button onClick={() => openModal('sign')} className="px-4 py-2 bg-purple-600 text-white shadow-md border rounded-md flex mr-2 items-center text-sm font-medium"><LogIn className='h-5 w-5 mr-2' />Sign in</button>
+                <button onClick={() => openModal('signIn')} className="px-4 py-2 bg-purple-600 text-white shadow-md border rounded-md flex mr-2 items-center text-sm font-medium"><LogIn className='h-5 w-5 mr-2' />Sign in</button>
                 :
                 <div className="flex items-center">
                   <button onClick={logOut} className=" p-[5px]  flex items-center text-sm font-medium hover:text-red-500"><Power className='h-5 w-5 ' /></button>
                   <button className="flex items-center w-full text-sm font-medium p-2  mr-3 hover:text-red-500" onClick={() => openModal('profile')}>
                     {authState.name ? authState.name : authState.username}
-                    {authState.avatar_url && authState?.name &&  <AvatarUser url={authState.avatar_url} name={authState?.name}  className='ml-2'/>
+                    {authState.avatar_url && authState?.name && <AvatarUser url={authState.avatar_url} name={authState?.name} className='ml-2' />
                     }
                   </button>
                 </div>
@@ -174,10 +196,10 @@ console.log(refreshNotificationSlice.refresh);
       </nav >
       {/* Modal */}
       <Modal isOpen={isModalOpen} closeModal={closeModal} >
-        {showProfile && <Profile closeModal={closeModal} />
-        }
-        {!showProfile && !showSignUp && <SignInForm closeModal={closeModal} toggleForm={toggleForm} />}
-        {!showProfile && showSignUp && <SignUpForm toggleForm={toggleForm} />}
+        {showModalByStatus === "profile" && <Profile closeModal={closeModal} />}
+        {showModalByStatus === "signIn" && <SignInForm closeModal={closeModal} toggleForm={toggleForm} />}
+        {showModalByStatus === "signUp" && <SignUpForm toggleForm={toggleForm} />}
+        {showModalByStatus === "answerCall" && <AnswerCall closeModal={closeModal} />}
       </Modal >
     </div >
   );

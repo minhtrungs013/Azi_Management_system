@@ -56,7 +56,7 @@ export const inviteMemberToProject = createAsyncThunk('deleteProjectByUserId', a
   }
 });
 
-export const getPermissions  = createAsyncThunk('getPermissions', async (_, { rejectWithValue }) => {
+export const getPermissions = createAsyncThunk('getPermissions', async (_, { rejectWithValue }) => {
   try {
     const response = await getPermissionService();
     return response;
@@ -101,7 +101,7 @@ export const updateListToProject = createAsyncThunk('updateListToProject', async
 export const getListByProjectIdSlice = createAsyncThunk('getListByProjectIdSlice', async (projectId: string, { rejectWithValue }) => {
   try {
     const response = await getListByProjectIdService(projectId);
-    return response ;
+    return response;
   } catch (error) {
     return rejectWithValue(error);
   }
@@ -109,7 +109,7 @@ export const getListByProjectIdSlice = createAsyncThunk('getListByProjectIdSlice
 export const getProjectDashboardByIdSlice = createAsyncThunk('getProjectDashboardByIdSlice', async (projectId: string, { rejectWithValue }) => {
   try {
     const response = await getProjectDashboardByIdService(projectId);
-    return response ;
+    return response;
   } catch (error) {
     return rejectWithValue(error);
   }
@@ -118,11 +118,13 @@ export const getProjectDashboardByIdSlice = createAsyncThunk('getProjectDashboar
 interface ProjectState {
   error: string | null;
   refresh: boolean,
+  projectId: String | null
 }
 
 const initialState: ProjectState = {
   error: null,
   refresh: false,
+  projectId: null,
 };
 
 
@@ -137,7 +139,11 @@ const projectSlice = createSlice({
         state.refresh = false;
       }
     },
+    setProjectId(state, action) {
+      state.projectId = action.payload;
+    },
+
   },
 });
-export const { setRefresh } = projectSlice.actions;
+export const { setRefresh, setProjectId } = projectSlice.actions;
 export default projectSlice.reducer;

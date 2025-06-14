@@ -1,5 +1,5 @@
 // lib/store/features/authSlice.ts
-import { CreatetaskService, getTaskByCurrentSprintService, getTasksByIdService, getTasksByProjectIdService, getTasksOnBacklogService, moveTaskService, updateTaskService } from '@/lib/services/task/taskService';
+import { CreatetaskService, getTaskByCurrentSprintService, getTasksByIdService, getTasksByProjectIdService, getTasksBySprintIdService, getTasksOnBacklogService, moveTaskService, updateTaskService } from '@/lib/services/task/taskService';
 import { taskPayload, tasksFilterParams } from '@/types/task';
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 
@@ -57,6 +57,14 @@ export const getTasksOnBacklogSlice = createAsyncThunk('getTasksOnBacklogSlice',
 export const getTasksByIdSlice = createAsyncThunk('getTasksByIdSlice', async (taskId: string, { rejectWithValue }) => {
   try {
     const response = await getTasksByIdService(taskId);
+    return response;
+  } catch (error) {
+    return rejectWithValue(' failed');
+  }
+});
+export const getTasksBySprintIdSlice = createAsyncThunk('getTasksBySprintIdSlice', async (sprintId: string, { rejectWithValue }) => {
+  try {
+    const response = await getTasksBySprintIdService(sprintId);
     return response;
   } catch (error) {
     return rejectWithValue(' failed');
