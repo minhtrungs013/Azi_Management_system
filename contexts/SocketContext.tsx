@@ -39,8 +39,8 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const [callStatus, setCallStatus] = useState('');
     // Kết nối socket chỉ một lần khi provider được mount
     useEffect(() => {
-        const socketInstance = io('http://localhost:5000');
-        // const socketInstance = io("https://azi-management-system-be.onrender.com");
+        // const socketInstance = io('http://localhost:5000');
+        const socketInstance = io("https://azi-management-system-be.onrender.com");
         // Log khi kết nối socket thành công
         socketInstance.on("connect", () => {
             console.log("Socket connected:", socketInstance?.id);
