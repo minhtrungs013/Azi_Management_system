@@ -15,6 +15,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { useSocket } from "../../../contexts/SocketContext";
 import { AvatarUser } from '@/components/common/AvatarUser';
+import { log } from 'util';
 // import { socket } from '@/lib/socket';
 
 interface Notification {
@@ -59,7 +60,9 @@ export default function ProjectTodo({ data }: { data: ProjectDetails | undefined
   }, [data])
 
   const openModal = (task: Cards) => {
-    setTask(task);
+    console.log(lists);
+    
+    setTask(lists.find(list => list.tasks.some(card => card._id === task._id))?.tasks.find(card => card._id === task._id));
     setModalOpen(true)
   };
 
@@ -105,6 +108,9 @@ export default function ProjectTodo({ data }: { data: ProjectDetails | undefined
         const updatedLists = prevLists.map((list) => {
           if (list._id === sourceListId) {
             cardToMove = list.tasks.find((card) => card._id === cardId) || null;
+            if (cardToMove) {
+              cardToMove.listId = targetListId;
+            }
             return {
               ...list,
               tasks: list.tasks.filter((card) => card._id !== cardId),

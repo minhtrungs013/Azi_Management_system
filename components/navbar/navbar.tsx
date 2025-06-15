@@ -155,7 +155,7 @@ export function Navbar() {
             </Modal>
             <div className=''>
                 <div
-                    className="fixed bottom-44 right-4 shadow-lg bg-white text-white rounded-full cursor-pointer z-50"
+                    className="fixed bottom-10 right-4 shadow-lg bg-white text-white rounded-full cursor-pointer z-50"
                     onClick={() => setIsChatOpen(!isChatOpen)}
                 >
                     <img src="https://res.cloudinary.com/dax8xvyhi/image/upload/v1734416526/qtosenattdunfhtpihbh.png" alt="" className='h-16 w-16'/>

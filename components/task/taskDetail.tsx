@@ -9,7 +9,7 @@ import { members } from "@/types/auth";
 import { notificationCreate } from "@/types/notification";
 import { Cards, issueTypes, listtest } from "@/types/project";
 import { Select } from "@radix-ui/react-select";
-import { BookOpenText, Bug, CalendarDays, ChartCandlestick, ClipboardList, Edit, FileArchive, Leaf, MessagesSquare, Save, Send, Users, X } from "lucide-react";
+import { BookmarkCheck, BookOpenText, Bug, CalendarDays, CaseSensitive, ChartCandlestick, CircleDashed, ClipboardList, Edit, Eye, FileArchive, Leaf, MessagesSquare, Save, Send, Users, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import ReactQuill from 'react-quill';
@@ -68,7 +68,7 @@ const TaskDetail = ({ taskId, projjectId }: { taskId: string, projjectId: string
 
         ['clean']                                         // remove formatting button
     ];
-    const editorModule  = { toolbar: toolbarOptions }
+    const editorModule = { toolbar: toolbarOptions }
     const fetchTask = async () => {
         const resGetTasksById = await dispatch(getTasksByIdSlice(taskId));
         if (getTasksByIdSlice.fulfilled.match(resGetTasksById)) {
@@ -357,15 +357,33 @@ const TaskDetail = ({ taskId, projjectId }: { taskId: string, projjectId: string
                             <div className="col-start-3 col-span-3 ">
                                 <div className="flex items-center mb-2">
                                     <label htmlFor="title" className=" text-black flex items-center font-semibold mr-2">  <Leaf className='h-11 w-11  p-3 rounded-sm mr-2 text-green-600 shadow-md bg-green-50' /> Status: </label>
-                                    <Select value={editTask.listId} onValueChange={(value) => handleOnValueChange(value)}>
-                                        <SelectTrigger className="w-[150px] px-4 py-3 h-auto text-sm font-medium">
+
+                                    <Select value={editTask.listId} onValueChange={(value) => handleOnValueChange(value)} >
+                                        <SelectTrigger className={`w-[180px] font-medium border-none 
+                                                                                    ${list.find(item => item._id == editTask.listId)?.name === "TO DO" ? "bg-gray-100 text-gray-500" :
+                                                list.find(item => item._id == editTask.listId)?.name === "IN PROGRESS" ? "bg-orange-100 text-orange-500" :
+                                                    list.find(item => item._id == editTask.listId)?.name === "BUG" ? "bg-red-100 text-red-500" :
+                                                        list.find(item => item._id == editTask.listId)?.name === "REVIEW" ? "bg-blue-100 text-blue-500" :
+                                                            list.find(item => item._id == editTask.listId)?.name === "DONE" ? "bg-green-100 text-green-500" : ""
+                                            }
+                                                                                    `} >
                                             <SelectValue>
-                                                {list.find(item => item._id == editTask.listId)?.name}
+
                                             </SelectValue>
                                         </SelectTrigger>
-                                        <SelectContent >
+                                        <SelectContent>
                                             {list?.map((item, index) => (
-                                                <SelectItem key={index} value={item._id}>{item.name}</SelectItem>
+                                                <SelectItem key={index} value={item._id}> <div className={`flex items-center justify-between
+                                                                                            ${item.name === "TO DO" ? "text-gray-600" :
+                                                        item.name === "IN PROGRESS" ? "text-orange-600" :
+                                                            item.name === "BUG" ? "text-red-500" :
+                                                                item.name === "REVIEW" ? "text-blue-600" :
+                                                                    item.name === "DONE" ? "text-green-600" : ""
+                                                    } `}> {item.name === "TO DO" ? <BookmarkCheck /> :
+                                                        item.name === "IN PROGRESS" ? <CircleDashed /> :
+                                                            item.name === "BUG" ? <Bug /> :
+                                                                item.name === "REVIEW" ? <Eye /> :
+                                                                    item.name === "DONE" ? <Leaf /> : <CaseSensitive />}<span className="ml-2 font-medium">{item.name}</span></div></SelectItem>
                                             ))}
                                         </SelectContent>
                                     </Select>
@@ -424,10 +442,10 @@ const TaskDetail = ({ taskId, projjectId }: { taskId: string, projjectId: string
                                     <label htmlFor="title" className=" text-black flex items-center font-semibold mb-1"><CalendarDays className='h-11 w-11  p-3 rounded-sm mr-2 text-blue-600 shadow-md bg-blue-50' /> Dates: </label>
                                     <div className="ml-2 py-2">
                                         <div className="flex items-center mb-2  text-green-700">
-                                            Create: <span className="text-md ml-2 text-xs text-black">{formatTime(task?.createdAt)}</span>
+                                          <span className="text-sm w-[125px] text-green-700 ">Create At: </span> <span className="text-md ml-2 text-xs text-black">{formatTime(task?.createdAt)}</span>
                                         </div>
                                         <div className="flex items-center  text-blue-700">
-                                            Updated: <span className="text-md ml-2 text-xs text-black">{formatTime(task?.updatedAt)}</span>
+                                           <span className="text-sm w-[125px] text-blue-700 ">Updated At: </span>  <span className="text-md ml-2 text-xs text-black">{formatTime(task?.updatedAt)}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -435,10 +453,10 @@ const TaskDetail = ({ taskId, projjectId }: { taskId: string, projjectId: string
                                     <label htmlFor="title" className=" text-black flex items-center font-semibold mb-1"><ChartCandlestick className='h-11 w-11  p-3 rounded-sm mr-2 text-blue-600 shadow-md bg-blue-50' /> Progress: </label>
                                     <div className="ml-2 py-2">
                                         <div className="flex items-center mb-2 text-blue-700">
-                                            <span className="text-md w-[110px]  text-green-700">Start Date: </span>  <input type="datetime-local" className="ml-2 text-sm text-black  w-full border border-gray-300 rounded-md p-2" name="startDate" onChange={handleChange} disabled={isEditTask} placeholder="" defaultValue={formatDateTimeForInput(task?.startDate || '')} />
+                                            <span className="text-md w-[125px] text-green-700">Start Date: </span>  <input type="datetime-local" className="ml-2 text-sm text-black  w-full border border-gray-300 rounded-md p-2" name="startDate" onChange={handleChange} disabled={isEditTask} placeholder="" defaultValue={formatDateTimeForInput(task?.startDate || '')} />
                                         </div>
                                         <div className="flex items-center mb-2 text-blue-700">
-                                            <span className="text-md w-[110px] text-red-700">End Date: </span>     <input type="datetime-local" className="ml-2 text-sm text-red-600 font-semibold w-full border border-gray-300 rounded-md p-2" name="endDate" onChange={handleChange} disabled={isEditTask} placeholder="" defaultValue={formatDateTimeForInput(task?.endDate || '')} />
+                                            <span className="text-md w-[125px] text-red-700">End Date: </span>     <input type="datetime-local" className="ml-2 text-sm text-red-600 font-semibold w-full border border-gray-300 rounded-md p-2" name="endDate" onChange={handleChange} disabled={isEditTask} placeholder="" defaultValue={formatDateTimeForInput(task?.endDate || '')} />
                                         </div>
                                     </div>
                                 </div>

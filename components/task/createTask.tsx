@@ -3,11 +3,12 @@ import { createtask, setRefresh } from "@/lib/store/features/taskSlice";
 import { AppDispatch, RootState } from "@/lib/store/store";
 import { members } from "@/types/auth";
 import { taskPayload } from "@/types/task";
-import { Bug, CaseSensitive, FileCheck2, ShieldAlert, UserPlus } from "lucide-react";
+import { Bug, CaseSensitive, FileCheck2, Plus, ShieldAlert, UserPlus, X } from "lucide-react";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import { Checkbox } from "../ui/checkbox";
+import { Button } from "../ui/button";
 
 const CreateTask = ({ closeModal, listId, allMemberProject }: { closeModal: () => void, listId: string | undefined, allMemberProject: members[] | undefined }) => {
     const dispatch = useDispatch<AppDispatch>();
@@ -204,12 +205,8 @@ const CreateTask = ({ closeModal, listId, allMemberProject }: { closeModal: () =
                             </div>
                         </form>
                         <div className='flex justify-end'>
-                            <button onClick={closeModal} type="button" className="mr-2 px-4 py-2 border border-red-500 text-red-500 font-semibold rounded-md shadow-md hover:bg-red-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-75">
-                                Cancel
-                            </button>
-                            <button onClick={handleCreateTask} className="px-4 py-2 bg-purple-500 text-white font-semibold rounded-md shadow-md hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-75">
-                                Create Task
-                            </button>
+                             <Button onClick={closeModal} variant="outline" size="sm" className="min-w-24 mr-2 hover:text-white bg-red-50 hover:bg-red-500 text-red-500 border-red-500"><X className='h-5 w-5 ' /> Cancel</Button>
+                             <Button onClick={handleCreateTask} variant="outline" size="sm" className="min-w-24 mr-2 text-white hover:bg-purple-50 bg-purple-500 hover:text-purple-500 border-purple-500"><Plus className='h-5 w-5 ' /> Create Task</Button>
                         </div>
                     </div>
                 </div>

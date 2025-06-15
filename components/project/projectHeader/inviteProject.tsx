@@ -1,10 +1,11 @@
 "use client"
+import { Button } from "@/components/ui/button";
 import { inviteMemberToProject } from "@/lib/store/features/projectSlice";
 import { setRefresh } from "@/lib/store/features/taskSlice";
 import { AppDispatch } from "@/lib/store/store";
 import { members, User } from "@/types/auth";
 import { AddUserPermissionforProject, permission } from "@/types/project";
-import { ShieldCheck, UserPlus, UserSearch } from "lucide-react";
+import { Plus, ShieldCheck, UserPlus, UserSearch, X } from "lucide-react";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { toast } from "react-toastify";
@@ -142,12 +143,8 @@ const InviteProject = ({ closeModal, projectId, permissions, allUser, user }: { 
                         </form>
 
                         <div className='flex justify-end'>
-                            <button onClick={closeModal} type="button" className="mr-2 px-4 py-2 border border-red-500 text-red-500 font-semibold rounded-md shadow-md hover:bg-red-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-75">
-                                Cancel
-                            </button>
-                            <button onClick={handleCreateTask} className="px-6 py-2 bg-purple-500 text-white font-semibold rounded-md shadow-md hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-75">
-                                Invite
-                            </button>
+                            <Button onClick={closeModal} variant="outline" size="sm" className="min-w-24 mr-2 hover:text-white bg-red-50 hover:bg-red-500 text-red-500 border-red-500"><X className='h-5 w-5 ' /> Cancel</Button>
+                            <Button onClick={handleCreateTask} variant="outline" size="sm" className="min-w-24 mr-2 text-white hover:bg-purple-50 bg-purple-500 hover:text-purple-500 border-purple-500"><Plus className='h-5 w-5 ' /> Invite</Button>
                         </div>
                     </div>
                 </div>

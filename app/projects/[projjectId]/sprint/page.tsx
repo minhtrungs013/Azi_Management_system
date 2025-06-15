@@ -14,6 +14,8 @@ export default function ProjjectId({ params }: { params: { projjectId: string } 
 
     useEffect(() => {
         (async () => {
+            console.log('data');
+            
             const res = await dispatch(getProjectId(params.projjectId));
             if (getProjectId.fulfilled.match(res)) {
                 setData(res.payload);

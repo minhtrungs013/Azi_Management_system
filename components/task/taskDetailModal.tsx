@@ -1,9 +1,9 @@
 "use client"
-import { setRefresh, updateTask } from "@/lib/store/features/taskSlice";
+import { setRefresh, updateTask, moveTask } from "@/lib/store/features/taskSlice";
 import { AppDispatch, RootState } from "@/lib/store/store";
 import { checkRuleAccess, handleUploadCloudinary } from "@/lib/utils";
 import { members } from "@/types/auth";
-import { Cards, issueTypes } from "@/types/project";
+import { Cards, issueTypes, listtest } from "@/types/project";
 import { BookmarkCheck, Bug, CaseSensitive, CircleDashed, DoorOpen, Edit, Eye, FileCheck2, Leaf, Power, Save, Send, User, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -14,6 +14,7 @@ import { Button } from "../ui/button";
 import Image from "next/image";
 import { AvatarUser } from "../common/AvatarUser";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+import { getListByProjectIdSlice } from "@/lib/store/features/projectSlice";
 
 const TaskDetailModal = ({ closeModal, task, allMemberProject, projjectId }: { closeModal: () => void, task: Cards | undefined, allMemberProject: members[] | undefined, projjectId: string | undefined }) => {
     const dispatch = useDispatch<AppDispatch>();
@@ -23,6 +24,7 @@ const TaskDetailModal = ({ closeModal, task, allMemberProject, projjectId }: { c
     const [isShowSearchUser, sethowSearchUser] = useState<boolean>(false);
     const [value, setValue] = useState<string>(task?.assignee?.firstname + " " + task?.assignee?.lastname || '');
     const authState = useSelector((state: RootState) => state.auth);
+    const [list, setList] = useState<listtest[]>([]);
     const [editTask, setEditTask] = useState({
         listId: task?.listId,
         title: task?.title,
@@ -131,6 +133,23 @@ const TaskDetailModal = ({ closeModal, task, allMemberProject, projjectId }: { c
             }
         }
     }
+    const handleCancelEditTask = () => {
+        setIsEditTask(!isEditTask);
+        setEditTask({
+            listId: task?.listId,
+            title: task?.title,
+            description: task?.description,
+            priority: task?.priority,
+            issueType: task?.issueType,
+            position: task?.position,
+            image_urls: task?.image_urls || [],
+            startDate: task?.startDate,
+            endDate: task?.endDate,
+            assignee: task?.assignee?._id,
+            reporter: task?.reporter?._id
+        });
+    }
+console.log();
 
     const formatTime = (date: string | undefined): string => {
         if (!date) return '';
@@ -157,10 +176,47 @@ const TaskDetailModal = ({ closeModal, task, allMemberProject, projjectId }: { c
         return new Date(localDate.getTime() - localDate.getTimezoneOffset() * 60000).toISOString();
     };
 
+    const handleChangeStatusTask = async (listId: string) => {
+        setEditTask((prevEditTask) => {
+            return {
+                ...prevEditTask,
+                listId: listId || '',
+            };
+        });
+        if (task?._id && isEditTask) {
+            const result = await dispatch(moveTask({ taskId: task?._id, listId: listId }))
+            if (moveTask.fulfilled.match(result)) {
+                toast.success("Update task successfully!", {
+                    position: "bottom-right",
+                    autoClose: 5000,
+                });
+                dispatch(setRefresh(true));
+            } else {
+                console.log(result);
+            }
+        }
+
+    }
+
+    useEffect(() => {
+        if (!projjectId) return;
+        const fetchListByProjectId = async () => {
+            const resgetListByProjectId = await dispatch(getListByProjectIdSlice(projjectId));
+            if (getListByProjectIdSlice.fulfilled.match(resgetListByProjectId)) {
+                setList(resgetListByProjectId.payload);
+            }
+        };
+
+        fetchListByProjectId();
+    }, [projjectId])
+
+    console.log(list);
+    console.log(editTask);
+
     return (
         <div className="md:w-[900px] xl:w-[1300px] lg:w-[1000px] flex flex-col justify-center sm:py-12">
             <div className="py-3">
-                <div className="relative px-4 py-5 bg-white shadow-lg sm:rounded-xl ">
+                <div className="relative px-4 py-5 bg-white shadow-lg sm:rounded-xl overflow-hidden">
                     <div className="overflow-y-auto section">
                         <div className="grid grid-cols-3 gap-4 my-5 ">
                             <div className="col-start-1 col-span-2 p-2 ">
@@ -173,14 +229,17 @@ const TaskDetailModal = ({ closeModal, task, allMemberProject, projjectId }: { c
                             <div className="col-start-3 col-span-3 flex justify-between">
                                 <div className="flex items-center mb-8 mt-3">
                                     {isEditTask ?
-                                        <Button onClick={() => handleOpenEditTask()} variant="outline" size="sm" className="mr-2 hover:text-red-500"><Edit className='h-5 w-5 mr-2 ' /> Edit</Button>
+                                        <Button onClick={() => handleOpenEditTask()} variant="outline" size="sm" className="mr-2 hover:text-white bg-orange-50 hover:bg-orange-500 text-orange-500 border-none"><Edit className='h-5 w-5 mr-2 ' /> Edit</Button>
                                         :
-                                        <Button onClick={() => handleEditTask()} variant="outline" size="sm" className="mr-2 hover:text-blue-500"><Save className='h-5 w-5 mr-2 ' /> Save</Button>
+                                        <>
+                                            <Button onClick={() => handleCancelEditTask()} variant="outline" size="sm" className="w-24 mr-2 hover:text-white bg-red-50 hover:bg-red-500 text-red-500 border-none"><X className='h-5 w-5 ' /> Cancel</Button>
+                                            <Button onClick={() => handleEditTask()} variant="outline" size="sm" className="w-24 mr-2 hover:text-white bg-blue-50 hover:bg-blue-500 text-blue-500 border-none"><Save className='h-5 w-5' /> Save</Button>
+                                        </>
                                     }
                                     <CopyButton label={`${task?.identifier}`} copyText={`http://localhost:3000/projects/${projjectId}/tasks/${task?.identifier}`} />
                                 </div>
                                 <div className="flex items-center mb-8 mt-3">
-                                    <Button onClick={(e) => closeModal()} variant="outline" size="sm" className="px-4 py-3 flex items-center text-sm font-medium hover:text-red-500"><X /></Button>
+                                    <Button onClick={(e) => closeModal()} variant="outline" size="sm" className=" flex items-center font-medium hover:text-white bg-red-50 hover:bg-red-500 text-red-500 border-none"><X /></Button>
                                 </div>
                             </div>
                         </div>
@@ -268,17 +327,33 @@ const TaskDetailModal = ({ closeModal, task, allMemberProject, projjectId }: { c
                             <div className="col-start-3 col-span-3 ">
                                 <div className="mb-2">
                                     <div className="flex items-center mb-2 ">
-                                        <Select defaultValue="system">
-                                            <SelectTrigger className="w-[180px] font-medium bg-green-100 border-none" >
-                                                <SelectValue placeholder="Theme" />
+                                        <Select value={editTask.listId} onValueChange={(value) => handleChangeStatusTask(value)} >
+                                            <SelectTrigger className={`w-[180px] font-medium border-none 
+                                                ${list.find(item => item._id == editTask.listId)?.name === "TO DO" ? "bg-gray-100 text-gray-500" :
+                                                    list.find(item => item._id == editTask.listId)?.name === "IN PROGRESS" ? "bg-orange-100 text-orange-500" :
+                                                        list.find(item => item._id == editTask.listId)?.name === "BUG" ? "bg-red-100 text-red-500" :
+                                                            list.find(item => item._id == editTask.listId)?.name === "REVIEW" ? "bg-blue-100 text-blue-500" :
+                                                                list.find(item => item._id == editTask.listId)?.name === "DONE" ? "bg-green-100 text-green-500" : ""
+                                                }
+                                                `} >
+                                                <SelectValue>
+
+                                                </SelectValue>
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="light"> <div className="flex items-center justify-between text-gray-600"> <DoorOpen /> <span className="ml-2 font-medium">OPEN</span></div></SelectItem>
-                                                <SelectItem value="dark"><div className="flex items-center justify-between text-gray-600"> <BookmarkCheck /> <span className="ml-2 font-medium">TO DO</span></div></SelectItem>
-                                                <SelectItem value="system"><div className="flex items-center justify-between text-orange-600"> <CircleDashed /> <span className="ml-2 font-medium">IN-PROGRESS</span></div></SelectItem>
-                                                <SelectItem value="system1"><div className="flex items-center justify-between text-red-500"> <Bug /> <span className="ml-2 font-medium ">BUG</span></div></SelectItem>
-                                                <SelectItem value="system2"><div className="flex items-center justify-between text-blue-600"> <Eye /> <span className="ml-2 font-medium">IN-REVIEW</span></div></SelectItem>
-                                                <SelectItem value="system3"> <div className="flex items-center justify-between text-green-600"> <Leaf /> <span className="ml-2 font-medium">DONE</span></div></SelectItem>
+                                                {list?.map((item, index) => (
+                                                    <SelectItem key={index} value={item._id}> <div className={`flex items-center justify-between
+                                                        ${item.name === "TO DO" ? "text-gray-600" :
+                                                            item.name === "IN PROGRESS" ? "text-orange-600" :
+                                                                item.name === "BUG" ? "text-red-500" :
+                                                                    item.name === "REVIEW" ? "text-blue-600" :
+                                                                        item.name === "DONE" ? "text-green-600" : ""
+                                                        } `}> {item.name === "TO DO" ? <BookmarkCheck /> :
+                                                            item.name === "IN PROGRESS" ? <CircleDashed /> :
+                                                                item.name === "BUG" ? <Bug /> :
+                                                                    item.name === "REVIEW" ? <Eye /> :
+                                                                        item.name === "DONE" ? <Leaf /> : <CaseSensitive />}<span className="ml-2 font-medium">{item.name}</span></div></SelectItem>
+                                                ))}
                                             </SelectContent>
                                         </Select>
                                     </div>
