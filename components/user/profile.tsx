@@ -3,11 +3,12 @@ import { refreshUser, updateUser } from '@/lib/store/features/counterSlice';
 import { AppDispatch, RootState } from '@/lib/store/store';
 import { handleUploadCloudinary } from '@/lib/utils';
 import { UserUpdate } from '@/types/auth';
-import { Upload } from 'lucide-react';
+import { Plus, Save, Upload, X } from 'lucide-react';
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { Button } from '../ui/button';
 
 const Profile = ({ closeModal }: { closeModal: () => void }) => {
 
@@ -15,8 +16,8 @@ const Profile = ({ closeModal }: { closeModal: () => void }) => {
     const authState = useSelector((state: RootState) => state.auth);
 
     const [user, setUser] = useState<UserUpdate>({
-        lastname: authState.lastname|| '',
-        firstname: authState.firstname  || '',
+        lastname: authState.lastname || '',
+        firstname: authState.firstname || '',
         email: authState.email || '',
         location: authState.location || '',
         avatar_url: authState.avatar_url || '',
@@ -166,12 +167,8 @@ const Profile = ({ closeModal }: { closeModal: () => void }) => {
                                         </div>
                                         <div className="relative mb-5 ">
                                             <div className='flex items-center  mt-5'>
-                                                <button onClick={closeModal} type="button" className="mr-2 px-4 py-2 border border-red-500 text-red-500 font-semibold rounded-md shadow-md hover:bg-red-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-75">
-                                                    Cancel
-                                                </button>
-                                                <button type='submit' onClick={() => handleSubmit()} className=" px-4 py-2 bg-purple-500 text-white font-semibold rounded-md shadow-md hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-75">
-                                                    Update
-                                                </button>
+                                                <Button onClick={closeModal} variant="outline" size="sm" className="min-w-24 mr-2 hover:text-white bg-red-50 hover:bg-red-500 text-red-500 border-red-500"><X className='h-5 w-5 ' /> Cancel</Button>
+                                                <Button onClick={() => handleSubmit()} variant="outline" size="sm" className="min-w-24 mr-2 text-white hover:bg-purple-50 bg-purple-500 hover:text-purple-500 border-purple-500"><Save className='h-5 w-5 ' /> Update</Button>
                                             </div>
                                         </div>
                                     </div>

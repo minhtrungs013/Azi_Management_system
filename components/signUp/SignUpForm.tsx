@@ -11,6 +11,12 @@ const SignUpForm = ({ toggleForm }: { toggleForm: () => void }) => {
     username: '',
     password: '',
     confirmPassword: '',
+    firstname: "",
+    lastname: "",
+    email: "",
+    location: "",
+    avatar_url: "",
+    phone: "",
   });
 
   const [error, setError] = useState('');
@@ -39,13 +45,13 @@ const SignUpForm = ({ toggleForm }: { toggleForm: () => void }) => {
 
     try {
       const response = await axios.post(`${URL}/auth/register`, {
-      // const response = await axios.post('http://localhost:5000/api/auth/register', {
-        firstname: "estt",
-        lastname: "estt",
-        email: "test@gmail.com",
-        location: "admin@",
-        avatar_url: "admin@",
-        phone: "048888888",
+        // const response = await axios.post('http://localhost:5000/api/auth/register', {
+        firstname: account.firstname,
+        lastname:   account.lastname,
+        email: account.email,
+        location:  account.location,
+        avatar_url:   "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR_s87zYsrB1nvFfUvNPUJm6KlFP5wIYz0Nxg&s",
+        phone:  account.phone,
         isactive: true,
         username: account.username,
         password: account.password,
@@ -67,6 +73,9 @@ const SignUpForm = ({ toggleForm }: { toggleForm: () => void }) => {
             {error && <p className="text-red-500 text-center mb-4">{error}</p>}
             <form onSubmit={handleSubmit}>
               <div className="relative mb-5">
+                <label className="block text-sm font-medium text-gray-700">
+                  Username
+                </label>
                 <input
                   type="username"
                   name='username'
@@ -75,25 +84,97 @@ const SignUpForm = ({ toggleForm }: { toggleForm: () => void }) => {
                   className="w-full px-4 py-3 text-sm bg-gray-200 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-400 focus:bg-white"
                 />
               </div>
-              <div className="relative mb-5">
+              <div className='flex items-center'>
+                <div className="relative mb-5 mr-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Password
+                  </label>
+                  <input
+                    type="password"
+                    name='password'
+                    placeholder="********"
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 text-sm bg-gray-200 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-400 focus:bg-white"
+                  />
+                </div>
+                <div className="relative mb-5 ">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Confirm Password
+                  </label>
+                  <input
+                    type="password"
+                    name='confirmPassword'
+                    placeholder="**********"
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 text-sm bg-gray-200 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-400 focus:bg-white"
+                  />
+                </div>
+              </div>
+              <div className='flex items-center'>
+                <div className="relative mb-5 mr-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Address
+                  </label>
+                  <input
+                    type="text"
+                    name='address'
+                    placeholder="Los Angeles, CA"
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 text-sm bg-gray-200 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-400 focus:bg-white"
+                  />
+                </div>
+                <div className="relative mb-5 ">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Phone
+                  </label>
+                  <input
+                    type="text"
+                    name='phone'
+                    placeholder="0123456789"
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 text-sm bg-gray-200 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-400 focus:bg-white"
+                  />
+                </div>
+              </div>
+              <div className='flex items-center'>
+                <div className="relative mb-5 mr-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Last Name
+                  </label>
+                  <input
+                    type="text"
+                    name='lastname'
+                    placeholder="John"
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 text-sm bg-gray-200 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-400 focus:bg-white"
+                  />
+                </div>
+                <div className="relative mb-5 ">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Frist Name
+                  </label>
+                  <input
+                    type="text"
+                    name='firstname'
+                    placeholder="Smith"
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 text-sm bg-gray-200 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-400 focus:bg-white"
+                  />
+                </div>
+              </div>
+              <div className="relative mb-5 ">
+                <label className="block text-sm font-medium text-gray-700">
+                  Email
+                </label>
                 <input
-                  type="password"
-                  name='password'
-                  placeholder="Password"
+                  type="email"
+                  required
+                  name='email'
+                  placeholder="john@gmail.com"
                   onChange={handleChange}
                   className="w-full px-4 py-3 text-sm bg-gray-200 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-400 focus:bg-white"
                 />
               </div>
-              <div className="relative mb-5">
-                <input
-                  type="password"
-                  name='confirmPassword'
-                  placeholder="Confirm Password"
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 text-sm bg-gray-200 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-400 focus:bg-white"
-                />
-              </div>
-
               <button
                 type="submit"
                 className="w-full px-4 py-2 bg-purple-500 text-white font-semibold rounded-md shadow-md hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-75"

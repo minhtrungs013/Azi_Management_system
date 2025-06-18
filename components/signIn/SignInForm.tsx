@@ -63,6 +63,9 @@ const SignInForm = ({ toggleForm, closeModal }: SignInFormProps) => {
             {error && <p className="text-red-500 text-center mb-4">{error}</p>}
             <form onSubmit={handleSubmit}>
               <div className="relative mb-5">
+                <label className="block text-sm font-medium text-gray-700">
+                  Username
+                </label>
                 <input
                   type="username"
                   placeholder="User name"
@@ -72,6 +75,9 @@ const SignInForm = ({ toggleForm, closeModal }: SignInFormProps) => {
                 />
               </div>
               <div className="relative mb-5">
+                <label className="block text-sm font-medium text-gray-700">
+                  Password
+                </label>
                 <input
                   type="password"
                   placeholder="Password"

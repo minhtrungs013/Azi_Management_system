@@ -13,7 +13,7 @@ import { members } from '@/types/auth';
 import { ProjectDetails } from '@/types/project';
 import { sprint } from "@/types/sprint";
 import { getTaskByProjectIdPayload, tasksFilterParams } from '@/types/task';
-import { ArrowDownWideNarrow, Ellipsis, RefreshCcwDot, SquareChartGantt } from 'lucide-react';
+import { ArrowDownWideNarrow, Ellipsis, RefreshCcwDot, SquareChartGantt, Tally1 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useState } from 'react';
@@ -136,10 +136,13 @@ export default function BackLog({ projjectId }: { projjectId: string }) {
                 </header>
                 <div className="flex space-x-2 justify-between">
                     <div className='flex'>
-                        <Link href={`/projects/${project?._id}`} className="px-4 py-2 bg-white border rounded-md flex items-center mr-2">Dashboard<ArrowDownWideNarrow className="w-4 h-4 ml-2" /></Link>
-                        <Link href={`/projects/${project?._id}/backlog`} className="px-4 py-2 bg-white border rounded-md flex items-center mr-2"><SquareChartGantt className="w-4 h-4 mr-2" />BackLog</Link>
-                        <Link href={`/projects/${project?._id}/sprint`} className="px-4 py-2 bg-white border rounded-md flex items-center mr-2">Sprint<ArrowDownWideNarrow className="w-4 h-4 ml-2" /></Link>
-                        <Link href={`/projects/${project?._id}/tasks`} className="px-4 py-2 bg-white border rounded-md flex items-center mr-2"><SquareChartGantt className="w-4 h-4 mr-2" />Task</Link>
+                        <Link href={`/projects/${project?._id}`} className="pr-4 py-2 bg-white hover:text-purple-600 font-medium flex items-center mr-2">Dashboard<ArrowDownWideNarrow className="w-4 h-4 ml-2" /></Link>
+                        <div className="flex items-center justify-center text-gray-400"> <Tally1 /></div>
+                        <Link href={`/projects/${project?._id}/backlog`} className="px-4 py-2 bg-white hover:text-purple-600 font-medium flex items-center mr-2">Backlog<ArrowDownWideNarrow className="w-4 h-4 ml-2" /></Link>
+                        <div className="flex items-center justify-center text-gray-400"> <Tally1 /></div>
+                        <Link href={`/projects/${project?._id}/sprint`} className="px-4 py-2 bg-white hover:text-purple-600 font-medium flex items-center mr-2">Sprint<ArrowDownWideNarrow className="w-4 h-4 ml-2" /></Link>
+                        <div className="flex items-center justify-center text-gray-400"> <Tally1 /></div>
+                        <Link href={`/projects/${project?._id}/tasks`} className="px-4 py-2 bg-white hover:text-purple-600 font-medium flex items-center mr-2">Task<ArrowDownWideNarrow className="w-4 h-4 ml-2" /></Link>
                     </div>
                     <div>
                         <Select onValueChange={e => handleSwithSprint(e)}>

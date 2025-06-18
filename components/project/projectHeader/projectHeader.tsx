@@ -4,7 +4,7 @@ import { getAllMemberProject, getAllNonMemberToProject, getPermissions } from '@
 import { AppDispatch, RootState } from '@/lib/store/store';
 import { members, User } from '@/types/auth';
 import { permission, ProjectDetails } from '@/types/project';
-import { ArrowDownWideNarrow, CalendarDays, PhoneCall, UserPlus } from 'lucide-react';
+import { ArrowDownWideNarrow, CalendarDays, PhoneCall, Tally1, UserPlus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import CreateTask from '../../task/createTask';
@@ -105,10 +105,17 @@ export default function ProjectHeader({ data }: { data: ProjectDetails | undefin
             </header>
             <div className="flex space-x-2 justify-between">
                 <div className='flex'>
-                    <Link href={`/projects/${data?._id}`} className="px-4 py-2 bg-white border rounded-md flex items-center mr-2">Dashboard<ArrowDownWideNarrow className="w-4 h-4 ml-2" /></Link>
+                    {/* <Link href={`/projects/${data?._id}`} className="px-4 py-2 bg-white border rounded-md flex items-center mr-2">Dashboard<ArrowDownWideNarrow className="w-4 h-4 ml-2" /></Link>
                     <Link href={`/projects/${data?._id}/backlog`} className="px-4 py-2 bg-white border rounded-md flex items-center mr-2">Backlog<ArrowDownWideNarrow className="w-4 h-4 ml-2" /></Link>
                     <Link href={`/projects/${data?._id}/sprint`} className="px-4 py-2 bg-white border rounded-md flex items-center mr-2">Sprint<ArrowDownWideNarrow className="w-4 h-4 ml-2" /></Link>
-                    <Link href={`/projects/${data?._id}/tasks`} className="px-4 py-2 bg-white border rounded-md flex items-center mr-2">Task<ArrowDownWideNarrow className="w-4 h-4 ml-2" /></Link>
+                    <Link href={`/projects/${data?._id}/tasks`} className="px-4 py-2 bg-white border rounded-md flex items-center mr-2">Task<ArrowDownWideNarrow className="w-4 h-4 ml-2" /></Link> */}
+                    <Link href={`/projects/${data?._id}`} className="pr-4 py-2 bg-white hover:text-purple-600 font-medium flex items-center mr-2">Dashboard<ArrowDownWideNarrow className="w-4 h-4 ml-2" /></Link>
+                     <div className="flex items-center justify-center text-gray-400"> <Tally1 /></div>
+                    <Link href={`/projects/${data?._id}/backlog`} className="px-4 py-2 bg-white hover:text-purple-600 font-medium flex items-center mr-2">Backlog<ArrowDownWideNarrow className="w-4 h-4 ml-2" /></Link>
+                     <div className="flex items-center justify-center text-gray-400"> <Tally1 /></div>
+                    <Link href={`/projects/${data?._id}/sprint`} className="px-4 py-2 bg-white hover:text-purple-600 font-medium flex items-center mr-2">Sprint<ArrowDownWideNarrow className="w-4 h-4 ml-2" /></Link>
+                     <div className="flex items-center justify-center text-gray-400"> <Tally1 /></div>
+                    <Link href={`/projects/${data?._id}/tasks`} className="px-4 py-2 bg-white hover:text-purple-600 font-medium flex items-center mr-2">Task<ArrowDownWideNarrow className="w-4 h-4 ml-2" /></Link>
                     {/* <Link href={`/projects/${data?._id}/member`} className="px-4 py-2 bg-white border rounded-md flex items-center mr-2">Member<ArrowDownWideNarrow className="w-4 h-4 ml-2" /></Link>
                     <Link href={`/projects/${data?._id}/backlog`} className="px-4 py-2 bg-white border rounded-md flex items-center mr-2">Backlog<ArrowDownWideNarrow className="w-4 h-4 ml-2" /></Link> */}
                 </div>
