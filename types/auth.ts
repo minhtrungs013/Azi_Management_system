@@ -16,7 +16,8 @@ export interface User {
 }
 
 export interface UserUpdate {
-  name?: string;
+  lastname?: string;
+  firstname?: string;
   email?: string;
   location?: string;
   avatar_url?: string;

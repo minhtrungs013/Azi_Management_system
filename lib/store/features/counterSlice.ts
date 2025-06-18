@@ -1,6 +1,6 @@
 // lib/store/features/authSlice.ts
 import { getAllUserService, loginService, updateUserService } from '@/lib/services/auth/loginService';
-import { LoginPayload, UserUpdate } from '@/types/auth';
+import { LoginPayload, User, UserUpdate } from '@/types/auth';
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 export const login = createAsyncThunk('auth/login', async (payload: LoginPayload, { rejectWithValue }) => {
@@ -57,6 +57,8 @@ interface AuthState {
   location?: string | null;
   avatar_url?: string | null;
   error: string | null;
+  lastname?: string | null;
+  firstname?: string | null;
 }
 
 const initialState: AuthState = {
@@ -69,6 +71,8 @@ const initialState: AuthState = {
   email: null,
   location: null,
   avatar_url: null,
+  lastname: null,
+  firstname: null
 };
 
 
@@ -77,7 +81,8 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     refreshUser(state, action: PayloadAction<UserUpdate>) {
-      state.name = action.payload.name;
+      state.firstname = action.payload.firstname;
+      state.lastname = action.payload.lastname;
       state.email = action.payload.email;
       state.location = action.payload.location;
       state.avatar_url = action.payload.avatar_url;
@@ -90,6 +95,8 @@ const authSlice = createSlice({
         state.username = action.payload.user.username;
         state.userId = action.payload.user._id;
         state.name = action.payload.user.firstname + ' ' + action.payload.user.lastname;
+        state.firstname = action.payload.user.firstname ;
+        state.lastname = action.payload.user.lastname;
         state.email = action.payload.user.email;
         state.location = action.payload.user.location;
         state.avatar_url = action.payload.user.avatar_url;

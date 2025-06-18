@@ -184,8 +184,8 @@ export function Header() {
                 <div className="flex items-center">
                   <button onClick={logOut} className=" p-[5px]  flex items-center text-sm font-medium hover:text-red-500"><Power className='h-5 w-5 ' /></button>
                   <button className="flex items-center w-full text-sm font-medium p-2  mr-3 hover:text-red-500" onClick={() => openModal('profile')}>
-                    {authState.name ? authState.name : authState.username}
-                    {authState.avatar_url && authState?.name && <AvatarUser url={authState.avatar_url} name={authState?.name} className='ml-2' />
+                    {authState.firstname && authState.lastname ? authState.firstname + " " + authState.lastname : authState.username}
+                    {authState.avatar_url && authState.firstname &&  authState.lastname && <AvatarUser url={authState.avatar_url} name={authState.firstname + " " + authState.lastname} className='ml-2' />
                     }
                   </button>
                 </div>

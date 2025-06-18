@@ -15,7 +15,8 @@ const Profile = ({ closeModal }: { closeModal: () => void }) => {
     const authState = useSelector((state: RootState) => state.auth);
 
     const [user, setUser] = useState<UserUpdate>({
-        name: authState.name || '',
+        lastname: authState.lastname|| '',
+        firstname: authState.firstname  || '',
         email: authState.email || '',
         location: authState.location || '',
         avatar_url: authState.avatar_url || '',
@@ -83,7 +84,7 @@ const Profile = ({ closeModal }: { closeModal: () => void }) => {
                                         <img className=' h-36 w-36 rounded-[100%]' src={`${user.avatar_url == '' ? "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR_s87zYsrB1nvFfUvNPUJm6KlFP5wIYz0Nxg&s" : user.avatar_url}`} alt="" />
                                     </div>
                                     <div className='flex items-center justify-center'>
-                                        <p className=' font-semibold'>{authState.name}</p>
+                                        <p className=' font-semibold'>{authState.firstname + " " + authState.lastname}</p>
                                     </div>
                                     <div className='absolute rounded-full bottom-[26px] right-[40px] cursor-pointer '>
                                         <Upload className='cursor-pointer text-4xl text-gray-500 hover:text-gray-300 z-10' />
@@ -92,7 +93,7 @@ const Profile = ({ closeModal }: { closeModal: () => void }) => {
                                 </div>
                                 <div >
                                     <div className='flex items-center'>
-                                        <div className="relative mb-5 mr-2">
+                                        <div className="relative mb-5 mr-2 min-w-[250px]">
                                             <label className="block text-sm font-medium text-gray-700">
                                                 Username
                                             </label>
@@ -106,22 +107,7 @@ const Profile = ({ closeModal }: { closeModal: () => void }) => {
                                                 className="w-full px-4 py-3 text-sm bg-gray-200 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-400 focus:bg-white"
                                             />
                                         </div>
-                                        <div className="relative mb-5">
-                                            <label className="block text-sm font-medium text-gray-700">
-                                                Full Name
-                                            </label>
-                                            <input
-                                                type="text"
-                                                name='name'
-                                                defaultValue={user.name}
-                                                placeholder=" Full Name"
-                                                onChange={handleChange}
-                                                className="w-full px-4 py-3 text-sm bg-gray-200 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-400 focus:bg-white"
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className='flex items-center'>
-                                        <div className="relative mb-5 mr-2">
+                                        <div className="relative mb-5 min-w-[250px]">
                                             <label className="block text-sm font-medium text-gray-700">
                                                 Email
                                             </label>
@@ -135,7 +121,37 @@ const Profile = ({ closeModal }: { closeModal: () => void }) => {
                                                 className="w-full px-4 py-3 text-sm bg-gray-200 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-400 focus:bg-white"
                                             />
                                         </div>
-                                        <div className="relative mb-5 ">
+                                    </div>
+                                    <div className='flex items-center'>
+                                        <div className="relative mb-5 mr-2 min-w-[250px]">
+                                            <label className="block text-sm font-medium text-gray-700">
+                                                Last name
+                                            </label>
+                                            <input
+                                                type="text"
+                                                name='lastname'
+                                                defaultValue={user.lastname}
+                                                placeholder="Last Name"
+                                                onChange={handleChange}
+                                                className="w-full px-4 py-3 text-sm bg-gray-200 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-400 focus:bg-white"
+                                            />
+                                        </div>
+                                        <div className="relative mb-5 min-w-[250px]">
+                                            <label className="block text-sm font-medium text-gray-700">
+                                                First Name
+                                            </label>
+                                            <input
+                                                type="text"
+                                                name='firstname'
+                                                defaultValue={user.firstname}
+                                                placeholder="First Name"
+                                                onChange={handleChange}
+                                                className="w-full px-4 py-3 text-sm bg-gray-200 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-400 focus:bg-white"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className='flex items-center justify-between'>
+                                        <div className="relative mb-5 mr-2 min-w-[250px]">
                                             <label className="block text-sm font-medium text-gray-700">
                                                 Address
                                             </label>
@@ -148,21 +164,20 @@ const Profile = ({ closeModal }: { closeModal: () => void }) => {
                                                 className="w-full px-4 py-3 text-sm bg-gray-200 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-400 focus:bg-white"
                                             />
                                         </div>
-
+                                        <div className="relative mb-5 ">
+                                            <div className='flex items-center  mt-5'>
+                                                <button onClick={closeModal} type="button" className="mr-2 px-4 py-2 border border-red-500 text-red-500 font-semibold rounded-md shadow-md hover:bg-red-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-75">
+                                                    Cancel
+                                                </button>
+                                                <button type='submit' onClick={() => handleSubmit()} className=" px-4 py-2 bg-purple-500 text-white font-semibold rounded-md shadow-md hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-75">
+                                                    Update
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
-
                                 </div>
                             </div>
-                            <div className='flex items-center justify-end '>
-                                <button onClick={closeModal} type="button" className="mr-2 px-4 py-2 border border-red-500 text-red-500 font-semibold rounded-md shadow-md hover:bg-red-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-75">
-                                    Cancel
-                                </button>
-                                <button type='submit' onClick={() => handleSubmit()}  className=" px-4 py-2 bg-purple-500 text-white font-semibold rounded-md shadow-md hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-75">
-                                    Update
-                                </button>
-                            </div>
                         </div>
-
                     </div>
                 </div>
             </div>
