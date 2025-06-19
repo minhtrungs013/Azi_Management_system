@@ -1,9 +1,9 @@
 "use client"
 import BurnDownChart from "@/components/common/BurnDownChart";
 import CumulativeFlowChart from "@/components/common/CumulativeFlowChart";
-import GanttChart from "@/components/common/GanttChart";
 import PieChartComponent from "@/components/common/PieChartComponent";
 import VelocityChart from "@/components/common/VelocityChart";
+import { useProject } from '@/contexts/ProjectContext';
 import { getProjectDashboardByIdSlice } from "@/lib/store/features/projectSlice";
 import { AppDispatch } from "@/lib/store/store";
 import { Dashboard } from "@/types/project";
@@ -11,19 +11,20 @@ import { Accessibility, Bug, FileCheck2, Shrink, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 
-export default function ProjectDashBoard({ projjectId }: { projjectId: string }) {
+export default function ProjectDashBoard() {
     const dispatch = useDispatch<AppDispatch>();
-
+    const { dataProject } = useProject();
     const [data, setData] = useState<Dashboard>();
 
     useEffect(() => {
         (async () => {
-            const resGetProjectDashboard = await dispatch(getProjectDashboardByIdSlice(projjectId));
+            if (!dataProject) return
+            const resGetProjectDashboard = await dispatch(getProjectDashboardByIdSlice(dataProject._id));
             if (getProjectDashboardByIdSlice.fulfilled.match(resGetProjectDashboard)) {
                 setData(resGetProjectDashboard.payload);
             }
         })();
-    }, [projjectId])
+    }, [dataProject, dispatch])
 
     return (
         <div >
@@ -59,7 +60,7 @@ export default function ProjectDashBoard({ projjectId }: { projjectId: string })
                                     </div>
                                     <div className="flex justify-between items-center">
                                         <span className="inline-flex items-center px-2.5 py-0.5 justify-center gap-1 rounded-full font-medium text-sm bg-success-50 text-success-600 dark:bg-success-500/15 dark:text-success-500">
-                                        {data?.project.bugCount}</span>
+                                            {data?.project.bugCount}</span>
                                     </div>
                                 </div>
                             </div>
@@ -76,7 +77,7 @@ export default function ProjectDashBoard({ projjectId }: { projjectId: string })
                                     </div>
                                     <div className="flex justify-between items-center">
                                         <span className="inline-flex items-center px-2.5 py-0.5 justify-center gap-1 rounded-full font-medium text-sm bg-success-50 text-success-600 dark:bg-success-500/15 dark:text-success-500">
-                                        {data?.project.memberCount}</span>
+                                            {data?.project.memberCount}</span>
                                     </div>
                                 </div>
                                 <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6 flex items-center justify-between">
@@ -91,7 +92,7 @@ export default function ProjectDashBoard({ projjectId }: { projjectId: string })
                                     </div>
                                     <div className="flex justify-between items-center">
                                         <span className="inline-flex items-center px-2.5 py-0.5 justify-center gap-1 rounded-full font-medium text-sm bg-success-50 text-success-600 dark:bg-success-500/15 dark:text-success-500">
-                                        {data?.project.sprintCount}</span>
+                                            {data?.project.sprintCount}</span>
                                     </div>
                                 </div>
                             </div>
@@ -108,10 +109,10 @@ export default function ProjectDashBoard({ projjectId }: { projjectId: string })
                                     </div>
                                     <div className="flex justify-between items-center">
                                         <span className="inline-flex items-center px-2.5 py-0.5 justify-center gap-1 rounded-full font-medium text-sm bg-success-50 text-success-600 dark:bg-success-500/15 dark:text-success-500">
-                                        {data?.project.memberCount}</span>
+                                            {data?.project.memberCount}</span>
                                     </div>
                                 </div>
-                               
+
                             </div>
                             {/* <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-5 pt-5 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6 sm:pt-6">
                                 <div className="flex items-center justify-between">

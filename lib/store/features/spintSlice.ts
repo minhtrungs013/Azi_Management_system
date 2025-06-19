@@ -43,11 +43,13 @@ export const completeSprintByIdSlice = createAsyncThunk('completeSprintByIdSlice
 
 interface sprintState {
   error: string | null;
+  sprintId: string | null;
   refresh: boolean,
 }
 
 const initialState: sprintState = {
   error: null,
+  sprintId: null,
   refresh: false,
 };
 
@@ -63,7 +65,10 @@ const sprintState = createSlice({
         state.refresh = false;
       }
     },
+    setSprintId(state, action) {
+        state.sprintId = action.payload;
+    },
   },
 });
-export const { setRefresh } = sprintState.actions;
+export const { setRefresh, setSprintId } = sprintState.actions;
 export default sprintState.reducer;

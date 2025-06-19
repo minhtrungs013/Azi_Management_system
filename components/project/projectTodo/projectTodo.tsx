@@ -1,22 +1,21 @@
 'use client';
+import { AvatarUser } from '@/components/common/AvatarUser';
 import Modal from '@/components/Modal/Modal';
 import TaskDetailModal from '@/components/task/taskDetailModal';
-import { createNotification, refreshNotification, updateNotification } from '@/lib/store/features/notificationSlice';
+import { useProject } from '@/contexts/ProjectContext';
+import { createNotification } from '@/lib/store/features/notificationSlice';
 import { getAllMemberProject } from '@/lib/store/features/projectSlice';
 import { moveTask, setRefresh } from '@/lib/store/features/taskSlice';
 import { AppDispatch, RootState } from '@/lib/store/store';
 import { checkRuleAccess } from '@/lib/utils';
 import { members } from '@/types/auth';
 import { notificationCreate } from '@/types/notification';
-import { Cards, List, ProjectDetails } from '@/types/project';
+import { Cards, List } from '@/types/project';
 import { Dot, Ellipsis } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { useSocket } from "../../../contexts/SocketContext";
-import { AvatarUser } from '@/components/common/AvatarUser';
-import { log } from 'util';
-// import { socket } from '@/lib/socket';
 
 interface Notification {
   // Define the shape of the notification object here
@@ -24,8 +23,9 @@ interface Notification {
   id: string;
   message: string;
 }
-export default function ProjectTodo({ data }: { data: ProjectDetails | undefined }) {
-  const [lists, setLists] = useState<List[]>(data?.lists || []);
+export default function ProjectTodo() {
+  const { dataProject } = useProject();
+  const [lists, setLists] = useState<List[]>(dataProject?.lists || []);
   const [task, setTask] = useState<Cards>();
   const dispatch = useDispatch<AppDispatch>();
   const [draggingCard, setDraggingCard] = useState<{ cardId: string; sourceListId: string } | null>(null);
@@ -44,12 +44,12 @@ export default function ProjectTodo({ data }: { data: ProjectDetails | undefined
         dispatch(setRefresh(true));
       });
     }
-  }, [socket]);
+  }, [socket, dispatch]);
 
   useEffect(() => {
     (async () => {
-      if (data?._id) {
-        const resAllMemberProject = await dispatch(getAllMemberProject(data?._id));
+      if (dataProject?._id) {
+        const resAllMemberProject = await dispatch(getAllMemberProject(dataProject?._id));
         if (getAllMemberProject.fulfilled.match(resAllMemberProject)) {
           setAllMemberProject(resAllMemberProject.payload);
           const user: members = resAllMemberProject.payload?.find((user: members) => user.user._id === authState.userId)
@@ -57,19 +57,19 @@ export default function ProjectTodo({ data }: { data: ProjectDetails | undefined
         }
       }
     })();
-  }, [data])
+  }, [dataProject])
 
   const openModal = (task: Cards) => {
     console.log(lists);
-    
+
     setTask(lists.find(list => list.tasks.some(card => card._id === task._id))?.tasks.find(card => card._id === task._id));
     setModalOpen(true)
   };
 
   const closeModal = () => setModalOpen(false);
   useEffect(() => {
-    setLists(data?.lists || []);
-  }, [data])
+    setLists(dataProject?.lists || []);
+  }, [dataProject])
 
 
   const handleDragStart = async (e: React.DragEvent, cardId: string, sourceListId: string, card: Cards) => {
@@ -128,14 +128,14 @@ export default function ProjectTodo({ data }: { data: ProjectDetails | undefined
                 title: 'Move Task',
                 message: authState.name + ' has been moved ' + cardToMove?.title + ' to ' + list.name,
                 type: 'Task',
-                link: `/projects/${data?._id}/tasks/${cardToMove?.identifier}`,
+                link: `/projects/${dataProject?._id}/tasks/${cardToMove?.identifier}`,
                 senderId: authState.userId || '',
                 notificationRecipients: userIds || []
               }
               dispatch(createNotification(notification))
               // dispatch(refreshNotification(true));
               setTimeout(() => {
-                sendMessage('sendNotification', { group: data?._id, message: authState.name + ' has been moved ' + cardToMove?.title + ' to ' + list.name });
+                sendMessage('sendNotification', { group: dataProject?._id, message: authState.name + ' has been moved ' + cardToMove?.title + ' to ' + list.name });
               }, 1000);
               return {
                 ...list,
@@ -230,7 +230,7 @@ export default function ProjectTodo({ data }: { data: ProjectDetails | undefined
         ))}
 
         <Modal isOpen={isModalOpen} closeModal={closeModal} >
-          <TaskDetailModal closeModal={closeModal} task={task} allMemberProject={allMemberProject} projjectId={data?._id} />
+          <TaskDetailModal closeModal={closeModal} task={task} allMemberProject={allMemberProject} projjectId={dataProject?._id} />
         </Modal>
       </div>
     </section>

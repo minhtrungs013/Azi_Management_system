@@ -1,7 +1,7 @@
 // lib/store/features/authSlice.ts
 import { CreatetaskService, getTaskByCurrentSprintService, getTasksByIdService, getTasksByProjectIdService, getTasksBySprintIdService, getTasksOnBacklogService, moveTaskService, updateTaskService } from '@/lib/services/task/taskService';
 import { taskPayload, tasksFilterParams } from '@/types/task';
-import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 
 
@@ -30,7 +30,7 @@ export const updateTask = createAsyncThunk('updateTask', async (body: { taskId: 
   }
 });
 
-export const getTasksByProjectIdSlice = createAsyncThunk('getTasksByProjectIdSlice', async (body: {projectId: string, filterParams: tasksFilterParams}, { rejectWithValue }) => {
+export const getTasksByProjectIdSlice = createAsyncThunk('getTasksByProjectIdSlice', async (body: { projectId: string, filterParams: tasksFilterParams }, { rejectWithValue }) => {
   try {
     const response = await getTasksByProjectIdService(body);
     return response;
@@ -75,11 +75,19 @@ export const getTasksBySprintIdSlice = createAsyncThunk('getTasksBySprintIdSlice
 interface TaskState {
   error: string | null;
   refresh: boolean,
+  filterParams: tasksFilterParams
 }
 
 const initialState: TaskState = {
   error: null,
   refresh: false,
+  filterParams: {
+    page: '1',
+    searchParams: '',
+    status: '',
+    assignee: '',
+    reporter: ''
+  }
 };
 
 
@@ -94,7 +102,14 @@ const taskSlice = createSlice({
         state.refresh = false;
       }
     },
+    setFilterParams(state, action: PayloadAction<tasksFilterParams>) {
+      state.filterParams.assignee = action.payload.assignee;
+      state.filterParams.page = action.payload.page;
+      state.filterParams.reporter = action.payload.reporter;
+      state.filterParams.searchParams = action.payload.searchParams;
+      state.filterParams.status = action.payload.status;
+    },
   },
 });
-export const { setRefresh } = taskSlice.actions;
+export const { setRefresh, setFilterParams } = taskSlice.actions;
 export default taskSlice.reducer;

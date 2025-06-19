@@ -1,20 +1,19 @@
 "use client"
-import { setRefresh, updateTask, moveTask } from "@/lib/store/features/taskSlice";
+import { getListByProjectIdSlice } from "@/lib/store/features/projectSlice";
+import { moveTask, setRefresh, updateTask } from "@/lib/store/features/taskSlice";
 import { AppDispatch, RootState } from "@/lib/store/store";
 import { checkRuleAccess, handleUploadCloudinary } from "@/lib/utils";
 import { members } from "@/types/auth";
 import { Cards, issueTypes, listtest } from "@/types/project";
-import { BookmarkCheck, Bug, CaseSensitive, CircleDashed, DoorOpen, Edit, Eye, FileCheck2, Leaf, Power, Save, Send, User, X } from "lucide-react";
+import { BookmarkCheck, Bug, CaseSensitive, CircleDashed, Edit, Eye, Leaf, Save, Send, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
+import { AvatarUser } from "../common/AvatarUser";
 import CopyButton from "../common/copyButton";
 import { Button } from "../ui/button";
-import Image from "next/image";
-import { AvatarUser } from "../common/AvatarUser";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
-import { getListByProjectIdSlice } from "@/lib/store/features/projectSlice";
 
 const TaskDetailModal = ({ closeModal, task, allMemberProject, projjectId }: { closeModal: () => void, task: Cards | undefined, allMemberProject: members[] | undefined, projjectId: string | undefined }) => {
     const dispatch = useDispatch<AppDispatch>();
@@ -149,7 +148,7 @@ const TaskDetailModal = ({ closeModal, task, allMemberProject, projjectId }: { c
             reporter: task?.reporter?._id
         });
     }
-console.log();
+    console.log();
 
     const formatTime = (date: string | undefined): string => {
         if (!date) return '';
