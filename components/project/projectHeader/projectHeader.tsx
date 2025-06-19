@@ -22,6 +22,7 @@ import CreateTask from '../../task/createTask';
 import CreateColumn from '../projectTodo/createColumn';
 import Sprint from '../sprint/sprint';
 import InviteProject from './inviteProject';
+import { AvatarUser } from '@/components/common/AvatarUser';
 
 export default function ProjectHeader({ data }: { data: ProjectDetails | undefined }) {
     const dispatch = useDispatch<AppDispatch>();
@@ -140,8 +141,7 @@ export default function ProjectHeader({ data }: { data: ProjectDetails | undefin
                             </div>
                             <div className="flex -space-x-4">
                                 {allMemberProject?.slice(0, 3)?.map((item) => (
-                                    <img key={item.user._id} src={`${item.user.avatar_url ? item.user.avatar_url : 'https://internetviettel.vn/wp-content/uploads/2017/05/1-2.jpg'}`} alt="Avatar 1" className="bg-white h-10 w-10 rounded-full border-2 border-gray-300" />
-                                    // <AvatarUser key={item.user._id} url={item.user.avatar_url} name={item.user.firstname}  className='bg-white h-10 w-10 rounded-full border-2 border-gray-300'/>
+                                    <AvatarUser key={item.user._id} url={item.user.avatar_url} name={item.user.firstname} className='bg-white h-10 w-10 rounded-full border-2 border-gray-300' />
                                 ))}
                                 {/* <!-- Additional avatar circle for +2 --> */}
                                 {allMemberProject && allMemberProject.length > 3 &&
@@ -165,13 +165,13 @@ export default function ProjectHeader({ data }: { data: ProjectDetails | undefin
             </header>
             <div className="flex space-x-2 justify-between">
                 <div className='flex'>
-                    <Link href={`/projects/${data?._id}`} className="pr-4 py-2 bg-white hover:text-purple-600 font-medium flex items-center mr-2">Dashboard<ArrowDownWideNarrow className="w-4 h-4 ml-2" /></Link>
+                    <Link href={`/projects/${data?._id}`} className={`px-4 py-2 bg-white hover:text-purple-600 font-medium flex items-center mr-2 ${lastSegment === data?._id ? "text-purple-600 border-purple-600 border-b-2" : ""}`}>Dashboard<ArrowDownWideNarrow className="w-4 h-4 ml-2" /></Link>
                     <div className="flex items-center justify-center text-gray-400"> <Tally1 /></div>
-                    <Link href={`/projects/${data?._id}/backlog`} className="px-4 py-2 bg-white hover:text-purple-600 font-medium flex items-center mr-2">Backlog<ArrowDownWideNarrow className="w-4 h-4 ml-2" /></Link>
+                    <Link href={`/projects/${data?._id}/backlog`} className={`px-4 py-2 bg-white hover:text-purple-600 font-medium flex items-center mr-2 ${lastSegment === "backlog" ? "text-purple-600 border-purple-600 border-b-2" : ""}`}>Backlog<ArrowDownWideNarrow className="w-4 h-4 ml-2" /></Link>
                     <div className="flex items-center justify-center text-gray-400"> <Tally1 /></div>
-                    <Link href={`/projects/${data?._id}/sprint`} className="px-4 py-2 bg-white hover:text-purple-600 font-medium flex items-center mr-2">Sprint<ArrowDownWideNarrow className="w-4 h-4 ml-2" /></Link>
+                    <Link href={`/projects/${data?._id}/sprint`} className={`px-4 py-2  hover:text-purple-600 font-medium flex items-center mr-2 ${lastSegment === "sprint" ? "text-purple-600 border-purple-600 border-b-2" : ""}`}>Sprint<ArrowDownWideNarrow className="w-4 h-4 ml-2" /></Link>
                     <div className="flex items-center justify-center text-gray-400"> <Tally1 /></div>
-                    <Link href={`/projects/${data?._id}/tasks`} className="px-4 py-2 bg-white hover:text-purple-600 font-medium flex items-center mr-2">Task<ArrowDownWideNarrow className="w-4 h-4 ml-2" /></Link>
+                    <Link href={`/projects/${data?._id}/tasks`} className={`px-4 py-2 bg-white hover:text-purple-600 font-medium flex items-center mr-2 ${lastSegment === "tasks" ? "text-purple-600 border-purple-600 border-b-2" : ""}`}>Task<ArrowDownWideNarrow className="w-4 h-4 ml-2" /></Link>
                 </div>
                 <div className='flex'>
                     {lastSegment === "backlog" ?

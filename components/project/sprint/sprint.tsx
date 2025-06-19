@@ -1,8 +1,9 @@
 "use client"
+import { Button } from "@/components/ui/button";
 import { createSprintSlice, setRefresh } from "@/lib/store/features/spintSlice";
 import { AppDispatch, RootState } from "@/lib/store/store";
 import { sprintPayload } from "@/types/sprint";
-import { CaseSensitive, RefreshCcwDot } from "lucide-react";
+import { CaseSensitive, Plus, RefreshCcwDot, X } from "lucide-react";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
@@ -94,8 +95,8 @@ const Sprint = ({ closeModal, projectId }: { closeModal: () => void, projectId: 
                                         onChange={handleChange}
                                         className="border border-gray-300 rounded-md p-2 w-full"
                                         placeholder="Enter project title"
-                                        defaultValue={new Date().toISOString().split('T')[0]} 
-                                        min={new Date().toISOString().split('T')[0]} 
+                                        defaultValue={new Date().toISOString().split('T')[0]}
+                                        min={new Date().toISOString().split('T')[0]}
                                         required
                                     />
 
@@ -115,12 +116,8 @@ const Sprint = ({ closeModal, projectId }: { closeModal: () => void, projectId: 
                             </div>
                         </form>
                         <div className='flex justify-end'>
-                            <button onClick={closeModal} type="button" className="mr-2 px-4 py-2 border border-red-500 text-red-500 font-semibold rounded-md shadow-md hover:bg-red-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-75">
-                                Cancel
-                            </button>
-                            <button onClick={handleCreateSpint} className="px-4 py-2 bg-purple-500 text-white font-semibold rounded-md shadow-md hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-75">
-                                Create
-                            </button>
+                            <Button onClick={closeModal} variant="outline" size="sm" className="min-w-24 mr-2 hover:text-white bg-red-50 hover:bg-red-500 text-red-500 border-red-500"><X className='h-5 w-5 ' /> Cancel</Button>
+                            <Button onClick={handleCreateSpint} variant="outline" size="sm" className="min-w-24 mr-2 text-white hover:bg-purple-50 bg-purple-500 hover:text-purple-500 border-purple-500"><Plus className='h-5 w-5 ' /> Create Sprint</Button>
                         </div>
                     </div>
                 </div>
