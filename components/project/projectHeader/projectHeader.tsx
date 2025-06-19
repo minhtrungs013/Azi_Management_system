@@ -1,4 +1,5 @@
 'use client';
+import { AvatarUser } from '@/components/common/AvatarUser';
 import Meeting from '@/components/media/meeting';
 import Modal from '@/components/Modal/Modal';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -12,7 +13,7 @@ import { members, User } from '@/types/auth';
 import { permission, ProjectDetails } from '@/types/project';
 import { sprint } from '@/types/sprint';
 import { tasksFilterParams } from '@/types/task';
-import { ArrowDownWideNarrow, ClipboardList, PhoneCall, RefreshCcwDot, Search, Tally1, UserCheck, UserPlus } from 'lucide-react';
+import { ArrowDownWideNarrow, ClipboardList, LayoutDashboard, ListCheck, PhoneCall, RefreshCcwDot, Search, SendToBack, Tally1, UserCheck, UserPlus } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -22,7 +23,6 @@ import CreateTask from '../../task/createTask';
 import CreateColumn from '../projectTodo/createColumn';
 import Sprint from '../sprint/sprint';
 import InviteProject from './inviteProject';
-import { AvatarUser } from '@/components/common/AvatarUser';
 
 export default function ProjectHeader({ data }: { data: ProjectDetails | undefined }) {
     const dispatch = useDispatch<AppDispatch>();
@@ -165,13 +165,13 @@ export default function ProjectHeader({ data }: { data: ProjectDetails | undefin
             </header>
             <div className="flex space-x-2 justify-between">
                 <div className='flex'>
-                    <Link href={`/projects/${data?._id}`} className={`px-4 py-2 bg-white hover:text-purple-600 font-medium flex items-center mr-2 ${lastSegment === data?._id ? "text-purple-600 border-purple-600 border-b-2" : ""}`}>Dashboard<ArrowDownWideNarrow className="w-4 h-4 ml-2" /></Link>
+                    <Link href={`/projects/${data?._id}`} className={`px-4 py-2  hover:text-purple-600 font-medium flex items-center mr-2 ${lastSegment === data?._id ? "text-purple-600 border-purple-600 border-b-2" : ""}`}><LayoutDashboard className="w-4 h-4 mr-2" /> Dashboard</Link>
                     <div className="flex items-center justify-center text-gray-400"> <Tally1 /></div>
-                    <Link href={`/projects/${data?._id}/backlog`} className={`px-4 py-2 bg-white hover:text-purple-600 font-medium flex items-center mr-2 ${lastSegment === "backlog" ? "text-purple-600 border-purple-600 border-b-2" : ""}`}>Backlog<ArrowDownWideNarrow className="w-4 h-4 ml-2" /></Link>
+                    <Link href={`/projects/${data?._id}/backlog`} className={`px-4 py-2  hover:text-purple-600 font-medium flex items-center mr-2 ${lastSegment === "backlog" ? "text-purple-600 border-purple-600 border-b-2" : ""}`}><SendToBack className="w-4 h-4 mr-2" />Backlog</Link>
                     <div className="flex items-center justify-center text-gray-400"> <Tally1 /></div>
-                    <Link href={`/projects/${data?._id}/sprint`} className={`px-4 py-2  hover:text-purple-600 font-medium flex items-center mr-2 ${lastSegment === "sprint" ? "text-purple-600 border-purple-600 border-b-2" : ""}`}>Sprint<ArrowDownWideNarrow className="w-4 h-4 ml-2" /></Link>
+                    <Link href={`/projects/${data?._id}/sprint`} className={`px-4 py-2  hover:text-purple-600 font-medium flex items-center mr-2 ${lastSegment === "sprint" ? "text-purple-600 border-purple-600 border-b-2" : ""}`}><RefreshCcwDot className="w-4 h-4 mr-2" />Sprint</Link>
                     <div className="flex items-center justify-center text-gray-400"> <Tally1 /></div>
-                    <Link href={`/projects/${data?._id}/tasks`} className={`px-4 py-2 bg-white hover:text-purple-600 font-medium flex items-center mr-2 ${lastSegment === "tasks" ? "text-purple-600 border-purple-600 border-b-2" : ""}`}>Task<ArrowDownWideNarrow className="w-4 h-4 ml-2" /></Link>
+                    <Link href={`/projects/${data?._id}/tasks`} className={`px-4 py-2  hover:text-purple-600 font-medium flex items-center mr-2 ${lastSegment === "tasks" ? "text-purple-600 border-purple-600 border-b-2" : ""}`}><ListCheck className="w-4 h-4 mr-2" />Task</Link>
                 </div>
                 <div className='flex'>
                     {lastSegment === "backlog" ?

@@ -4,17 +4,21 @@ import { useProject } from '@/contexts/ProjectContext';
 import { getTasksByProjectIdSlice } from '@/lib/store/features/taskSlice';
 import { AppDispatch, RootState } from '@/lib/store/store';
 import { getTaskByProjectIdPayload, tasksFilterParams } from '@/types/task';
-import { Eye } from 'lucide-react';
+import { Eye, Trash } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { PaginationWithLinks } from '../common/pagination-with-links';
+import Modal from "../Modal/Modal";
+import DeleteModal from "../Modal/deleteModal";
 
 export default function GetTasksByProjectId() {
     const { dataProject } = useProject();
     const searchParams = useSearchParams();
     const currentPage = searchParams.get("page") || "1";
+    const [isModalOpen, setModalOpen] = useState<boolean>(false);
+    const [TaskId, setTaskId] = useState<string>('');
     const dispatch = useDispatch<AppDispatch>();
     const [data, setData] = useState<{ tasks: getTaskByProjectIdPayload[], totalPages: number }>()
     const taskState = useSelector((state: RootState) => state.task);
@@ -36,6 +40,26 @@ export default function GetTasksByProjectId() {
         })();
     }, [dataProject, taskState, currentPage, taskState.filterParams, dispatch])
 
+    const openModal = async (id: string | null) => {
+        setTaskId(id ?? '');
+        setModalOpen(true)
+    };
+
+    const handleDeleteTask = () => {
+        // if (projectId) {
+        //     const result = await dispatch(deleteTaskById(TaskId));
+        //     if (deleteProjectById.fulfilled.match(result)) {
+        //         toast.success("Project deleted successfully!", {
+        //             position: "bottom-right",
+        //             autoClose: 5000,
+        //         });
+        //         dispatch(setRefresh(true));
+        //         closeModal();
+        //     }
+        // }
+         closeModal();
+    }
+    const closeModal = () => setModalOpen(false);
     return (
         <div >
             <div className='mb-3'>
@@ -125,16 +149,30 @@ export default function GetTasksByProjectId() {
                             </td>
                             <td className="py-2 px-4 ">
                                 <div className="text-center flex items-center justify-center">
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <Link target="_blank" href={`/projects/${dataProject?._id}/tasks/${task.identifier}`} className="mr-2 p-2 hover:bg-gray-200 rounded">
-                                                <Eye className="w-4 h-4 text-blue-500" />
-                                            </Link>
-                                        </TooltipTrigger>
-                                        <TooltipContent side="left" align="end">
-                                            <p>View Task</p>
-                                        </TooltipContent>
-                                    </Tooltip>
+                                    <Link target="_blank" href={`/projects/${dataProject?._id}/tasks/${task.identifier}`} className="mr-2 p-2 hover:bg-gray-200 rounded cursor-pointer">
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <div >
+                                                    <Eye className="w-4 h-4 text-blue-500" />
+                                                </div>
+                                            </TooltipTrigger>
+                                            <TooltipContent side="left" align="end">
+                                                <p>View Task</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </Link>
+                                    <button onClick={() => openModal(task._id ?? null)} className="p-2 hover:bg-gray-200 rounded">
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <div >
+                                                    <Trash className="w-4 h-4 text-red-500" />
+                                                </div>
+                                            </TooltipTrigger>
+                                            <TooltipContent side="left" align="end">
+                                                <p>Delete Task</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </button>
                                 </div>
                             </td>
                         </tr>
@@ -144,6 +182,14 @@ export default function GetTasksByProjectId() {
             <div className='mt-3 flex justify-end'>
                 <PaginationWithLinks page={parseInt(currentPage, 10)} pageSize={10} totalCount={data?.totalPages ?? 0} />
             </div>
+            <Modal isOpen={isModalOpen} closeModal={closeModal}>
+                <DeleteModal
+                    closeModal={closeModal}
+                    title="Delete Task"
+                    handleDelete={handleDeleteTask}
+                    body={<p className="text-black font-semibold mb-6">Are you sure you want to delete this task? This action cannot be undone.</p>}
+                />
+            </Modal>
         </div>
     );
 }

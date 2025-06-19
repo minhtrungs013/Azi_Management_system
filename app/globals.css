@@ -169,3 +169,13 @@
   50% { transform: translateY(-5px); opacity: 0.8; }
   100% { transform: translateY(0); opacity: 1; }
 }
+@layer utilities {
+  .no-scrollbar {
+    -ms-overflow-style: none;  /* IE & Edge */
+    scrollbar-width: none;     /* Firefox */
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;             /* Chrome & Safari */
+  }
+}
