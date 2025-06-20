@@ -115,7 +115,7 @@ export default function ProjectHeader({ data }: { data: ProjectDetails | undefin
                 setSprints(resGetAllSprintByProjectId.payload)
             }
         })();
-    }, [data, dispatch])
+    }, [data, dispatch, sprintState.refresh])
 
 
     const handleSwithSprint = async (sprintId: string) => {
@@ -191,7 +191,7 @@ export default function ProjectHeader({ data }: { data: ProjectDetails | undefin
                                 </SelectTrigger>
                                 <SelectContent>
                                     {sprints?.map((sprint) => (
-                                        <SelectItem key={sprint._id} value={sprint._id}>{sprint.name}</SelectItem>
+                                        <SelectItem key={sprint._id} value={sprint._id || ''}>{sprint.name}</SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
@@ -273,7 +273,7 @@ export default function ProjectHeader({ data }: { data: ProjectDetails | undefin
                             showModalByStatus === 'meeting' ?
                                 <Meeting closeModal={closeModal} data={data} /> :
                                 showModalByStatus === 'createSprint' ?
-                                    <Sprint closeModal={closeModal} projectId={data?._id} /> :
+                                    <Sprint closeModal={closeModal} projectId={data?._id ?? null}  data={undefined}/> :
                                     <></>
                 }
             </Modal>

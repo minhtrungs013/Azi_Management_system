@@ -1,4 +1,5 @@
 'use client';
+import Modal from "@/components/Modal/Modal";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -8,18 +9,24 @@ import { setRefresh } from '@/lib/store/features/projectSlice';
 import { setSprintId, updateSprintByIdSlice } from "@/lib/store/features/spintSlice";
 import { getTaskByCurrentSprintSlice, getTasksBySprintIdSlice, getTasksOnBacklogSlice } from '@/lib/store/features/taskSlice';
 import { AppDispatch, RootState } from '@/lib/store/store';
-import { sprint } from "@/types/sprint";
+import { sprint, sprintPayload } from "@/types/sprint";
 import { getTaskByProjectIdPayload } from '@/types/task';
 import { Ellipsis } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import Sprint from "../sprint/sprint";
+import { toast } from "react-toastify";
+import { checkRuleAccess } from "@/lib/utils";
 export default function BackLog() {
     const { dataProject } = useProject();
     const dispatch = useDispatch<AppDispatch>();
     const [data, setData] = useState<{ tasks: getTaskByProjectIdPayload[], sprint: sprint, completionPercentage: number }>()
     const [backlog, setBacklog] = useState<getTaskByProjectIdPayload[]>()
+    const [sprint, setSprint] = useState<sprint>()
+    const [isModalOpen, setModalOpen] = useState<boolean>(false);
+    const [showModalByStatus, setShowModalByStatus] = useState<string>('');
     const projectState = useSelector((state: RootState) => state.project);
     const sprintState = useSelector((state: RootState) => state.sprint);
     useEffect(() => {
@@ -28,6 +35,7 @@ export default function BackLog() {
             const res = await dispatch(getTaskByCurrentSprintSlice(dataProject._id));
             if (getTaskByCurrentSprintSlice.fulfilled.match(res)) {
                 setData({ tasks: res.payload.tasks, sprint: res.payload.sprint, completionPercentage: res.payload.completionPercentage }); // Replace '1' with the actual totalPages if available
+                setSprint(res.payload.sprint);
                 dispatch(setSprintId(res.payload.sprint._id))
             }
             const resGettTasksOnBacklog = await dispatch(getTasksOnBacklogSlice(dataProject._id));
@@ -35,7 +43,7 @@ export default function BackLog() {
                 setBacklog(resGettTasksOnBacklog.payload);
             }
         })();
-    }, [dataProject, projectState.refresh, dispatch])
+    }, [dataProject, projectState.refresh, dispatch, sprintState.refresh])
 
     const handleChangeStatusSprint = (sprint: sprint) => {
         sprint.status === 'Pending' ? sprint.status = 'Running' : sprint.status === 'Running' ? sprint.status = 'Completed' : sprint.status
@@ -50,12 +58,30 @@ export default function BackLog() {
             if (getTasksBySprintIdSlice.fulfilled.match(res)) {
                 if (data) {
                     setData({ tasks: res.payload.tasks, sprint: res.payload.sprint, completionPercentage: data.completionPercentage });
+                    setSprint(res.payload.sprint);
                 }
 
             }
         })();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [dispatch, sprintState.sprintId])
+
+    const openModal = async (status: string) => {
+        if (projectState.role) {
+            const hasPermissioncreateSprint = await checkRuleAccess(['task_admin', 'project_admin'], projectState.role)
+            if (!hasPermissioncreateSprint && status === "createSprint") {
+                toast.warning('You do not have permission to create Sprint for the project.!', {
+                    position: "bottom-left",
+                    autoClose: 5000,
+                });
+                return;
+            }
+        }
+        setShowModalByStatus(status)
+        setModalOpen(true)
+    };
+
+    const closeModal = () => setModalOpen(false);
 
     return (
         <div>
@@ -79,7 +105,7 @@ export default function BackLog() {
                                      `}>
                                     {data.sprint.status === "Pending" ? "Start Sprint" : data.sprint.status === "Running" ? " Complete Sprint" : "Finish"}
                                 </Button>
-                                <Ellipsis className="text-gray-400 font-normal text-xs ml-2 cursor-pointer" />
+                                <Ellipsis onClick={() => openModal('createSprint')} className="text-balck font-normal text-xs ml-2 cursor-pointer" />
                             </div>
                         </div>
                         <Progress value={data?.completionPercentage} className="w-full bg-gray-300 [&>div]:bg-green-600 h-2 mb-2" />
@@ -191,6 +217,14 @@ export default function BackLog() {
                     </AccordionContent>
                 </AccordionItem>
             </Accordion>
+            <div>
+                <Modal isOpen={isModalOpen} closeModal={closeModal}>
+                    {showModalByStatus === 'createSprint' ?
+                        <Sprint closeModal={closeModal} projectId={projectState?.projectId} data={sprint}/> :
+                        <></>
+                    }
+                </Modal>
+            </div>
         </div>
     );
 }

@@ -1,28 +1,29 @@
 "use client"
 import { Button } from "@/components/ui/button";
-import { createSprintSlice, setRefresh } from "@/lib/store/features/spintSlice";
+import { createSprintSlice, setRefresh, updateSprintByIdSlice } from "@/lib/store/features/spintSlice";
 import { AppDispatch, RootState } from "@/lib/store/store";
-import { sprintPayload } from "@/types/sprint";
+import { sprint, sprintPayload } from "@/types/sprint";
 import { CaseSensitive, Plus, RefreshCcwDot, X } from "lucide-react";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 
-const Sprint = ({ closeModal, projectId }: { closeModal: () => void, projectId: string | undefined }) => {
+const Sprint = ({ closeModal, projectId, data }: { closeModal: () => void, projectId: string | null, data: sprint | undefined }) => {
     const dispatch = useDispatch<AppDispatch>();
     const [value, setValue] = useState<string>('');
     const authState = useSelector((state: RootState) => state.auth);
-    const [createSprint, setCreateSprint] = useState({
-        projectId: "",
-        name: "",
-        description: "",
-        startDate: new Date().toISOString().split('T')[0],
-        endDate: '',
+    const [sprint, setSprint] = useState({
+        projectId: data?.projectId || projectId || "",
+        name: data?.name || "",
+        description: data?.description || "",
+        status: data?.status || "Pending", // Default status for a new sprint
+        startDate: data?.startDate || new Date().toISOString().split('T')[0],
+        endDate: data?.endDate || new Date().toISOString().split('T')[0],
     })
 
     const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-        setCreateSprint((prevSprint) => {
+        setSprint((prevSprint) => {
             return {
                 ...prevSprint,
                 [name]: value || '',
@@ -31,26 +32,45 @@ const Sprint = ({ closeModal, projectId }: { closeModal: () => void, projectId: 
     };
 
     const handleCreateSpint = async () => {
-        const print: sprintPayload = {
-            projectId: projectId || '',
-            name: createSprint.name,
-            description: createSprint.description,
-            startDate: createSprint.startDate,
-            endDate: createSprint.endDate,
+        const print: sprint = {
+            projectId: sprint.projectId || '',
+            name: sprint.name,
+            description: sprint.description,
+            status: sprint.status, 
+            startDate: sprint.startDate,
+            endDate: sprint.endDate,
         }
-        try {
-            await dispatch(createSprintSlice(print)).unwrap();
-            toast.success("Sprint created successfully!", {
-                position: "bottom-right",
-                autoClose: 5000,
-            });
-            dispatch(setRefresh(true));
-            closeModal();
-        } catch (error: any) {
-            toast.error("Failed to create sprint: " + (error.message || "Unknown error"), {
-                position: "bottom-right",
-                autoClose: 5000,
-            });
+        if (data) {
+            try {
+                print._id = data._id; 
+                await dispatch(updateSprintByIdSlice(print)).unwrap();
+                toast.success("Sprint created successfully!", {
+                    position: "bottom-right",
+                    autoClose: 5000,
+                });
+                dispatch(setRefresh(true));
+                closeModal();
+            } catch (error: any) {
+                toast.error("Failed to create sprint: " + (error.message || "Unknown error"), {
+                    position: "bottom-right",
+                    autoClose: 5000,
+                });
+            }
+        } else {
+            try {
+                await dispatch(createSprintSlice(print)).unwrap();
+                toast.success("Sprint created successfully!", {
+                    position: "bottom-right",
+                    autoClose: 5000,
+                });
+                dispatch(setRefresh(true));
+                closeModal();
+            } catch (error: any) {
+                toast.error("Failed to create sprint: " + (error.message || "Unknown error"), {
+                    position: "bottom-right",
+                    autoClose: 5000,
+                });
+            }
         }
     }
 
@@ -67,6 +87,7 @@ const Sprint = ({ closeModal, projectId }: { closeModal: () => void, projectId: 
                                     type="text"
                                     id="name"
                                     name="name"
+                                    value={sprint.name}
                                     onChange={handleChange}
                                     className="border border-gray-300 rounded-md p-2 w-full"
                                     placeholder="EX: Spint 1"
@@ -78,6 +99,7 @@ const Sprint = ({ closeModal, projectId }: { closeModal: () => void, projectId: 
                                 <textarea
                                     id="description"
                                     name="description"
+                                    value={sprint.description}
                                     onChange={handleChange}
                                     className="border border-gray-300 rounded-md p-2 w-full"
                                     placeholder="Enter project description"
@@ -92,10 +114,10 @@ const Sprint = ({ closeModal, projectId }: { closeModal: () => void, projectId: 
                                         type="date"
                                         id="startDate"
                                         name="startDate"
+                                        value={sprint.startDate?.slice(0, 10)}
                                         onChange={handleChange}
                                         className="border border-gray-300 rounded-md p-2 w-full"
                                         placeholder="Enter project title"
-                                        defaultValue={new Date().toISOString().split('T')[0]}
                                         min={new Date().toISOString().split('T')[0]}
                                         required
                                     />
@@ -107,6 +129,8 @@ const Sprint = ({ closeModal, projectId }: { closeModal: () => void, projectId: 
                                         type="date"
                                         id="endDate"
                                         name="endDate"
+                                        value={sprint.endDate?.slice(0, 10)}
+                                        min={sprint.startDate}
                                         onChange={handleChange}
                                         className="border border-gray-300 rounded-md p-2 w-full"
                                         placeholder="Enter project title"

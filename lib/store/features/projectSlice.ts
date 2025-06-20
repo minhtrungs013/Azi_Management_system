@@ -119,7 +119,7 @@ export const getProjectDashboardByIdSlice = createAsyncThunk('getProjectDashboar
 interface ProjectState {
   error: string | null;
   refresh: boolean,
-  projectId: String | null
+  projectId: string | null
   role: members | null
 }
 

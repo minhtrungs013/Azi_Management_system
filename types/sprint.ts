@@ -6,7 +6,7 @@ export interface sprintPayload {
     endDate: string;
   }
 export interface sprint {
-    _id: string;
+    _id?: string;
     name: string;
     description: string;
     status: string;
