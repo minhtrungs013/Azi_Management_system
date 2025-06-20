@@ -26,8 +26,20 @@ export const handleUploadCloudinary = async (files: FileList) => {
 };
 
 export const checkRuleAccess = async (rule: string[], RuleAccess: members) => {
-   const hasAccess = rule.some((ruleName) =>
+  const hasAccess = rule.some((ruleName) =>
     RuleAccess.permissions.some((perm) => perm.label === ruleName)
   );
   return hasAccess;
+};
+
+export const canMoveTask = (from: string, to: string): boolean => {
+  const validTransitions: Record<string, string[]> = {
+    "TO DO": ["IN PROGRESS", "BUG"],
+    "IN PROGRESS": ["REVIEW", "BUG"],
+    "BUG": ["TO DO", "IN PROGRESS"],
+    "REVIEW": ["DONE", "BUG"],
+    "DONE": [] 
+  };
+  return validTransitions[from]?.includes(to);
+
 };

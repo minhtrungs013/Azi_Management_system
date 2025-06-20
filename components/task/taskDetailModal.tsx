@@ -1,11 +1,11 @@
 "use client"
 import { getListByProjectIdSlice } from "@/lib/store/features/projectSlice";
-import { moveTask, setRefresh, updateTask } from "@/lib/store/features/taskSlice";
+import { moveTask, moveTaskToBacklogSlice, setRefresh, updateTask } from "@/lib/store/features/taskSlice";
 import { AppDispatch, RootState } from "@/lib/store/store";
-import { checkRuleAccess, handleUploadCloudinary } from "@/lib/utils";
+import { canMoveTask, checkRuleAccess, handleUploadCloudinary } from "@/lib/utils";
 import { members } from "@/types/auth";
 import { Cards, issueTypes, listtest } from "@/types/project";
-import { BookmarkCheck, Bug, CaseSensitive, CircleDashed, Edit, Eye, Leaf, Save, Send, X } from "lucide-react";
+import { BookmarkCheck, Bug, CaseSensitive, CircleDashed, Edit, Eye, Leaf, Save, Send, SendToBack, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -22,6 +22,7 @@ const TaskDetailModal = ({ closeModal, task, allMemberProject, projjectId }: { c
     const [filteredUsers, setFilteredUsers] = useState<members[]>();
     const [isShowSearchUser, sethowSearchUser] = useState<boolean>(false);
     const [value, setValue] = useState<string>(task?.assignee?.firstname + " " + task?.assignee?.lastname || '');
+    const projectState = useSelector((state: RootState) => state.project);
     const authState = useSelector((state: RootState) => state.auth);
     const [list, setList] = useState<listtest[]>([]);
     const [editTask, setEditTask] = useState({
@@ -148,7 +149,6 @@ const TaskDetailModal = ({ closeModal, task, allMemberProject, projjectId }: { c
             reporter: task?.reporter?._id
         });
     }
-    console.log();
 
     const formatTime = (date: string | undefined): string => {
         if (!date) return '';
@@ -174,8 +174,69 @@ const TaskDetailModal = ({ closeModal, task, allMemberProject, projjectId }: { c
         const localDate = new Date(dateString);
         return new Date(localDate.getTime() - localDate.getTimezoneOffset() * 60000).toISOString();
     };
-
+   
+    /**
+     * Handles the logic of moving a task to a new status list.
+     *
+     * This function performs the following:
+     * - Retrieves the current and target list names from their IDs.
+     * - Validates whether the transition between lists is allowed.
+     * - Checks user permissions to ensure the current user can move the task.
+     * - If moving to "BACKLOG", dispatches a specific backlog action.
+     * - Otherwise, updates the task's list via dispatch.
+     *
+     * @param listId - The ID of the target list to move the task into.
+     *
+     * @throws Shows toast warnings for:
+     * - Invalid list IDs.
+     * - Unauthorized status transitions.
+     * - Insufficient user permissions.
+     * - Errors from the dispatch actions.
+     */
     const handleChangeStatusTask = async (listId: string) => {
+
+        const currentList = list.find(item => item._id == task?.listId)?.name
+        const targetList = list.find(item => item._id == listId)?.name
+
+        if (!currentList || !targetList) {
+            toast.warning(`Valid list not found.`, {
+                position: "top-right",
+                autoClose: 5000,
+            });
+            return;
+        } else if (!canMoveTask(currentList, targetList)) {
+            toast.warning(`You cannot move a task from "${currentList}" to "${targetList}".`, {
+                position: "top-right",
+                autoClose: 5000,
+            });
+            return;
+        }
+
+        if (projectState.role) {
+            const hasPermissionCreateTask = await checkRuleAccess(['task_admin', 'project_admin'], projectState.role)
+            if (!hasPermissionCreateTask && authState.userId !== task?.assignee._id && authState.userId !== task?.reporter._id) {
+                toast.warning('You do not have permission to update status this task.!', {
+                    position: "top-right",
+                    autoClose: 5000,
+                });
+                return;
+            }
+        }
+
+        if (listId === 'BACKLOG' && task?._id) {
+            const result = await dispatch(moveTaskToBacklogSlice(task?._id))
+            if (moveTaskToBacklogSlice.fulfilled.match(result)) {
+                toast.success("Move task to Backlog successfully!", {
+                    position: "bottom-right",
+                    autoClose: 5000,
+                });
+                dispatch(setRefresh(true));
+                closeModal()
+                return
+            } else {
+                console.log(result);
+            }
+        }
         setEditTask((prevEditTask) => {
             return {
                 ...prevEditTask,
@@ -340,8 +401,9 @@ const TaskDetailModal = ({ closeModal, task, allMemberProject, projjectId }: { c
                                                 </SelectValue>
                                             </SelectTrigger>
                                             <SelectContent>
+                                                <SelectItem value={'BACKLOG'}> <div className={`flex items-center justify-between text-gray-600 cursor-pointer `}> <SendToBack /><span className="ml-2 font-medium">BACKLOG</span></div></SelectItem>
                                                 {list?.map((item, index) => (
-                                                    <SelectItem key={index} value={item._id}> <div className={`flex items-center justify-between
+                                                    <SelectItem key={index} value={item._id}> <div className={`flex items-center cursor-pointer justify-between
                                                         ${item.name === "TO DO" ? "text-gray-600" :
                                                             item.name === "IN PROGRESS" ? "text-orange-600" :
                                                                 item.name === "BUG" ? "text-red-500" :

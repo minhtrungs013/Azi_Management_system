@@ -26,6 +26,18 @@ export async function moveTaskService(param: { listId: string, taskId: string })
     });
   }
 }
+export async function moveTaskToBacklogService(taskId: string): Promise<any> {
+  try {
+    const response = await api.put(`/tasks/moveToBacklog/${taskId}`);
+    return response.data;
+  } catch (error: any) {
+    return Promise.reject({
+
+      message: error.response?.data?.message || 'Something went wrong',
+      status: error.response?.status || 500,
+    });
+  }
+}
 export async function updateTaskService(body: { taskId: string, data: object }): Promise<any> {
   try {
     const response = await api.put(`/tasks/${body.taskId}`, body.data);
