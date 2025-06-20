@@ -4,7 +4,7 @@ import Meeting from '@/components/media/meeting';
 import Modal from '@/components/Modal/Modal';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useSocket } from '@/contexts/SocketContext';
-import { getAllMemberProject, getAllNonMemberToProject, getPermissions } from '@/lib/store/features/projectSlice';
+import { getAllMemberProject, getAllNonMemberToProject, getPermissions, setRole } from '@/lib/store/features/projectSlice';
 import { getAllSprintByProjectIdSlice, setSprintId } from '@/lib/store/features/spintSlice';
 import { setFilterParams } from '@/lib/store/features/taskSlice';
 import { AppDispatch, RootState } from '@/lib/store/store';
@@ -54,15 +54,23 @@ export default function ProjectHeader({ data }: { data: ProjectDetails | undefin
         if (user) {
             const hasPermissionCreateTask = await checkRuleAccess(['task_admin', 'project_admin'], user)
             if (!hasPermissionCreateTask && (status === "createTask" || status === "createColumn")) {
-                toast.warning('You do not have permission to create tasks or create columns for the project.!', {
+                toast.warning('You do not have permission to create tasks for the project.!', {
                     position: "bottom-left",
                     autoClose: 5000,
                 });
                 return;
             }
-            const hasPermissionCreateColum = await checkRuleAccess(['member_manager', 'project_admin'], user)
-            if (!hasPermissionCreateColum && status === "invite") {
+            const hasPermissionInviteMember = await checkRuleAccess(['member_manager', 'project_admin'], user)
+            if (!hasPermissionInviteMember && status === "invite") {
                 toast.warning('You do not have permission to invite people to the project.!', {
+                    position: "bottom-left",
+                    autoClose: 5000,
+                });
+                return;
+            }
+            const hasPermissioncreateSprint = await checkRuleAccess(['task_admin', 'project_admin'], user)
+            if (!hasPermissioncreateSprint && status === "createSprint") {
+                toast.warning('You do not have permission to create Sprint for the project.!', {
                     position: "bottom-left",
                     autoClose: 5000,
                 });
@@ -92,11 +100,12 @@ export default function ProjectHeader({ data }: { data: ProjectDetails | undefin
                 const resAllMemberProject = await dispatch(getAllMemberProject(data?._id));
                 if (getAllMemberProject.fulfilled.match(resAllMemberProject)) {
                     setAllMemberProject(resAllMemberProject.payload);
+                  dispatch(setRole(resAllMemberProject.payload?.find((user: members) => user.user._id === authState.userId)))  
                 }
 
             }
         })();
-    }, [data, dispatch])
+    }, [data, dispatch, authState.userId])
 
     useEffect(() => {
         (async () => {

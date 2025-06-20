@@ -206,7 +206,7 @@ const CreateTask = ({ closeModal, listId, allMemberProject }: { closeModal: () =
                         </form>
                         <div className='flex justify-end'>
                              <Button onClick={closeModal} variant="outline" size="sm" className="min-w-24 mr-2 hover:text-white bg-red-50 hover:bg-red-500 text-red-500 border-red-500"><X className='h-5 w-5 ' /> Cancel</Button>
-                             <Button onClick={handleCreateTask} variant="outline" size="sm" className="min-w-24 mr-2 text-white hover:bg-purple-50 bg-purple-500 hover:text-purple-500 border-purple-500"><Plus className='h-5 w-5 ' /> Create Task</Button>
+                             <Button onClick={handleCreateTask} variant="outline" size="sm" className="min-w-24 mr-2 text-white hover:bg-purple-50 bg-purple-600 hover:text-purple-600 border-purple-600"><Plus className='h-5 w-5 ' /> Create Task</Button>
                         </div>
                     </div>
                 </div>

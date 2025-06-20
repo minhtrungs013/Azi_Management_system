@@ -1,7 +1,8 @@
 // lib/store/features/authSlice.ts
 import { CreateprojectService, deleteProjectIdByUserIdService, getAllMemberProjectService, getAllNonMemberToProjectService, getListByProjectIdService, getPermissionService, getProjectByUserIdService, getProjectDashboardByIdService, getProjectIdService, inviteMemberToProjectService, postListToProjectService, updateListToProjectService, updateProjectIdByUserIdService } from '@/lib/services/project/projectService';
+import { members } from '@/types/auth';
 import { AddUserPermissionforProject, PostList, projectPayload, updateList } from '@/types/project';
-import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 export const getProjectById = createAsyncThunk('getProjectByUserIdService', async (_, { rejectWithValue }) => {
   try {
@@ -119,12 +120,14 @@ interface ProjectState {
   error: string | null;
   refresh: boolean,
   projectId: String | null
+  role: members | null
 }
 
 const initialState: ProjectState = {
   error: null,
   refresh: false,
   projectId: null,
+  role: null
 };
 
 
@@ -142,8 +145,11 @@ const projectSlice = createSlice({
     setProjectId(state, action) {
       state.projectId = action.payload;
     },
+    setRole(state, action: PayloadAction<members>) {
+      state.role = action.payload;
+    },
 
   },
 });
-export const { setRefresh, setProjectId } = projectSlice.actions;
+export const { setRefresh, setProjectId, setRole } = projectSlice.actions;
 export default projectSlice.reducer;

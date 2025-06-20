@@ -1,7 +1,7 @@
 'use client';
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useProject } from '@/contexts/ProjectContext';
-import { getTasksByProjectIdSlice } from '@/lib/store/features/taskSlice';
+import { deleteTaskByIdSlice, getTasksByProjectIdSlice, setRefresh } from '@/lib/store/features/taskSlice';
 import { AppDispatch, RootState } from '@/lib/store/store';
 import { getTaskByProjectIdPayload, tasksFilterParams } from '@/types/task';
 import { Eye, Trash } from 'lucide-react';
@@ -12,6 +12,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { PaginationWithLinks } from '../common/pagination-with-links';
 import Modal from "../Modal/Modal";
 import DeleteModal from "../Modal/deleteModal";
+import { toast } from "react-toastify";
+import { checkRuleAccess } from "@/lib/utils";
 
 export default function GetTasksByProjectId() {
     const { dataProject } = useProject();
@@ -22,6 +24,7 @@ export default function GetTasksByProjectId() {
     const dispatch = useDispatch<AppDispatch>();
     const [data, setData] = useState<{ tasks: getTaskByProjectIdPayload[], totalPages: number }>()
     const taskState = useSelector((state: RootState) => state.task);
+    const projectState = useSelector((state: RootState) => state.project);
 
     useEffect(() => {
         (async () => {
@@ -38,26 +41,36 @@ export default function GetTasksByProjectId() {
                 setData({ tasks: res.payload.tasks, totalPages: res.payload.totalPages });
             }
         })();
-    }, [dataProject, taskState, currentPage, taskState.filterParams, dispatch])
+    }, [dataProject, taskState.refresh, currentPage, taskState.filterParams, dispatch])
 
     const openModal = async (id: string | null) => {
+        if (projectState.role) {
+            const hasPermissionCreateTask = await checkRuleAccess(['task_admin', 'project_admin'], projectState.role)
+            if (!hasPermissionCreateTask) {
+                toast.warning('You do not have permission to delete tasks for the project.!', {
+                    position: "top-right",
+                    autoClose: 5000,
+                });
+                return;
+            }
+        }
         setTaskId(id ?? '');
         setModalOpen(true)
     };
 
-    const handleDeleteTask = () => {
-        // if (projectId) {
-        //     const result = await dispatch(deleteTaskById(TaskId));
-        //     if (deleteProjectById.fulfilled.match(result)) {
-        //         toast.success("Project deleted successfully!", {
-        //             position: "bottom-right",
-        //             autoClose: 5000,
-        //         });
-        //         dispatch(setRefresh(true));
-        //         closeModal();
-        //     }
-        // }
-         closeModal();
+    const handleDeleteTask = async () => {
+        if (TaskId) {
+            const result = await dispatch(deleteTaskByIdSlice(TaskId));
+            if (deleteTaskByIdSlice.fulfilled.match(result)) {
+                toast.success("Task deleted successfully!", {
+                    position: "bottom-right",
+                    autoClose: 5000,
+                });
+                dispatch(setRefresh(true));
+                closeModal();
+            }
+        }
+        closeModal();
     }
     const closeModal = () => setModalOpen(false);
     return (

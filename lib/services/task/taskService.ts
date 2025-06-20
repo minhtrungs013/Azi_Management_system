@@ -92,3 +92,14 @@ export async function getTasksBySprintIdService(sprintId: string): Promise<{task
     });
   }
 }
+export async function deleteTaskByIdService(sprintId: string): Promise<void> {
+  try {
+    const response = await api.delete(`/tasks/${sprintId}`);
+    return response.data.data;
+  } catch (error: any) {
+    return Promise.reject({
+      message: error.response?.data?.message || 'Something went wrong',
+      status: error.response?.status || 500,
+    });
+  }
+}
