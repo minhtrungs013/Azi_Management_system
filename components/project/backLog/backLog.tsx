@@ -11,14 +11,15 @@ import { getTaskByCurrentSprintSlice, getTasksBySprintIdSlice, getTasksOnBacklog
 import { AppDispatch, RootState } from '@/lib/store/store';
 import { sprint, sprintPayload } from "@/types/sprint";
 import { getTaskByProjectIdPayload } from '@/types/task';
-import { Ellipsis } from 'lucide-react';
+import { Edit, Ellipsis } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import Sprint from "../sprint/sprint";
+import UpdateOrCreateSprint from "../sprint/updateOrCreateSprint";
 import { toast } from "react-toastify";
 import { checkRuleAccess } from "@/lib/utils";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
 export default function BackLog() {
     const { dataProject } = useProject();
     const dispatch = useDispatch<AppDispatch>();
@@ -96,62 +97,109 @@ export default function BackLog() {
                                 </div>
                             </AccordionTrigger>
                             <div className="flex items-center">
-                                <Button variant={"secondary"} onClick={() => handleChangeStatusSprint(data.sprint)}
+                                <Button variant={"secondary"} size="sm" onClick={() => handleChangeStatusSprint(data.sprint)}
                                     disabled={data.sprint.status === "Completed"}
-                                    className={`ml-3 rounded-sm p-2 text-sm font-medium w-[120px]
+                                    className={`ml-3 rounded-sm w-[120px] 
                                             ${data.sprint.status === "Pending" ? "bg-gray-100 hover:bg-gray-100 hover:text-gray-700 text-gray-500" :
                                             data.sprint.status === "Running" ? "bg-green-100 hover:bg-green-100 hover:text-green-700 text-green-500" :
                                                 "bg-purple-100 hover:bg-purple-100 hover:text-purple-700 text-purple-500"}
                                      `}>
-                                    {data.sprint.status === "Pending" ? "Start Sprint" : data.sprint.status === "Running" ? " Complete Sprint" : "Finish"}
+                                    {data.sprint.status === "Pending" ? "Start Sprint" : data.sprint.status === "Running" ? " Complete" : "Finish"}
                                 </Button>
-                                <Ellipsis onClick={() => openModal('createSprint')} className="text-balck font-normal text-xs ml-2 cursor-pointer" />
+                                <Button onClick={() => openModal('createSprint')} variant="secondary" size="sm" className="mx-2 hover:text-white bg-orange-50 hover:bg-orange-500 text-orange-500 border-none"><Edit className='h-5 w-5 mr-2 ' /> Edit</Button>
                             </div>
                         </div>
                         <Progress value={data?.completionPercentage} className="w-full bg-gray-300 [&>div]:bg-green-600 h-2 mb-2" />
                         <AccordionContent>
-                            <div className="overflow-auto max-h-[300px] section1">
-                                <table className="min-w-full bg-white border border-gray-200">
-                                    <tbody className="text-gray-700">
-                                        {data?.tasks?.map((task) => (
-                                            <tr className="border text-xs  drop-shadow-sm" key={task._id}>
-                                                <td className="relative py-2 px-4 min-w-[350px] max-w-[350px] text-sm">
-                                                    <Tooltip>
-                                                        <TooltipTrigger asChild>
-                                                            <Link target="_blank" href={`/projects/${dataProject?._id}/tasks/${task.identifier}`}
-                                                                className="mr-2 px-2  line-clamp-1 underline text-blue-600 ">
-                                                                {task.title}
-                                                            </Link>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent side="top" align="start">
-                                                            <p>{task.title}</p>
-                                                        </TooltipContent>
-                                                    </Tooltip>
-                                                    <div className={`absolute h-5/6  w-[3px] top-[5px] left-0 ${task.issueType == 'task' ? '  bg-blue-600 ' :
-                                                        task.issueType == 'bug' ? ' bg-red-500' : 'bg-green-500'
-                                                        }`}></div>
-                                                </td>
-                                                <td className="py-2 px-4 ">
-                                                    <span className={`font-normal rounded-sm py-1 px-2 ${task.priority === 'high' ? 'text-red-500  bg-red-100' :
-                                                        task.priority === 'medium' ? 'text-orange-500  bg-orange-100' :
-                                                            'text-green-500  bg-green-100'}`}>{task.priority}</span>
-                                                </td>
-                                                <td className="py-2 px-4">
-                                                    <span className={`font-semibold rounded-sm ${task.listId.name === 'TO DO' ? 'text-slate-700' :
-                                                        task.listId.name === 'IN PROGRESS' ? 'text-orange-600 ' :
-                                                            task.listId.name === 'REVIEW' ? 'text-blue-600 ' :
-                                                                task.listId.name === 'BUG' ? 'text-red-600 ' :
-                                                                    task.listId.name === 'DONE' ? 'text-green-500' : ''} `}>{task.listId.name}</span>
-                                                </td>
-                                                <td className="py-2 px-4 flex items-center">
-                                                    <div className='flex items-center'>
-                                                        <img src={task.assignee?.avatar_url} alt="Avatar 1" className="h-7 w-7 mr-3 rounded-full border-2 border-gray-100" /> {task.assignee.firstname + " " + task.assignee.lastname}
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                            <div className="overflow-auto max-h-[300px] section">
+                                <ul className="bg-white border border-gray-200 text-xs text-gray-700 divide-y divide-gray-200">
+                                    {data?.tasks?.map((task) => (
+                                        <li key={task._id} className="flex items-center px-4 py-2  gap-4">
+                                            <div className="w-[55%]  text-sm">
+                                                <Tooltip>
+                                                    <TooltipTrigger asChild>
+                                                        <Link
+                                                            target="_blank"
+                                                            href={`/projects/${dataProject?._id}/tasks/${task.identifier}`}
+                                                            className="line-clamp-1 underline text-blue-600"
+                                                        >
+                                                            {task.title}
+                                                        </Link>
+                                                    </TooltipTrigger>
+                                                    <TooltipContent side="top" align="start">
+                                                        <p>{task.title}</p>
+                                                    </TooltipContent>
+                                                </Tooltip>
+                                                <div
+                                                    className={`absolute h-5/6 w-[3px] top-[5px] left-0 ${task.issueType === "task"
+                                                        ? "bg-blue-600"
+                                                        : task.issueType === "bug"
+                                                            ? "bg-red-500"
+                                                            : "bg-green-500"
+                                                        }`}
+                                                ></div>
+                                            </div>
+                                            <div className="w-[10%]">
+                                                <span
+                                                    className={`font-normal rounded-sm py-1 px-2 ${task.priority === "high"
+                                                        ? "text-red-500 bg-red-100"
+                                                        : task.priority === "medium"
+                                                            ? "text-orange-500 bg-orange-100"
+                                                            : "text-green-500 bg-green-100"
+                                                        }`}
+                                                >
+                                                    {task.priority}
+                                                </span>
+                                            </div>
+                                            <div className="w-[10%] font-semibold">
+                                                <span
+                                                    className={`rounded-sm ${task.listId.name === "TO DO"
+                                                        ? "text-slate-700"
+                                                        : task.listId.name === "IN PROGRESS"
+                                                            ? "text-orange-600"
+                                                            : task.listId.name === "REVIEW"
+                                                                ? "text-blue-600"
+                                                                : task.listId.name === "BUG"
+                                                                    ? "text-red-600"
+                                                                    : task.listId.name === "DONE"
+                                                                        ? "text-green-500"
+                                                                        : ""
+                                                        }`}
+                                                >
+                                                    {task.listId.name}
+                                                </span>
+                                            </div>
+                                            <div className="w-[20%] flex items-center">
+                                                <img
+                                                    src={task.assignee?.avatar_url}
+                                                    alt="Avatar"
+                                                    className="h-7 w-7 mr-3 rounded-full border-2 border-gray-100"
+                                                />
+                                                <span>
+                                                    {task.assignee.firstname + " " + task.assignee.lastname}
+                                                </span>
+                                            </div>
+                                            <div className="w-[5%]">
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button
+                                                            variant="secondary"
+                                                            size="icon"
+                                                            className="w-8 h-8 hover:bg-white hover:shadow-sm hover:text-orange-500"
+                                                        >
+                                                            <Ellipsis className="text-gray-500 cursor-pointer w-8 h-8  hover:bg-white hover:border-none hover:text-orange-500" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end" className="w-[150px] z-50 border rounded-md shadow-sm bg-white cursor-pointer" >
+                                                        <DropdownMenuItem className="px-2 py-2 divide-y divide-gray-200 hover:bg-gray-100">View</DropdownMenuItem>
+                                                        <DropdownMenuItem className="px-2 py-2 divide-y divide-gray-200 hover:bg-gray-100">Move to Backlog</DropdownMenuItem>
+                                                        <DropdownMenuItem className="px-2 py-2 divide-y divide-gray-200 hover:bg-gray-100">Delete</DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </div>
+                                        </li>
+                                    ))}
+                                </ul>
                             </div>
                         </AccordionContent>
                     </AccordionItem>
@@ -220,7 +268,7 @@ export default function BackLog() {
             <div>
                 <Modal isOpen={isModalOpen} closeModal={closeModal}>
                     {showModalByStatus === 'createSprint' ?
-                        <Sprint closeModal={closeModal} projectId={projectState?.projectId} data={sprint}/> :
+                        <UpdateOrCreateSprint closeModal={closeModal} projectId={projectState?.projectId} data={sprint} /> :
                         <></>
                     }
                 </Modal>

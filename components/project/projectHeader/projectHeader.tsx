@@ -21,7 +21,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import CreateTask from '../../task/createTask';
 import CreateColumn from '../projectTodo/createColumn';
-import Sprint from '../sprint/sprint';
+import UpdateOrCreateSprint from '../sprint/updateOrCreateSprint';
 import InviteProject from './inviteProject';
 
 export default function ProjectHeader({ data }: { data: ProjectDetails | undefined }) {
@@ -273,7 +273,7 @@ export default function ProjectHeader({ data }: { data: ProjectDetails | undefin
                             showModalByStatus === 'meeting' ?
                                 <Meeting closeModal={closeModal} data={data} /> :
                                 showModalByStatus === 'createSprint' ?
-                                    <Sprint closeModal={closeModal} projectId={data?._id ?? null}  data={undefined}/> :
+                                    <UpdateOrCreateSprint closeModal={closeModal} projectId={data?._id ?? null}  data={undefined}/> :
                                     <></>
                 }
             </Modal>

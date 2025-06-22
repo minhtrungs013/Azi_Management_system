@@ -171,7 +171,7 @@ const CreateTask = ({ closeModal, listId, allMemberProject }: { closeModal: () =
                                                 <div className="flex">
                                                     <img src={filteredUser.user.avatar_url} alt="" className="h-10 w-10 rounded-full border-2  border-gray-100 mr-2" />
                                                     <div>
-                                                        <div className={` text-base text-gray-900 `}>{(filteredUser.user.firstname ?? '') + (filteredUser.user.lastname ?? '')}</div>
+                                                        <div className={` text-base text-gray-900 `}>{(filteredUser.user.firstname ?? '') + " "+ (filteredUser.user.lastname ?? '')}</div>
                                                         <p className="text-xs text-gray-600">{filteredUser.user.email}</p>
                                                     </div>
                                                 </div>

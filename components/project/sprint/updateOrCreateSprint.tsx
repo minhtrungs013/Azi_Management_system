@@ -8,7 +8,7 @@ import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 
-const Sprint = ({ closeModal, projectId, data }: { closeModal: () => void, projectId: string | null, data: sprint | undefined }) => {
+const UpdateOrCreateSprint = ({ closeModal, projectId, data }: { closeModal: () => void, projectId: string | null, data: sprint | undefined }) => {
     const dispatch = useDispatch<AppDispatch>();
     const [value, setValue] = useState<string>('');
     const authState = useSelector((state: RootState) => state.auth);
@@ -36,13 +36,13 @@ const Sprint = ({ closeModal, projectId, data }: { closeModal: () => void, proje
             projectId: sprint.projectId || '',
             name: sprint.name,
             description: sprint.description,
-            status: sprint.status, 
+            status: sprint.status,
             startDate: sprint.startDate,
             endDate: sprint.endDate,
         }
         if (data) {
             try {
-                print._id = data._id; 
+                print._id = data._id;
                 await dispatch(updateSprintByIdSlice(print)).unwrap();
                 toast.success("Sprint created successfully!", {
                     position: "bottom-right",
@@ -141,7 +141,7 @@ const Sprint = ({ closeModal, projectId, data }: { closeModal: () => void, proje
                         </form>
                         <div className='flex justify-end'>
                             <Button onClick={closeModal} variant="outline" size="sm" className="min-w-24 mr-2 hover:text-white bg-red-50 hover:bg-red-500 text-red-500 border-red-500"><X className='h-5 w-5 ' /> Cancel</Button>
-                            <Button onClick={handleCreateSpint} variant="outline" size="sm" className="min-w-24 mr-2 text-white hover:bg-purple-50 bg-purple-500 hover:text-purple-500 border-purple-500"><Plus className='h-5 w-5 ' /> Create Sprint</Button>
+                            <Button onClick={handleCreateSpint} variant="outline" size="sm" className="min-w-24 mr-2 text-white hover:bg-purple-50 bg-purple-500 hover:text-purple-500 border-purple-500"><Plus className='h-5 w-5 ' /> {data ? 'Update' : 'Create'}</Button>
                         </div>
                     </div>
                 </div>
@@ -150,4 +150,4 @@ const Sprint = ({ closeModal, projectId, data }: { closeModal: () => void, proje
     );
 };
 
-export default Sprint;
+export default UpdateOrCreateSprint;
