@@ -7,6 +7,7 @@ import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { useRouter } from 'next/navigation';
 interface SignInFormProps {
   toggleForm: () => void;
   closeModal: () => void;
@@ -15,7 +16,7 @@ const SignInForm = ({ toggleForm, closeModal }: SignInFormProps) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-
+  const router = useRouter(); // 👈 thêm hook router
   const dispatch = useDispatch<AppDispatch>();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -36,6 +37,7 @@ const SignInForm = ({ toggleForm, closeModal }: SignInFormProps) => {
         // setTimeout(() => {
         dispatch(setRefresh(true));
         dispatch(setRefreshTask(true));
+        router.push('/');
         // }, 500);
         closeModal();
       } else {

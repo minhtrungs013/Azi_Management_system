@@ -1,5 +1,6 @@
 'use client';
 import VideoCall from "@/components/media/VideoCall";
+import UnderDevelopment from "@/components/underDevelopment/underDevelopment";
 import { getProjectById, getProjectId } from "@/lib/store/features/projectSlice";
 import { AppDispatch, RootState } from "@/lib/store/store";
 import { ProjectDetails, ProjectList } from "@/types/project";
@@ -36,7 +37,7 @@ export default function Tasks() {
 
     return (
         <div >
-            <div className="">
+            {/* <div className="">
                 <div className=" mb-5">
                     <h1 className="text-2xl font-semibold">Tasks</h1>
                     <VideoCall/>
@@ -62,7 +63,8 @@ export default function Tasks() {
                         ))}
                     </div>
                 </main>
-            </div>
+            </div> */}
+             <UnderDevelopment />
         </div>
     )
 }

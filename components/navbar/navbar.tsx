@@ -51,10 +51,10 @@ export function Navbar() {
     // ];
     const navbars = [
         { id: 1, name: 'Home', icon: <LayoutDashboard className="w-5 h-5" />, href: '/home' },
-        { id: 2, name: 'Messages', icon: <MessageSquare className="w-5 h-5" />, href: '/messages' },
+        // { id: 2, name: 'Messages', icon: <MessageSquare className="w-5 h-5" />, href: '/messages' },
         { id: 3, name: 'Tasks', icon: <ListChecks className="w-5 h-5" />, href: '/tasks' },
-        { id: 4, name: 'Members', icon: <Users className="w-5 h-5" />, href: '/members' },
-        { id: 5, name: 'Settings', icon: <Settings className="w-5 h-5" />, href: '/settings' }
+        // { id: 4, name: 'Members', icon: <Users className="w-5 h-5" />, href: '/members' },
+        // { id: 5, name: 'Settings', icon: <Settings className="w-5 h-5" />, href: '/settings' }
     ];
 
     useEffect(() => {
@@ -70,9 +70,9 @@ export function Navbar() {
             <div className="flex items-center h-16 p-4 bg-white dark:bg-[#020817] shadow-sm dark:shadow-slate-600">
                 <img src="https://res.cloudinary.com/dax8xvyhi/image/upload/v1727755525/emtzje8x6vlsqzsxdg7a.png" alt="" className='h-14 mr-2 pb-[5px]' />
                 {/* <img src="https://res.cloudinary.com/dax8xvyhi/image/upload/v1727755525/kujrbiv97xfkbdme13lz.png" alt="" className='h-14 mr-2 pb-[5px]' /> */}
-                <div className="flex-shrink-0">
+                <Link href={'/'} className="flex-shrink-0">
                     <h1 className="font-bold text-sm text-purple-600">Azi Management System</h1>
-                </div>
+                </Link>
             </div>
             <div className="space-y-8 p-4">
                 <nav className="space-y-4">
