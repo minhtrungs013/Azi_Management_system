@@ -20,6 +20,7 @@ import { refreshNotification } from '@/lib/store/features/notificationSlice';
 import { hideAnswer } from '@/lib/store/features/socialSlice';
 import { AvatarUser } from '../common/AvatarUser';
 import AnswerCall from '../media/answerCall';
+import { useRouter } from 'next/navigation';
 
 // import { useSelector, useDispatch } from 'react-redux';
 // import { RootState, AppDispatch } from '../lib/store/store';
@@ -33,6 +34,7 @@ export function Header() {
   // const notifications = notificationState.notification || [];
   const refreshNotificationSlice = useSelector((state: RootState) => state.notification);
   const dispatch = useDispatch<AppDispatch>();
+  const router = useRouter(); // 👈 thêm hook router
   const toggleForm = () => {
     if (showModalByStatus === "signIn") {
       setShowModalByStatus("signUp")
@@ -73,6 +75,7 @@ export function Header() {
 
   const logOut = () => {
     dispatch(logout());
+    router.push('/');
     toast.success("Logout successful!", {
       position: "bottom-right",
       autoClose: 5000,
