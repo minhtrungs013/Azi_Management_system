@@ -115,3 +115,14 @@ export async function deleteTaskByIdService(sprintId: string): Promise<void> {
     });
   }
 }
+export async function addTaskToSprintService(param: {sprintId: string, taskId: string}): Promise<void> {
+  try {
+    const response = await api.put(`/tasks/${param.taskId}/addTaskToSprint/${param.sprintId}`);
+    return response.data.data;
+  } catch (error: any) {
+    return Promise.reject({
+      message: error.response?.data?.message || 'Something went wrong',
+      status: error.response?.status || 500,
+    });
+  }
+}

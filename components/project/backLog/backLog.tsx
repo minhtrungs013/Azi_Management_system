@@ -7,11 +7,11 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useProject } from '@/contexts/ProjectContext';
 import { setRefresh } from '@/lib/store/features/projectSlice';
 import { setSprintId, updateSprintByIdSlice } from "@/lib/store/features/spintSlice";
-import { getTaskByCurrentSprintSlice, getTasksBySprintIdSlice, getTasksOnBacklogSlice } from '@/lib/store/features/taskSlice';
+import { addTaskToSprintThunk, deleteTaskByIdSlice, getTaskByCurrentSprintSlice, getTasksBySprintIdSlice, getTasksOnBacklogSlice, moveTaskToBacklogSlice } from '@/lib/store/features/taskSlice';
 import { AppDispatch, RootState } from '@/lib/store/store';
 import { sprint, sprintPayload } from "@/types/sprint";
 import { getTaskByProjectIdPayload } from '@/types/task';
-import { Edit, Ellipsis } from 'lucide-react';
+import { Edit, Ellipsis, Eye, RefreshCcwDot, SendToBack, Trash } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from 'react';
@@ -20,6 +20,7 @@ import UpdateOrCreateSprint from "../sprint/updateOrCreateSprint";
 import { toast } from "react-toastify";
 import { checkRuleAccess } from "@/lib/utils";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
+import DeleteModal from "@/components/Modal/deleteModal";
 export default function BackLog() {
     const { dataProject } = useProject();
     const dispatch = useDispatch<AppDispatch>();
@@ -28,6 +29,7 @@ export default function BackLog() {
     const [sprint, setSprint] = useState<sprint>()
     const [isModalOpen, setModalOpen] = useState<boolean>(false);
     const [showModalByStatus, setShowModalByStatus] = useState<string>('');
+    const [taskId, setTaskId] = useState<string>('');
     const projectState = useSelector((state: RootState) => state.project);
     const sprintState = useSelector((state: RootState) => state.sprint);
     useEffect(() => {
@@ -67,7 +69,7 @@ export default function BackLog() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [dispatch, sprintState.sprintId])
 
-    const openModal = async (status: string) => {
+    const openModal = async (status: string, id?: string) => {
         if (projectState.role) {
             const hasPermissioncreateSprint = await checkRuleAccess(['task_admin', 'project_admin'], projectState.role)
             if (!hasPermissioncreateSprint && status === "createSprint") {
@@ -77,6 +79,18 @@ export default function BackLog() {
                 });
                 return;
             }
+            const hasPermissionDeleteTask = await checkRuleAccess(['task_admin', 'project_admin'], projectState.role)
+            if (!hasPermissionDeleteTask && status === "deleteTask") {
+                toast.warning('You do not have permission to delete tasks for the project.!', {
+                    position: "top-right",
+                    autoClose: 5000,
+                });
+                return;
+            }
+
+        }
+        if (status === 'deleteTask') {
+            setTaskId(id ?? '')
         }
         setShowModalByStatus(status)
         setModalOpen(true)
@@ -84,6 +98,74 @@ export default function BackLog() {
 
     const closeModal = () => setModalOpen(false);
 
+    const handleMoveToBacklog = async (taskId?: string) => {
+        if (!taskId || !projectState.role) return
+
+        const hasPermissionMoveToBacklog = await checkRuleAccess(['task_admin', 'project_admin'], projectState.role)
+        if (!hasPermissionMoveToBacklog) {
+            toast.warning('You do not have permission to delete tasks for the project.!', {
+                position: "top-right",
+                autoClose: 5000,
+            });
+            return;
+        }
+        const result = await dispatch(moveTaskToBacklogSlice(taskId))
+        if (moveTaskToBacklogSlice.fulfilled.match(result)) {
+            toast.success("Move task to Backlog successfully!", {
+                position: "top-right",
+                autoClose: 5000,
+            });
+            dispatch(setRefresh(true));
+            closeModal()
+            return
+        } else {
+            console.log(result);
+        }
+    }
+    const handleDeleteTask = async () => {
+        if (taskId) {
+            const result = await dispatch(deleteTaskByIdSlice(taskId));
+            if (deleteTaskByIdSlice.fulfilled.match(result)) {
+                toast.success("Task deleted successfully!", {
+                    position: "top-right",
+                    autoClose: 5000,
+                });
+                dispatch(setRefresh(true));
+                closeModal();
+            }
+        }
+        closeModal();
+    }
+    const handleAddToSprint = async (taskId?: string) => {
+        if (!taskId || !projectState.role || !data) return
+
+        const hasPermissionAddToSprint = await checkRuleAccess(['task_admin', 'project_admin'], projectState.role)
+        if (!hasPermissionAddToSprint) {
+            toast.warning('You do not have permission to add tasks to Sprint for the project.!', {
+                position: "top-right",
+                autoClose: 5000,
+            });
+            return;
+        }
+        
+        if (data.sprint.status === "Running" && data.sprint) {
+            const res = await dispatch(addTaskToSprintThunk({ sprintId: data.sprint._id as string, taskId: taskId }))
+            if (addTaskToSprintThunk.fulfilled.match(res)) {
+                dispatch(setRefresh(true));
+                toast.success("Add task to Sprint successfully!", {
+                    position: "top-right",
+                    autoClose: 5000,
+                });
+            }
+
+        } else {
+            toast.warning("You can only add tasks to a running sprint!", {
+                position: "top-right",
+                autoClose: 5000,
+            });
+        }
+
+    }
     return (
         <div>
             {data &&
@@ -180,22 +262,44 @@ export default function BackLog() {
                                                 </span>
                                             </div>
                                             <div className="w-[5%]">
-                                                <DropdownMenu>
-                                                    <DropdownMenuTrigger asChild>
-                                                        <Button
-                                                            variant="secondary"
-                                                            size="icon"
-                                                            className="w-8 h-8 hover:bg-white hover:shadow-sm hover:text-orange-500"
-                                                        >
-                                                            <Ellipsis className="text-gray-500 cursor-pointer w-8 h-8  hover:bg-white hover:border-none hover:text-orange-500" />
-                                                        </Button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent align="end" className="w-[150px] z-50 border rounded-md shadow-sm bg-white cursor-pointer" >
-                                                        <DropdownMenuItem className="px-2 py-2 divide-y divide-gray-200 hover:bg-gray-100">View</DropdownMenuItem>
-                                                        <DropdownMenuItem className="px-2 py-2 divide-y divide-gray-200 hover:bg-gray-100">Move to Backlog</DropdownMenuItem>
-                                                        <DropdownMenuItem className="px-2 py-2 divide-y divide-gray-200 hover:bg-gray-100">Delete</DropdownMenuItem>
-                                                    </DropdownMenuContent>
-                                                </DropdownMenu>
+                                                <div className="text-center flex items-center justify-center mr-5">
+                                                    <Link target="_blank" href={`/projects/${dataProject?._id}/tasks/${task.identifier}`} className="mr-2 p-2 hover:bg-gray-200 rounded cursor-pointer">
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <div >
+                                                                    <Eye className="w-4 h-4 text-blue-500" />
+                                                                </div>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent side="left" align="end">
+                                                                <p>View Task</p>
+                                                            </TooltipContent>
+                                                        </Tooltip>
+                                                    </Link>
+                                                    <button onClick={() => handleMoveToBacklog(task._id)} className="p-2 hover:bg-gray-200 rounded">
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <div >
+                                                                    <SendToBack className="w-4 h-4 text-purple-500" />
+                                                                </div>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent side="left" align="end">
+                                                                <p>Move to Backlog</p>
+                                                            </TooltipContent>
+                                                        </Tooltip>
+                                                    </button>
+                                                    <button onClick={() => openModal('deleteTask', task._id)} className="p-2 hover:bg-gray-200 rounded">
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <div >
+                                                                    <Trash className="w-4 h-4 text-red-500" />
+                                                                </div>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent side="left" align="end">
+                                                                <p>Delete Task</p>
+                                                            </TooltipContent>
+                                                        </Tooltip>
+                                                    </button>
+                                                </div>
                                             </div>
                                         </li>
                                     ))}
@@ -219,48 +323,117 @@ export default function BackLog() {
                         </div>
                     </div>
                     <AccordionContent>
-                        <div className="overflow-auto max-h-[300px] section1">
-                            <table className="min-w-full bg-white border border-gray-200">
-                                <tbody className="text-gray-700">
-                                    {backlog?.map((task) => (
-                                        <tr className="border text-xs  drop-shadow-sm" key={task._id}>
-                                            <td className="relative py-2 px-4 min-w-[350px] max-w-[350px] text-sm">
-                                                <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                        <Link target="_blank" href={`/projects/${dataProject?._id}/tasks/${task.identifier}`}
-                                                            className="mr-2 px-2  line-clamp-1 underline text-blue-600">
-                                                            {task.title}
-                                                        </Link>
-                                                    </TooltipTrigger>
-                                                    <TooltipContent side="top" align="start">
-                                                        <p>{task.title}</p>
-                                                    </TooltipContent>
-                                                </Tooltip>
-                                                <div className={`absolute h-5/6  w-[3px] top-[5px] left-0 ${task.issueType == 'task' ? '  bg-blue-600 ' :
-                                                    task.issueType == 'bug' ? ' bg-red-500' : 'bg-green-500'
-                                                    }`}></div>
-                                            </td>
-                                            <td className="py-2 px-4 ">
-                                                <span className={`font-normal rounded-sm py-1 px-2  ${task.priority === 'high' ? 'text-red-500  bg-red-100' :
-                                                    task.priority === 'medium' ? 'text-orange-500  bg-orange-100' :
-                                                        'text-green-500  bg-green-100'}`}>{task.priority}</span>
-                                            </td>
-                                            <td className="py-2 px-4">
-                                                <span className={`font-semibold rounded-sm ${task.listId.name === 'TO DO' ? 'text-slate-700' :
-                                                    task.listId.name === 'IN PROGRESS' ? 'text-orange-600 ' :
-                                                        task.listId.name === 'REVIEW' ? 'text-blue-600 ' :
-                                                            task.listId.name === 'BUG' ? 'text-red-600 ' :
-                                                                task.listId.name === 'DONE' ? 'text-green-500' : ''} `}>{task.listId.name}</span>
-                                            </td>
-                                            <td className="py-2 px-4 flex items-center">
-                                                <div className='flex items-center'>
-                                                    <img src={task.assignee?.avatar_url} alt="Avatar 1" className="h-7 w-7 mr-3 rounded-full border-2 border-gray-100" /> {task.assignee.firstname + " " + task.assignee.lastname}
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                        <div className="overflow-auto max-h-[300px] section">
+                            <ul className="bg-white border border-gray-200 text-xs text-gray-700 divide-y divide-gray-200">
+                                {backlog?.map((task) => (
+                                    <li key={task._id} className="flex items-center px-4 py-2  gap-4">
+                                        <div className="w-[55%]  text-sm">
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <Link
+                                                        target="_blank"
+                                                        href={`/projects/${dataProject?._id}/tasks/${task.identifier}`}
+                                                        className="line-clamp-1 underline text-blue-600"
+                                                    >
+                                                        {task.title}
+                                                    </Link>
+                                                </TooltipTrigger>
+                                                <TooltipContent side="top" align="start">
+                                                    <p>{task.title}</p>
+                                                </TooltipContent>
+                                            </Tooltip>
+                                            <div
+                                                className={`absolute h-5/6 w-[3px] top-[5px] left-0 ${task.issueType === "task"
+                                                    ? "bg-blue-600"
+                                                    : task.issueType === "bug"
+                                                        ? "bg-red-500"
+                                                        : "bg-green-500"
+                                                    }`}
+                                            ></div>
+                                        </div>
+                                        <div className="w-[10%]">
+                                            <span
+                                                className={`font-normal rounded-sm py-1 px-2 ${task.priority === "high"
+                                                    ? "text-red-500 bg-red-100"
+                                                    : task.priority === "medium"
+                                                        ? "text-orange-500 bg-orange-100"
+                                                        : "text-green-500 bg-green-100"
+                                                    }`}
+                                            >
+                                                {task.priority}
+                                            </span>
+                                        </div>
+                                        <div className="w-[10%] font-semibold">
+                                            <span
+                                                className={`rounded-sm ${task.listId.name === "TO DO"
+                                                    ? "text-slate-700"
+                                                    : task.listId.name === "IN PROGRESS"
+                                                        ? "text-orange-600"
+                                                        : task.listId.name === "REVIEW"
+                                                            ? "text-blue-600"
+                                                            : task.listId.name === "BUG"
+                                                                ? "text-red-600"
+                                                                : task.listId.name === "DONE"
+                                                                    ? "text-green-500"
+                                                                    : ""
+                                                    }`}
+                                            >
+                                                {task.listId.name}
+                                            </span>
+                                        </div>
+                                        <div className="w-[20%] flex items-center">
+                                            <img
+                                                src={task.assignee?.avatar_url}
+                                                alt="Avatar"
+                                                className="h-7 w-7 mr-3 rounded-full border-2 border-gray-100"
+                                            />
+                                            <span>
+                                                {task.assignee.firstname + " " + task.assignee.lastname}
+                                            </span>
+                                        </div>
+                                        <div className="w-[5%]">
+                                            <div className="text-center flex items-center justify-center mr-5">
+                                                <Link target="_blank" href={`/projects/${dataProject?._id}/tasks/${task.identifier}`} className="mr-2 p-2 hover:bg-gray-200 rounded cursor-pointer">
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <div >
+                                                                <Eye className="w-4 h-4 text-blue-500" />
+                                                            </div>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent side="left" align="end">
+                                                            <p>View Task</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </Link>
+                                                <button onClick={() => handleAddToSprint(task._id)} className="p-2 hover:bg-gray-200 rounded">
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <div >
+                                                                <RefreshCcwDot className="w-4 h-4 text-purple-500" />
+                                                            </div>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent side="left" align="end">
+                                                            <p>Add To Sprint</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </button>
+                                                <button onClick={() => openModal('deleteTask', task._id)} className="p-2 hover:bg-gray-200 rounded">
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <div >
+                                                                <Trash className="w-4 h-4 text-red-500" />
+                                                            </div>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent side="left" align="end">
+                                                            <p>Delete Task</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </li>
+                                ))}
+                            </ul>
                         </div>
                     </AccordionContent>
                 </AccordionItem>
@@ -269,7 +442,15 @@ export default function BackLog() {
                 <Modal isOpen={isModalOpen} closeModal={closeModal}>
                     {showModalByStatus === 'createSprint' ?
                         <UpdateOrCreateSprint closeModal={closeModal} projectId={projectState?.projectId} data={sprint} /> :
-                        <></>
+                        showModalByStatus === 'deleteTask' ?
+                            <DeleteModal
+                                closeModal={closeModal}
+                                title="Delete Task"
+                                handleDelete={handleDeleteTask}
+                                body={<p className="text-black font-semibold mb-6">Are you sure you want to delete this task? This action cannot be undone.</p>}
+                            /> :
+
+                            <></>
                     }
                 </Modal>
             </div>

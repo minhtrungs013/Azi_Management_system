@@ -45,8 +45,8 @@ export default function GetTasksByProjectId() {
 
     const openModal = async (id: string | null) => {
         if (projectState.role) {
-            const hasPermissionCreateTask = await checkRuleAccess(['task_admin', 'project_admin'], projectState.role)
-            if (!hasPermissionCreateTask) {
+            const hasPermissionDeleteTask = await checkRuleAccess(['task_admin', 'project_admin'], projectState.role)
+            if (!hasPermissionDeleteTask) {
                 toast.warning('You do not have permission to delete tasks for the project.!', {
                     position: "top-right",
                     autoClose: 5000,

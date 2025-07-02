@@ -270,8 +270,6 @@ const TaskDetailModal = ({ closeModal, task, allMemberProject, projjectId }: { c
         fetchListByProjectId();
     }, [projjectId])
 
-    console.log(list);
-    console.log(editTask);
 
     return (
         <div className="md:w-[900px] xl:w-[1300px] lg:w-[1000px] flex flex-col justify-center sm:py-12">
