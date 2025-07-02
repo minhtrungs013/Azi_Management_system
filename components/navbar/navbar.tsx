@@ -59,6 +59,7 @@ export function Navbar() {
 
     useEffect(() => {
         (async () => {
+            if (!authState.userId) return;
             const res = await dispatch(getProjectById());
             if (getProjectById.fulfilled.match(res)) {
                 setProjects(res.payload);
