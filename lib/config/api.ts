@@ -47,8 +47,9 @@ api.interceptors.response.use(
       });
       if(window.location.pathname !== '/login') {
         window.location.href = '/login'; // Redirect đến trang đăng nhập
+        localStorage.removeItem('access_token'); // Xóa token khỏi localStorage
+        localStorage.removeItem('persist:root'); // Xóa persist:root khỏi localStorage
       }
-      localStorage.clear(); // Xóa token khỏi localStorage
     }
     if (error.response && error.response.status === 404) {
       // Xử lý trường hợp không tìm thấy tài nguyên
